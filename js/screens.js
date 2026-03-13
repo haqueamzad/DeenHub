@@ -688,8 +688,10 @@ const Screens = {
   },
 
   _aiResponseCard(msg) {
+    try {
     const entry = msg.data || {};
-    const text = (entry.text || msg.text || '').replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--gold-light)">$1</strong>');
+    const rawText = entry.text || msg.text || '';
+    const text = rawText.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--gold-light)">$1</strong>').replace(/\n/g, '<br>');
     const sources = entry.sources || [];
     const related = entry.related || [];
     const category = entry.category || '';
@@ -742,39 +744,51 @@ const Screens = {
         </div>
       </div>
     `;
+    } catch(e) { return '<div style="padding:12px;color:#e74c3c">Error displaying response. Please try again.</div>'; }
   },
 
   sendAI() {
-    const input = document.getElementById('ai-input');
-    if (!input || !input.value.trim()) return;
-    const q = input.value.trim();
-    input.value = '';
-    this.aiShowWelcome = false;
+    try {
+      const input = document.getElementById('ai-input');
+      if (!input || !input.value.trim()) return;
+      const q = input.value.trim();
+      input.value = '';
+      this.aiShowWelcome = false;
 
-    // Add user message
-    this.aiMessages.push({ role: 'user', text: q });
+      // Add user message
+      this.aiMessages.push({ role: 'user', text: q });
 
-    // Show typing indicator
-    this.renderAI();
-    const typing = document.getElementById('ai-typing');
-    if (typing) typing.style.display = 'block';
-    const msgs = document.getElementById('chat-messages');
-    if (msgs) msgs.scrollTop = msgs.scrollHeight;
-
-    // Simulate brief "thinking" delay for natural feel
-    setTimeout(() => {
-      const result = API.getAIResponse(q);
-      this.aiMessages.push({
-        role: 'ai',
-        text: result.text || result,
-        data: result
-      });
-      Store.unlockAchievement('scholar_chat');
+      // Show typing indicator
       this.renderAI();
+      const typing = document.getElementById('ai-typing');
+      if (typing) typing.style.display = 'block';
+      const msgs = document.getElementById('chat-messages');
+      if (msgs) msgs.scrollTop = msgs.scrollHeight;
 
-      // Check for Quran verse references in the query (e.g. "2:255" or "surah 2 ayah 255")
-      this._checkQuranVerseQuery(q);
-    }, 400 + Math.random() * 400);
+      // Simulate brief "thinking" delay for natural feel
+      setTimeout(() => {
+        try {
+          const result = API.getAIResponse(q);
+          const text = typeof result === 'string' ? result : (result.text || '');
+          this.aiMessages.push({
+            role: 'ai',
+            text: text,
+            data: typeof result === 'object' ? result : { text: text, sources: [], category: '', related: [] }
+          });
+          Store.unlockAchievement('scholar_chat');
+          this.renderAI();
+
+          // Check for Quran verse references in the query (e.g. "2:255" or "surah 2 ayah 255")
+          this._checkQuranVerseQuery(q);
+        } catch(e) {
+          console.error('Scholar response error:', e);
+          this.aiMessages.push({ role: 'ai', text: 'Sorry, an error occurred. Please try again.', data: { text: 'Sorry, an error occurred. Please try again.', sources: [], category: '', related: [] } });
+          this.renderAI();
+        }
+      }, 400 + Math.random() * 400);
+    } catch(e) {
+      console.error('Scholar sendAI error:', e);
+    }
   },
 
   aiSearchTopic(topicId) {
