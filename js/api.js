@@ -335,12 +335,35 @@ const API = {
     this.audioState = 'playing';
   },
 
+  // Alias used by Quran reader in screens.js — accepts (url, speed, onEndCallback)
+  playAudio(url, speed, onEnd) {
+    const player = this.initAudioPlayer();
+    if (this.audioCurrentUrl !== url) {
+      player.src = url;
+      this.audioCurrentUrl = url;
+    }
+    player.playbackRate = speed || 1.0;
+    if (onEnd) {
+      this._onAudioEnd = onEnd;
+      player.onended = () => {
+        this.audioState = 'paused';
+        if (this._onAudioEnd) { this._onAudioEnd(); this._onAudioEnd = null; }
+      };
+    }
+    player.play();
+    this.audioState = 'playing';
+  },
+
   pauseAudio() {
     if (this.audioPlayer) {
       this.audioPlayer.pause();
       this.audioState = 'paused';
     }
   },
+
+  // Aliases used by screens.js
+  pauseAyah() { this.pauseAudio(); },
+  resumeAyah() { this.resumeAudio(); },
 
   resumeAudio() {
     if (this.audioPlayer) {

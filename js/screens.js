@@ -1000,24 +1000,33 @@ const Screens = {
       });
 
       self._duaAudioPlayer.addEventListener('error', function() {
+        clearTimeout(self._duaLoadTimeout);
         self._duaAudioPlayer = null;
         self._startDuaTTS(dua, duaId);
       });
 
+      // Timeout: if audio doesn't start within 5s, fall back to TTS/reading
+      self._duaLoadTimeout = setTimeout(function() {
+        if (self._duaAudioPlayer && self._duaAudioPlayer.readyState === 0) {
+          self._duaAudioPlayer.pause();
+          self._duaAudioPlayer = null;
+          self._startDuaTTS(dua, duaId);
+        }
+      }, 5000);
+
       // Play immediately — user gesture is still active
       self._duaAudioPlayer.play().then(function() {
+        clearTimeout(self._duaLoadTimeout);
         self._showDuaToast('🔊 ' + I18n.t('playingDua'));
+        self.renderDuas();
       }).catch(function() {
+        clearTimeout(self._duaLoadTimeout);
         self._duaAudioPlayer = null;
         self._startDuaTTS(dua, duaId);
       });
     } else {
-      // Non-Quranic dua — use TTS or reading mode
-      if (!this._duaVoicesLoaded) {
-        setTimeout(function() { self._startDuaTTS(dua, duaId); }, 300);
-      } else {
-        self._startDuaTTS(dua, duaId);
-      }
+      // Non-Quranic dua — always try TTS first (no voice check gate)
+      self._startDuaTTS(dua, duaId);
     }
 
     this.renderDuas();
@@ -1032,21 +1041,29 @@ const Screens = {
   _startDuaTTS(dua, duaId) {
     var self = this;
 
-    // Check if Arabic TTS is actually available before trying
-    var hasArabicTTS = false;
+    // Always try speechSynthesis first — don't pre-check voices.
+    // Many browsers (Chrome, Edge, Safari) have Arabic TTS but getVoices()
+    // may return empty before the async voiceschanged event fires.
     if ('speechSynthesis' in window) {
-      var voices = speechSynthesis.getVoices();
-      hasArabicTTS = voices.some(function(v) { return v.lang && v.lang.indexOf('ar') === 0; });
-    }
-
-    if ('speechSynthesis' in window && hasArabicTTS) {
       speechSynthesis.cancel();
       var utterance = new SpeechSynthesisUtterance(dua.arabic);
-      utterance.lang = 'ar';
-      utterance.rate = 0.75;
+      utterance.lang = 'ar-SA';
+      utterance.rate = 0.8;
       utterance.pitch = 1;
-      if (self._duaArabicVoice) utterance.voice = self._duaArabicVoice;
+
+      // Try to use a known good Arabic voice if available
+      var voices = speechSynthesis.getVoices();
+      var arabicVoice = null;
+      for (var i = 0; i < voices.length; i++) {
+        if (voices[i].lang && voices[i].lang.indexOf('ar') === 0) {
+          arabicVoice = voices[i];
+          // Prefer Google voices for quality
+          if (voices[i].name.toLowerCase().indexOf('google') >= 0) break;
+        }
+      }
+      if (arabicVoice) utterance.voice = arabicVoice;
       self._duaUtterance = utterance;
+      self._duaTTSActive = true;
 
       utterance.onboundary = function(e) {
         if (e.name === 'word' && self.duaPlayingId) {
@@ -1065,15 +1082,18 @@ const Screens = {
       var ttsStarted = false;
       utterance.onstart = function() {
         ttsStarted = true;
+        self._duaTTSActive = true;
         self._duaStartTime = Date.now();
         self._showDuaToast('🔊 ' + I18n.t('playingDua'));
       };
 
       utterance.onend = function() {
+        self._duaTTSActive = false;
         Screens.onDuaAudioEnded();
       };
 
       utterance.onerror = function(e) {
+        self._duaTTSActive = false;
         if (!ttsStarted && self.duaPlayingId === duaId) {
           self._startDuaReadingMode();
         } else {
@@ -1083,15 +1103,16 @@ const Screens = {
 
       speechSynthesis.speak(utterance);
 
-      // Safety: if TTS doesn't start within 1.5s, fall back to reading mode
+      // Safety: if TTS doesn't start within 3s, fall back to reading mode
       setTimeout(function() {
         if (!ttsStarted && self.duaPlayingId === duaId) {
           speechSynthesis.cancel();
+          self._duaTTSActive = false;
           self._startDuaReadingMode();
         }
-      }, 1500);
+      }, 3000);
     } else {
-      // No Arabic TTS — go directly to reading mode (skip the 2s wait)
+      // Browser has no speechSynthesis at all — reading mode
       self._startDuaReadingMode();
     }
 
@@ -1141,7 +1162,9 @@ const Screens = {
       this._duaAudioPlayer.src = '';
       this._duaAudioPlayer = null;
     }
+    if (this._duaLoadTimeout) { clearTimeout(this._duaLoadTimeout); this._duaLoadTimeout = null; }
     if (this._duaTimer) { clearInterval(this._duaTimer); this._duaTimer = null; }
+    this._duaTTSActive = false;
     this.duaPlayingId = null;
     this.duaWordHighlightIdx = -1;
     this._duaUtterance = null;
