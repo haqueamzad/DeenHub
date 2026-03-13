@@ -864,7 +864,7 @@ const Screens = {
   _initDuaVoices() {
     if (this._duaVoicesLoaded) return;
     if (!('speechSynthesis' in window)) {
-      this._duaAudioMode = 'reading';
+      this._duaAudioMode = 'tts'; // We'll still try TTS first
       this._duaVoicesLoaded = true;
       return;
     }
@@ -879,7 +879,7 @@ const Screens = {
         self._duaAudioMode = 'tts';
       } else {
         self._duaArabicVoice = null;
-        self._duaAudioMode = 'reading';
+        self._duaAudioMode = 'tts'; // Still try - browser may support Arabic without dedicated voice
       }
       self._duaVoicesLoaded = true;
       return true;
@@ -891,12 +891,15 @@ const Screens = {
       setTimeout(function() {
         if (!self._duaVoicesLoaded) pickVoice();
         if (!self._duaVoicesLoaded) {
-          self._duaAudioMode = 'reading';
+          self._duaAudioMode = 'tts';
           self._duaVoicesLoaded = true;
         }
       }, 2000);
     }
   },
+
+  // Dua audio player (HTML5 Audio element for real audio playback)
+  _duaAudioPlayer: null,
 
   playDua(duaId) {
     var self = this;
@@ -904,12 +907,14 @@ const Screens = {
     var dua = duas.find(function(d) { return d.id === duaId; });
     if (!dua) return;
 
+    // Toggle off if already playing
     if (this.duaPlayingId === duaId) {
       this.stopDuaAudio();
       this.renderDuas();
       return;
     }
 
+    // Stop any existing playback
     this.stopDuaAudio();
     if (this.quranPlayingAyah) this.pauseAyah();
 
@@ -919,72 +924,67 @@ const Screens = {
     this.duaWordHighlightIdx = -1;
     this._duaWords = dua.arabic.split(/\s+/);
 
-    var totalChars = this._duaWords.reduce(function(s, w) { return s + w.length; }, 0);
-    var msPerWord = this._duaAudioMode === 'tts' ? 480 : 600;
-    this._duaEstDuration = Math.max(this._duaWords.length * msPerWord, 2500);
-    this._duaStartTime = Date.now();
+    // Try audio file first (for Quranic duas that have ayah references), then TTS, then reading mode
+    var audioUrl = dua.audioUrl || null;
 
     var startPlayback = function() {
-      if (self._duaAudioMode === 'tts' && 'speechSynthesis' in window) {
-        speechSynthesis.cancel();
-        var utterance = new SpeechSynthesisUtterance(dua.arabic);
-        utterance.lang = 'ar';
-        utterance.rate = 0.75;
-        utterance.pitch = 1;
-        if (self._duaArabicVoice) utterance.voice = self._duaArabicVoice;
-        self._duaUtterance = utterance;
+      // STRATEGY 1: Real audio file (if dua has audioUrl)
+      if (audioUrl) {
+        self._duaAudioPlayer = new Audio(audioUrl);
+        self._duaAudioPlayer.volume = 0.8;
+        self._duaAudioPlayer.crossOrigin = 'anonymous';
 
-        utterance.onboundary = function(e) {
-          if (e.name === 'word' && self.duaPlayingId) {
-            var charIdx = e.charIndex;
-            var pos = 0;
-            for (var i = 0; i < self._duaWords.length; i++) {
-              if (charIdx <= pos + self._duaWords[i].length) {
-                self._syncDuaWordHighlight(i);
-                break;
-              }
-              pos += self._duaWords[i].length + 1;
-            }
-          }
-        };
-
-        var ttsStarted = false;
-        utterance.onstart = function() {
-          ttsStarted = true;
+        self._duaAudioPlayer.addEventListener('loadedmetadata', function() {
+          self._duaEstDuration = self._duaAudioPlayer.duration * 1000;
           self._duaStartTime = Date.now();
-        };
+        });
 
-        utterance.onend = function() {
+        self._duaAudioPlayer.addEventListener('timeupdate', function() {
+          if (!self.duaPlayingId || !self._duaAudioPlayer) return;
+          var duration = self._duaAudioPlayer.duration || 1;
+          var progress = self._duaAudioPlayer.currentTime / duration;
+          // Update progress bar
+          var progressBar = document.getElementById('duaProgressBar');
+          if (progressBar) progressBar.style.width = (progress * 100) + '%';
+          // Weighted word highlighting
+          var words = self._duaWords;
+          var totalChars = words.reduce(function(sum, w) { return sum + w.length; }, 0);
+          var cumulative = 0;
+          var wordIdx = 0;
+          for (var i = 0; i < words.length; i++) {
+            cumulative += words[i].length / totalChars;
+            if (progress < cumulative) { wordIdx = i; break; }
+            if (i === words.length - 1) wordIdx = i;
+          }
+          self._syncDuaWordHighlight(wordIdx);
+        });
+
+        self._duaAudioPlayer.addEventListener('ended', function() {
           Screens.onDuaAudioEnded();
-        };
+        });
 
-        utterance.onerror = function(e) {
-          if (!ttsStarted && self.duaPlayingId === duaId) {
-            self._duaAudioMode = 'reading';
-            self._duaStartTime = Date.now();
-            self._duaEstDuration = Math.max(self._duaWords.length * 600, 2500);
-            self._showDuaToast('Reading mode — follow the highlighted words');
-          } else {
-            Screens.onDuaAudioEnded();
-          }
-        };
+        self._duaAudioPlayer.addEventListener('error', function() {
+          // Audio file failed — fall back to TTS
+          self._duaAudioPlayer = null;
+          self._startDuaTTS(dua, duaId);
+        });
 
-        speechSynthesis.speak(utterance);
-
-        setTimeout(function() {
-          if (!ttsStarted && self.duaPlayingId === duaId) {
-            self._duaAudioMode = 'reading';
-            self._duaStartTime = Date.now();
-            self._duaEstDuration = Math.max(self._duaWords.length * 600, 2500);
-            self._showDuaToast('Reading mode — follow the highlighted words');
-          }
-        }, 1500);
-      } else {
-        self._showDuaToast('Reading mode — follow along with the highlighted words');
+        self._duaAudioPlayer.play().catch(function() {
+          // Autoplay blocked — fall back to TTS
+          self._duaAudioPlayer = null;
+          self._startDuaTTS(dua, duaId);
+        });
+        return;
       }
 
-      self._duaTimer = setInterval(function() { Screens.onDuaTimeUpdate(); }, 50);
+      // STRATEGY 2: TTS or reading mode
+      self._startDuaTTS(dua, duaId);
     };
+
+    // Calculate initial timing estimates
+    var msPerWord = 480;
+    this._duaEstDuration = Math.max(this._duaWords.length * msPerWord, 2500);
+    this._duaStartTime = Date.now();
 
     if (!this._duaVoicesLoaded) {
       setTimeout(function() { startPlayback(); }, 300);
@@ -998,6 +998,82 @@ const Screens = {
       var card = document.querySelector('.dua-card-premium[data-dua-id="' + duaId + '"]');
       if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 150);
+  },
+
+  // TTS-based dua playback with robust fallback to reading mode
+  _startDuaTTS(dua, duaId) {
+    var self = this;
+
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel();
+      var utterance = new SpeechSynthesisUtterance(dua.arabic);
+      utterance.lang = 'ar';
+      utterance.rate = 0.75;
+      utterance.pitch = 1;
+      if (self._duaArabicVoice) utterance.voice = self._duaArabicVoice;
+      self._duaUtterance = utterance;
+
+      utterance.onboundary = function(e) {
+        if (e.name === 'word' && self.duaPlayingId) {
+          var charIdx = e.charIndex;
+          var pos = 0;
+          for (var i = 0; i < self._duaWords.length; i++) {
+            if (charIdx <= pos + self._duaWords[i].length) {
+              self._syncDuaWordHighlight(i);
+              break;
+            }
+            pos += self._duaWords[i].length + 1;
+          }
+        }
+      };
+
+      var ttsStarted = false;
+      utterance.onstart = function() {
+        ttsStarted = true;
+        self._duaStartTime = Date.now();
+        self._showDuaToast('🔊 Playing dua recitation');
+      };
+
+      utterance.onend = function() {
+        Screens.onDuaAudioEnded();
+      };
+
+      utterance.onerror = function(e) {
+        if (!ttsStarted && self.duaPlayingId === duaId) {
+          // TTS failed, switch to reading mode
+          self._startDuaReadingMode();
+        } else {
+          Screens.onDuaAudioEnded();
+        }
+      };
+
+      speechSynthesis.speak(utterance);
+
+      // Safety: if TTS doesn't start within 2s, fall back to reading mode
+      setTimeout(function() {
+        if (!ttsStarted && self.duaPlayingId === duaId) {
+          speechSynthesis.cancel();
+          self._startDuaReadingMode();
+        }
+      }, 2000);
+    } else {
+      // No TTS at all — use reading mode
+      self._startDuaReadingMode();
+    }
+
+    // Start the universal word highlighting timer (for TTS boundary fallback and reading mode)
+    self._duaTimer = setInterval(function() { Screens.onDuaTimeUpdate(); }, 50);
+  },
+
+  // Pure reading mode — word-by-word highlighting at a steady pace
+  _startDuaReadingMode() {
+    this._duaAudioMode = 'reading';
+    this._duaStartTime = Date.now();
+    this._duaEstDuration = Math.max(this._duaWords.length * 550, 3000);
+    this._showDuaToast('📖 Reading mode — follow the highlighted words');
+    if (!this._duaTimer) {
+      this._duaTimer = setInterval(function() { Screens.onDuaTimeUpdate(); }, 50);
+    }
   },
 
   _syncDuaWordHighlight(wordIdx) {
@@ -1026,6 +1102,11 @@ const Screens = {
 
   stopDuaAudio() {
     if ('speechSynthesis' in window) speechSynthesis.cancel();
+    if (this._duaAudioPlayer) {
+      this._duaAudioPlayer.pause();
+      this._duaAudioPlayer.src = '';
+      this._duaAudioPlayer = null;
+    }
     if (this._duaTimer) { clearInterval(this._duaTimer); this._duaTimer = null; }
     this.duaPlayingId = null;
     this.duaWordHighlightIdx = -1;
@@ -1344,7 +1425,7 @@ const Screens = {
           <div class="azan-voice-grid">
             ${lib.map(a => `
               <div class="azan-voice-card ${s.voice === a.id ? 'selected' : ''}" style="border:2px solid ${s.voice === a.id ? 'var(--gold-light)' : 'rgba(212,168,67,0.2)'};border-radius:12px;padding:12px;cursor:pointer;text-align:center;background:${s.voice === a.id ? 'rgba(212,168,67,0.1)' : 'transparent'}" onclick="Store.setAzanSetting('voice','${a.id}');Screens.renderProfile()">
-                <div class="azan-voice-icon" style="font-size:24px;margin-bottom:6px">${a.id === 'makkah' ? '🕋' : a.id === 'madinah' ? '⭐' : a.id.includes('mishary') ? '🎤' : a.id === 'turkish' ? '🇹🇷' : a.id === 'alaqsa' ? '🇵🇸' : a.id === 'egyptian' ? '🇪🇬' : a.id === 'peaceful' ? '🌿' : a.id === 'short' ? '⏱' : '🕌'}</div>
+                <div class="azan-voice-icon" style="font-size:24px;margin-bottom:6px">${a.id === 'makkah' ? '🕋' : a.id === 'madinah' || a.id === 'madinah1952' ? '🌟' : a.id === 'mishary' || a.id === 'alafasy' || a.id === 'fajr' ? '🎤' : a.id === 'egyptian' || a.id === 'abdulbaset' ? '🇪🇬' : a.id === 'qatami' || a.id === 'tareq' ? '🇸🇦' : a.id === 'halab' ? '🇸🇾' : a.id === 'kurtish' ? '🏔️' : '🕌'}</div>
                 <div class="azan-voice-name" style="font-weight:600;font-size:12px">${a.name}</div>
                 <div class="azan-voice-origin" style="font-size:10px;color:var(--text-sec)">${a.origin}</div>
                 ${s.voice === a.id ? '<div class="azan-voice-check" style="margin-top:6px;color:var(--gold-light)">✓</div>' : ''}

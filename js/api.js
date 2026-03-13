@@ -499,14 +499,15 @@ const API = {
   azanAudio: null,
   azanFading: false,
 
-  // Curated library of free Azan recordings from cdn.aladhan.com
+  // Curated library of real Azan recordings from Internet Archive (verified working)
+  // Source: https://archive.org/details/adhans_sunnah
   azanLibrary: [
     {
       id: 'makkah',
       name: 'Makkah (Al-Haram)',
       muezzin: 'Sheikh Ali Ahmed Mulla',
       desc: 'Official Makkah Haramain Azan',
-      url: 'https://cdn.aladhan.com/audio/adhans/a1.mp3',
+      url: 'https://archive.org/download/adhans_sunnah/adhan_makkah.mp3',
       origin: 'Makkah, Saudi Arabia',
       style: 'Hijazi'
     },
@@ -514,82 +515,100 @@ const API = {
       id: 'mishary',
       name: 'Mishary Rashid Alafasy',
       muezzin: 'Mishary Rashid Alafasy',
-      desc: 'Beautiful melodious Azan from Dubai One TV',
-      url: 'https://cdn.aladhan.com/audio/adhans/a4.mp3',
+      desc: 'Beautiful melodious Azan by the renowned Kuwaiti reciter',
+      url: 'https://archive.org/download/adhans_sunnah/adhan_mishari.mp3',
       origin: 'Kuwait',
       style: 'Kuwaiti'
-    },
-    {
-      id: 'turkish',
-      name: 'Turkish Style',
-      muezzin: 'Hafiz Mustafa Ozcan',
-      desc: 'Traditional Ottoman Turkish Azan',
-      url: 'https://cdn.aladhan.com/audio/adhans/a2.mp3',
-      origin: 'Turkey',
-      style: 'Turkish/Maqam'
-    },
-    {
-      id: 'mishary2',
-      name: 'Mishary Alafasy (Alt)',
-      muezzin: 'Mishary Rashid Alafasy',
-      desc: 'Another beautiful rendition by Alafasy',
-      url: 'https://cdn.aladhan.com/audio/adhans/a7.mp3',
-      origin: 'Kuwait',
-      style: 'Classic'
-    },
-    {
-      id: 'nafees',
-      name: 'Ahmad Al-Nafees',
-      muezzin: 'Ahmad Al-Nafees',
-      desc: 'Soft and spiritual Azan',
-      url: 'https://cdn.aladhan.com/audio/adhans/a1.mp3',
-      origin: 'Saudi Arabia',
-      style: 'Najdi'
-    },
-    {
-      id: 'alaqsa',
-      name: 'Al-Aqsa Style',
-      muezzin: 'Al-Aqsa Muezzin',
-      desc: 'Azan in the style of Masjid Al-Aqsa',
-      url: 'https://cdn.aladhan.com/audio/adhans/a5.mp3',
-      origin: 'Jerusalem',
-      style: 'Palestinian'
-    },
-    {
-      id: 'egyptian',
-      name: 'Egyptian Classic',
-      muezzin: 'Egyptian Muezzin',
-      desc: 'Traditional Egyptian Azan style',
-      url: 'https://cdn.aladhan.com/audio/adhans/a6.mp3',
-      origin: 'Egypt',
-      style: 'Egyptian/Maqam Bayati'
-    },
-    {
-      id: 'peaceful',
-      name: 'Peaceful Adhan',
-      muezzin: 'Karl Jenkins',
-      desc: 'Calm and peaceful rendition',
-      url: 'https://cdn.aladhan.com/audio/adhans/a3.mp3',
-      origin: 'International',
-      style: 'Contemporary'
     },
     {
       id: 'madinah',
       name: 'Madinah (Al-Nabawi)',
       muezzin: 'Madinah Muezzin',
-      desc: 'From the Prophet\'s Mosque',
-      url: 'https://cdn.aladhan.com/audio/adhans/a8.mp3',
+      desc: 'From the Prophet\'s Mosque in Madinah',
+      url: 'https://archive.org/download/adhans_sunnah/adhan_madina.mp3',
       origin: 'Madinah, Saudi Arabia',
       style: 'Hijazi'
     },
     {
-      id: 'short',
-      name: 'Short Azan',
-      muezzin: 'Various',
-      desc: 'Brief notification-friendly Azan',
-      url: 'https://cdn.aladhan.com/audio/adhans/a9.mp3',
-      origin: 'Various',
-      style: 'Brief'
+      id: 'egyptian',
+      name: 'Egyptian Classic',
+      muezzin: 'Egyptian Muezzin',
+      desc: 'Traditional Egyptian Azan with rich maqam melody',
+      url: 'https://archive.org/download/adhans_sunnah/adhan_egypt.mp3',
+      origin: 'Cairo, Egypt',
+      style: 'Egyptian/Maqam Bayati'
+    },
+    {
+      id: 'abdulbaset',
+      name: 'Abdul Basit',
+      muezzin: 'Sheikh Abdul Basit Abdul Samad',
+      desc: 'Legendary Egyptian Quran reciter\'s Azan',
+      url: 'https://archive.org/download/adhans_sunnah/adhan_abdul_baset.mp3',
+      origin: 'Egypt',
+      style: 'Egyptian Classical'
+    },
+    {
+      id: 'alafasy',
+      name: 'Alafasy (Extended)',
+      muezzin: 'Mishary Rashid Alafasy',
+      desc: 'Full-length beautiful rendition by Alafasy',
+      url: 'https://archive.org/download/adhans_sunnah/Athan_alafasi_nice.mp3',
+      origin: 'Kuwait',
+      style: 'Kuwaiti'
+    },
+    {
+      id: 'qatami',
+      name: 'Nasser Al-Qatami',
+      muezzin: 'Nasser Al-Qatami',
+      desc: 'Renowned Saudi reciter with powerful voice',
+      url: 'https://archive.org/download/adhans_sunnah/adhan_nasser_al_qatami.mp3',
+      origin: 'Saudi Arabia',
+      style: 'Najdi'
+    },
+    {
+      id: 'fajr',
+      name: 'Fajr Azan (Mishary)',
+      muezzin: 'Mishary Rashid Alafasy',
+      desc: 'Special dawn prayer Azan — serene and spiritual',
+      url: 'https://archive.org/download/adhans_sunnah/adhan_morning_mishari.mp3',
+      origin: 'Kuwait',
+      style: 'Fajr Special'
+    },
+    {
+      id: 'halab',
+      name: 'Aleppo (Syrian)',
+      muezzin: 'Syrian Muezzin',
+      desc: 'Traditional Syrian Halabi style Azan',
+      url: 'https://archive.org/download/adhans_sunnah/adhan_halab.mp3',
+      origin: 'Aleppo, Syria',
+      style: 'Syrian/Halabi'
+    },
+    {
+      id: 'madinah1952',
+      name: 'Madinah Classic (1952)',
+      muezzin: 'Historic Madinah Muezzin',
+      desc: 'Rare historical recording from Masjid Al-Nabawi',
+      url: 'https://archive.org/download/adhans_sunnah/adhan_madina_1952.mp3',
+      origin: 'Madinah, Saudi Arabia',
+      style: 'Historic Hijazi'
+    },
+    {
+      id: 'tareq',
+      name: 'Tareq Mohammad',
+      muezzin: 'Tareq Mohammad',
+      desc: 'Beautiful full-length Azan with rich vocal range',
+      url: 'https://archive.org/download/adhans_sunnah/Azan_Tareq_Mohammad.mp3',
+      origin: 'Middle East',
+      style: 'Classical Arabic'
+    },
+    {
+      id: 'kurtish',
+      name: 'Kurdish Style',
+      muezzin: 'Molana (Kurdish)',
+      desc: 'Unique Kurdish-influenced Azan melody',
+      url: 'https://archive.org/download/adhans_sunnah/athan_molana_kurtish.mp3',
+      origin: 'Kurdistan',
+      style: 'Kurdish'
     }
   ],
 
