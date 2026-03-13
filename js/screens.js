@@ -985,14 +985,14 @@ const Screens = {
       self._startDuaTTS(dua, duaId);
     });
 
-    // Timeout: if audio doesn't load within 5s, fall back
+    // Timeout: if audio doesn't load within 8s, fall back (archive.org can be slower)
     self._duaLoadTimeout = setTimeout(function() {
       if (self._duaAudioPlayer && self._duaAudioPlayer.readyState === 0) {
         self._duaAudioPlayer.pause();
         self._duaAudioPlayer = null;
         self._startDuaTTS(dua, duaId);
       }
-    }, 5000);
+    }, 8000);
   },
 
   playDua(duaId) {
@@ -1048,10 +1048,36 @@ const Screens = {
     }, 150);
   },
 
-  // TTS-based dua playback: Arabic voice → English transliteration → reading mode
+  // TTS fallback: Google Arabic TTS → speechSynthesis → reading mode
   _startDuaTTS(dua, duaId) {
     var self = this;
 
+    // Try Google Translate Arabic TTS as first fallback (sounds much better than speechSynthesis)
+    if (dua.arabic) {
+      var text = dua.arabic;
+      if (text.length > 200) text = text.substring(0, 200);
+      var googleUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=ar&client=tw-ob&q=' + encodeURIComponent(text);
+      self._setupDuaAudio(googleUrl, dua, duaId);
+      self._duaAudioPlayer.play().then(function() {
+        clearTimeout(self._duaLoadTimeout);
+        self._showDuaToast('🔊 ' + I18n.t('playingDua'));
+        self.renderDuas();
+      }).catch(function() {
+        clearTimeout(self._duaLoadTimeout);
+        self._duaAudioPlayer = null;
+        // Google TTS failed — try speechSynthesis
+        self._trySpeechSynthesis(dua, duaId);
+      });
+      return;
+    }
+
+    // No Arabic text — try speechSynthesis directly
+    self._trySpeechSynthesis(dua, duaId);
+  },
+
+  // speechSynthesis fallback
+  _trySpeechSynthesis(dua, duaId) {
+    var self = this;
     if (!('speechSynthesis' in window)) {
       self._startDuaReadingMode();
       self._duaTimer = setInterval(function() { Screens.onDuaTimeUpdate(); }, 50);
@@ -1062,17 +1088,13 @@ const Screens = {
     var hasArabic = voices.some(function(v) { return v.lang && v.lang.indexOf('ar') === 0; });
 
     if (hasArabic) {
-      // Use Arabic voice with Arabic text
       self._speakWithTTS(dua.arabic, 'ar-SA', 0.8, dua, duaId, true);
     } else if (dua.translit) {
-      // No Arabic voice — use English voice with transliteration (actual audio!)
       self._speakWithTTS(dua.translit, 'en-US', 0.85, dua, duaId, false);
     } else {
-      // No transliteration available — silent reading mode
       self._startDuaReadingMode();
     }
 
-    // Start the universal word highlighting timer
     if (!self._duaTimer) {
       self._duaTimer = setInterval(function() { Screens.onDuaTimeUpdate(); }, 50);
     }
