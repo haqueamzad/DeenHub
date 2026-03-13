@@ -2917,3 +2917,490 @@ body::after {
     --text: #1A1A1A;
   }
 }
+
+/* ============================================================
+   ISLAMIC CARD WITH CORNER BRACKETS
+   ============================================================ */
+
+.islamic-card {
+  position: relative;
+  overflow: visible;
+}
+
+.islamic-corner-bracket {
+  position: absolute;
+  font-size: 18px;
+  color: var(--gold);
+  opacity: 0.5;
+  line-height: 1;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+}
+
+.islamic-card:hover .islamic-corner-bracket {
+  opacity: 0.8;
+}
+
+/* ============================================================
+   QURAN SCREEN PREMIUM ENHANCEMENTS
+   ============================================================ */
+
+.quran-surah-badge {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(212, 168, 67, 0.2), rgba(212, 168, 67, 0.08));
+  border: 1.5px solid rgba(212, 168, 67, 0.3);
+  border-radius: 10px;
+  transform: rotate(45deg);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--gold-light);
+  flex-shrink: 0;
+}
+
+.quran-surah-badge span {
+  transform: rotate(-45deg);
+}
+
+.quran-bismillah {
+  font-family: 'Scheherazade New', 'Amiri', serif;
+  position: relative;
+}
+
+.quran-bismillah::before,
+.quran-bismillah::after {
+  content: '❋';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gold);
+  opacity: 0.4;
+  font-size: 14px;
+}
+
+.quran-bismillah::before { left: 12px; }
+.quran-bismillah::after { right: 12px; }
+
+/* ============================================================
+   HADITH SCREEN PREMIUM ENHANCEMENTS
+   ============================================================ */
+
+.hadith-grade-sahih {
+  background: rgba(46, 204, 113, 0.15) !important;
+  color: var(--green) !important;
+  box-shadow: 0 0 12px rgba(46, 204, 113, 0.15);
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.hadith-grade-hasan {
+  background: rgba(52, 152, 219, 0.15) !important;
+  color: var(--blue) !important;
+  box-shadow: 0 0 12px rgba(52, 152, 219, 0.15);
+  border: 1px solid rgba(52, 152, 219, 0.3);
+}
+
+/* ============================================================
+   AI SCHOLAR SCREEN ENHANCEMENTS
+   ============================================================ */
+
+.chat-bubble.ai {
+  border-left: 3px solid var(--gold);
+  background: linear-gradient(135deg, rgba(17, 29, 51, 0.8), rgba(22, 32, 51, 0.6));
+}
+
+.chat-bubble.user {
+  border-left: 3px solid var(--primary-light);
+}
+
+.chat-input-islamic {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(22, 32, 51, 0.8);
+  border-radius: 14px;
+  border: 1px solid rgba(212, 168, 67, 0.15);
+  backdrop-filter: blur(8px);
+  margin-top: 12px;
+}
+
+.chat-input-islamic input {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 14px;
+  flex: 1;
+  outline: none;
+}
+
+.chat-input-islamic input::placeholder {
+  color: var(--text-muted);
+}
+
+.chat-input-islamic button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all var(--transition-fast);
+}
+
+.chat-input-islamic button:active {
+  transform: scale(0.9);
+}
+
+/* ============================================================
+   TASBIH SCREEN PREMIUM - GOLDEN RING
+   ============================================================ */
+
+.tasbih-ring-islamic {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(17, 29, 51, 0.8), rgba(22, 32, 51, 0.6));
+  border: 3px solid rgba(212, 168, 67, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 20px auto;
+  cursor: pointer;
+  position: relative;
+  transition: all var(--transition-fast);
+  box-shadow:
+    0 0 30px rgba(212, 168, 67, 0.1),
+    inset 0 0 30px rgba(212, 168, 67, 0.05);
+}
+
+.tasbih-ring-islamic:active {
+  transform: scale(0.93);
+  border-color: var(--gold-light);
+  box-shadow:
+    0 0 40px rgba(212, 168, 67, 0.2),
+    inset 0 0 40px rgba(212, 168, 67, 0.1);
+}
+
+/* Decorative 8-point star border outside the ring */
+.tasbih-ring-islamic::before {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 1px dashed rgba(212, 168, 67, 0.2);
+  animation: tasbihRotate 30s linear infinite;
+}
+
+.tasbih-ring-islamic::after {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  border: 1px dotted rgba(212, 168, 67, 0.1);
+  animation: tasbihRotate 45s linear infinite reverse;
+}
+
+@keyframes tasbihRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.tasbih-arabic-dhikr {
+  font-family: 'Scheherazade New', 'Amiri', serif;
+  font-size: 20px;
+  color: var(--gold-light);
+  text-align: center;
+  margin-bottom: 8px;
+  text-shadow: 0 0 15px rgba(212, 168, 67, 0.3);
+}
+
+.tasbih-counter-display {
+  font-size: 56px;
+  font-weight: 200;
+  color: var(--text);
+  line-height: 1;
+}
+
+.tasbih-target-display {
+  font-size: 13px;
+  color: var(--text-sec);
+  margin-top: 4px;
+}
+
+/* ============================================================
+   QIBLA SCREEN PREMIUM COMPASS
+   ============================================================ */
+
+.qibla-compass-islamic {
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(17, 29, 51, 0.9), rgba(22, 32, 51, 0.7));
+  border: 3px solid rgba(212, 168, 67, 0.3);
+  position: relative;
+  margin: 20px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 40px rgba(212, 168, 67, 0.1),
+    inset 0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.qibla-compass-islamic::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid rgba(212, 168, 67, 0.15);
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(212, 168, 67, 0.05) 0deg 5deg,
+    transparent 5deg 10deg
+  );
+}
+
+.qibla-needle {
+  width: 4px;
+  height: 100px;
+  position: absolute;
+  transform-origin: bottom center;
+  bottom: 50%;
+  left: calc(50% - 2px);
+}
+
+.qibla-needle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 30px solid var(--gold);
+  transform: translateX(-6px);
+  filter: drop-shadow(0 0 8px rgba(212, 168, 67, 0.5));
+}
+
+.qibla-kaaba-icon {
+  font-size: 28px;
+  position: absolute;
+  top: 16px;
+  filter: drop-shadow(0 0 12px rgba(212, 168, 67, 0.6));
+}
+
+/* Cardinal direction labels */
+.qibla-cardinal {
+  position: absolute;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold-light);
+  opacity: 0.7;
+}
+
+/* ============================================================
+   ZAKAT SCREEN PREMIUM FORM STYLING
+   ============================================================ */
+
+.zakat-header-arabic {
+  font-family: 'Scheherazade New', 'Amiri', serif;
+  font-size: 36px;
+  color: var(--gold-light);
+  text-align: center;
+  text-shadow: 0 0 20px rgba(212, 168, 67, 0.3);
+  margin-bottom: 4px;
+}
+
+.zakat-result-premium {
+  background: linear-gradient(135deg, rgba(212, 168, 67, 0.15), rgba(212, 168, 67, 0.05));
+  border: 2px solid rgba(212, 168, 67, 0.3);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  margin-top: 16px;
+}
+
+.zakat-result-premium .zakat-amount {
+  font-size: 40px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+}
+
+/* ============================================================
+   CALENDAR SCREEN PREMIUM
+   ============================================================ */
+
+.cal-hijri-premium {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 14px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(212, 168, 67, 0.15);
+}
+
+.cal-hijri-premium::after {
+  content: '☪';
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 40px;
+  opacity: 0.15;
+}
+
+.cal-day.today {
+  background: var(--gold) !important;
+  color: #1a1a1a !important;
+  font-weight: 700;
+  border-radius: 50%;
+  box-shadow: 0 0 15px rgba(212, 168, 67, 0.4);
+}
+
+.cal-day.event-day {
+  border-bottom: 2px solid var(--gold);
+}
+
+/* ============================================================
+   COMMUNITY SCREEN PREMIUM
+   ============================================================ */
+
+.community-post-premium {
+  border-top: 2px solid rgba(212, 168, 67, 0.2);
+}
+
+.community-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  border: 2px solid rgba(212, 168, 67, 0.3);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   PROFILE SCREEN PREMIUM
+   ============================================================ */
+
+.profile-card-islamic {
+  background: linear-gradient(135deg, rgba(13, 124, 102, 0.2), rgba(17, 29, 51, 0.8));
+  border: 1px solid rgba(212, 168, 67, 0.15);
+  border-radius: 20px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-card-islamic::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.profile-avatar-islamic {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: #1a1a1a;
+  font-size: 24px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  border: 3px solid rgba(212, 168, 67, 0.5);
+  box-shadow: 0 0 20px rgba(212, 168, 67, 0.2);
+}
+
+.stat-card-premium {
+  background: linear-gradient(135deg, rgba(17, 29, 51, 0.8), rgba(22, 32, 51, 0.6));
+  border: 1px solid rgba(212, 168, 67, 0.1);
+  border-radius: var(--radius);
+  padding: 14px;
+  text-align: center;
+}
+
+.stat-card-premium .stat-num {
+  font-size: 24px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--gold-light), var(--primary-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.achievement-badge-islamic {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(212, 168, 67, 0.15), rgba(212, 168, 67, 0.05));
+  border: 1.5px solid rgba(212, 168, 67, 0.3);
+  border-radius: 12px;
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
+.achievement-badge-islamic span {
+  transform: rotate(-45deg);
+  font-size: 20px;
+}
+
+.achievement-badge-islamic.unlocked {
+  border-color: var(--gold-light);
+  box-shadow: 0 0 12px rgba(212, 168, 67, 0.2);
+}
+
+.achievement-badge-islamic.locked {
+  opacity: 0.4;
+  filter: grayscale(0.5);
+}
+
+/* XP Shimmer Animation */
+@keyframes goldShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.xp-bar-fill-shimmer {
+  background: linear-gradient(90deg,
+    var(--primary) 0%,
+    var(--gold) 25%,
+    var(--primary-light) 50%,
+    var(--gold) 75%,
+    var(--primary) 100%);
+  background-size: 200% 100%;
+  animation: goldShimmer 3s ease-in-out infinite;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.5s ease;
+}

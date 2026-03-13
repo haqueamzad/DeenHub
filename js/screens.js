@@ -7,6 +7,37 @@ const Screens = {
   prayerTimes: null,
   location: null,
 
+  // ==== SHARED ISLAMIC HELPERS ====
+  _screenHeader(icon, title, arabicTitle, subtitle) {
+    const archSVG = `<svg style="width:100%;height:12px;margin-top:-6px" viewBox="0 0 200 20" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <path d="M0 10 Q50 0 100 0 Q150 0 200 10" stroke="rgba(212,168,67,0.4)" stroke-width="2" fill="none"/>
+      <circle cx="100" cy="10" r="3" fill="rgba(212,168,67,0.6)"/>
+    </svg>`;
+    return `
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:28px;margin-bottom:8px">${icon}</div>
+        <div style="font-family:'Amiri',serif;font-size:24px;color:var(--gold-light);margin-bottom:2px;letter-spacing:0.5px">${arabicTitle}</div>
+        <div style="font-size:18px;font-weight:600">${title}</div>
+        ${subtitle ? `<div style="font-size:12px;color:var(--text-sec);margin-top:4px">${subtitle}</div>` : ''}
+        ${archSVG}
+      </div>
+    `;
+  },
+
+  _islamicCard(content, extraClass = '') {
+    return `
+      <div class="card islamic-card ${extraClass}">
+        <div style="position:relative;padding:12px">
+          <div class="islamic-corner-bracket" style="top:0;left:0">◛</div>
+          <div class="islamic-corner-bracket" style="top:0;right:0;transform:scaleX(-1)">◛</div>
+          ${content}
+          <div class="islamic-corner-bracket" style="bottom:0;left:0;transform:scaleY(-1)">◛</div>
+          <div class="islamic-corner-bracket" style="bottom:0;right:0;transform:scale(-1,-1)">◛</div>
+        </div>
+      </div>
+    `;
+  },
+
   // ==== HOME SCREEN ====
   async renderHome() {
     const el = document.getElementById('screen-home');
@@ -83,7 +114,7 @@ const Screens = {
       </div>
 
       <div class="streak-bar card-hover" onclick="Screens.logDailyPrayer()">
-        <div class="streak-flame">\uD83D\uDD25</div>
+        <div class="streak-flame">🔥</div>
         <div class="streak-info">
           <div class="streak-count">${streak} Day Streak</div>
           <div class="streak-label">${todayPrayers.length}/5 prayers logged</div>
@@ -209,6 +240,14 @@ const Screens = {
     const lastRead = Store.getLastRead();
     const progress = Store.getReadingProgress();
 
+    const quranBookSVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:32px;height:32px">
+      <path d="M25 20 L25 80 L50 70 L75 80 L75 20 Z" fill="rgba(212,168,67,0.8)" stroke="rgba(212,168,67,0.6)" stroke-width="2"/>
+      <line x1="35" y1="25" x2="65" y2="25" stroke="rgba(30,40,60,0.6)" stroke-width="1.5"/>
+      <line x1="35" y1="35" x2="65" y2="35" stroke="rgba(30,40,60,0.4)" stroke-width="1"/>
+      <line x1="35" y1="45" x2="65" y2="45" stroke="rgba(30,40,60,0.4)" stroke-width="1"/>
+      <line x1="35" y1="55" x2="65" y2="55" stroke="rgba(30,40,60,0.4)" stroke-width="1"/>
+    </svg>`;
+
     let content = '';
 
     if (this.quranTab === 'surah') {
@@ -226,7 +265,7 @@ const Screens = {
           <input type="text" placeholder="Search surahs..." value="${this.quranSearch}" oninput="Screens.quranSearch=this.value;Screens.renderQuran()">
         </div>
         ${lastRead ? `
-          <div class="card card-hover mb-8" onclick="Screens.openSurah(${lastRead.surah})" style="border:1px solid var(--primary-dark)">
+          <div class="card card-hover mb-8" onclick="Screens.openSurah(${lastRead.surah})" style="border:1px solid var(--primary-dark);border-left:4px solid var(--gold-light)">
             <div class="row" style="justify-content:space-between">
               <div><div class="text-xs" style="color:var(--primary-light)">Continue Reading</div><div style="font-weight:600;margin-top:2px">Surah ${lastRead.surah}, Ayah ${lastRead.ayah}</div></div>
               <div style="font-size:20px">▶️</div>
@@ -242,14 +281,18 @@ const Screens = {
         </div>
         <div>
           ${filtered.map(s => `
-            <div class="list-item" onclick="Screens.openSurah(${s.number})">
-              <div class="list-num">${s.number}</div>
-              <div class="list-body">
-                <div class="list-title">${s.name}</div>
-                <div class="list-sub">${s.translation} · ${s.ayahs} ayahs · ${s.type}</div>
+            <div class="list-item card-hover" onclick="Screens.openSurah(${s.number})" style="border-left:3px solid var(--gold-light);border-radius:8px;padding:12px">
+              <div class="list-body" style="flex:1">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="list-num" style="background:rgba(212,168,67,0.15);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:600;color:var(--gold-light)">${s.number}</div>
+                  <div>
+                    <div class="list-title">${s.name}</div>
+                    <div class="list-sub">${s.translation} · ${s.ayahs} ayahs</div>
+                  </div>
+                </div>
               </div>
-              <div class="list-right">
-                <div style="font-family:'Amiri',serif;font-size:18px;color:var(--gold-light)">${s.arabic}</div>
+              <div class="list-right" style="text-align:right">
+                <div style="font-family:'Amiri',serif;font-size:18px;color:var(--gold-light);margin-bottom:4px">${s.arabic}</div>
                 <div style="font-size:16px;cursor:pointer" onclick="event.stopPropagation();Screens.toggleBookmark(${s.number})">${bookmarks.includes(s.number) ? '❤️' : '🧡'}</div>
               </div>
             </div>
@@ -262,11 +305,14 @@ const Screens = {
           const juz = i + 1;
           const juzInfo = API.juzData[i];
           return `
-            <div class="juz-card" onclick="Screens.quranView='reader';Screens.quranActiveSurah=${juzInfo.surah};Screens.renderQuran()">
-              <div class="juz-num">${juz}</div>
-              <div class="juz-info">
-                <div class="juz-name">${juzInfo.name}</div>
-                <div class="juz-range">Surah ${juzInfo.surah}:${juzInfo.ayah}</div>
+            <div class="card card-hover" style="border-left:4px solid var(--gold-light);cursor:pointer" onclick="Screens.quranView='reader';Screens.quranActiveSurah=${juzInfo.surah};Screens.renderQuran()">
+              <div class="row" style="align-items:center;gap:12px">
+                <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--gold-light),rgba(212,168,67,0.4));display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark)">${juz}</div>
+                <div class="flex-1">
+                  <div class="juz-name" style="font-weight:600">${juzInfo.name}</div>
+                  <div class="juz-range" style="font-size:12px;color:var(--text-sec)">Surah ${juzInfo.surah}:${juzInfo.ayah}</div>
+                </div>
+                <div style="color:var(--gold-light)">→</div>
               </div>
             </div>
           `;
@@ -277,15 +323,18 @@ const Screens = {
       content = `
         ${bookmarkedSurahs.length === 0 ? '<div class="empty-state"><div class="empty-icon">📖</div><div>No bookmarks yet</div></div>' : `
           ${bookmarkedSurahs.map(s => `
-            <div class="list-item" onclick="Screens.openSurah(${s.number})">
-              <div class="list-num">${s.number}</div>
-              <div class="list-body">
-                <div class="list-title">${s.name}</div>
-                <div class="list-sub">${s.translation} · ${s.ayahs} ayahs</div>
+            <div class="list-item card-hover" onclick="Screens.openSurah(${s.number})" style="border-left:3px solid var(--gold-light);border-radius:8px;padding:12px">
+              <div class="list-body" style="flex:1">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="list-num" style="background:rgba(212,168,67,0.15);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:600;color:var(--gold-light)">${s.number}</div>
+                  <div>
+                    <div class="list-title">${s.name}</div>
+                    <div class="list-sub">${s.translation} · ${s.ayahs} ayahs</div>
+                  </div>
+                </div>
               </div>
-              <div class="list-right">
-                <div style="font-family:'Amiri',serif;font-size:18px;color:var(--gold-light)">${s.arabic}</div>
-                <div style="font-size:16px;cursor:pointer" onclick="event.stopPropagation();Screens.toggleBookmark(${s.number})">❤️</div>
+              <div class="list-right" style="text-align:right">
+                <div style="font-family:'Amiri',serif;font-size:18px;color:var(--gold-light)">❤️</div>
               </div>
             </div>
           `).join('')}
@@ -294,6 +343,7 @@ const Screens = {
     }
 
     el.innerHTML = `
+      ${this._screenHeader('📖', 'The Noble Quran', 'القرآن الكريم')}
       <div class="quran-tabs">
         <div class="quran-tab ${this.quranTab === 'surah' ? 'active' : ''}" onclick="Screens.quranTab='surah';Screens.renderQuran()">Surah</div>
         <div class="quran-tab ${this.quranTab === 'juz' ? 'active' : ''}" onclick="Screens.quranTab='juz';Screens.renderQuran()">Juz</div>
@@ -364,7 +414,7 @@ const Screens = {
           <div class="tajweed-legend-item"><div class="tajweed-legend-dot" style="background:#1ABC9C"></div>Madd</div>
         </div>
       ` : ''}
-      ${this.quranActiveSurah !== 1 && this.quranActiveSurah !== 9 ? `<div class="quran-bismillah islamic-arch">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>` : ''}
+      ${this.quranActiveSurah !== 1 && this.quranActiveSurah !== 9 ? `<div class="quran-bismillah islamic-arch" style="padding:16px;border:2px solid var(--gold-light);border-radius:12px;text-align:center;font-size:24px;color:var(--gold-light);font-family:'Amiri',serif;font-weight:600;margin:16px 0">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>` : ''}
 
       ${ayahs.length === 0 ? '<div class="empty-state"><div class="empty-icon">📖</div><div>Could not load ayahs. Check your connection.</div></div>' : `
         ${ayahs.map(a => `
@@ -398,194 +448,63 @@ const Screens = {
   playAyah(ayahNum) {
     if (this.quranPlayingAyah === ayahNum) {
       if (API.isPlaying()) {
-        API.pauseAudio();
-        this.renderQuran();
+        API.pauseAyah();
+        this.renderQuranReader(document.getElementById('screen-quran'));
       } else {
-        API.resumeAudio();
-        this.renderQuran();
+        API.resumeAyah();
+        this.renderQuranReader(document.getElementById('screen-quran'));
       }
     } else {
-      const ayah = this.quranAyahs?.find(a => a.number === ayahNum);
-      if (ayah && ayah.audio) {
-        this.quranPlayingAyah = ayahNum;
-        this.quranWordHighlightIdx = -1;
-        // Auto-enable word-by-word when playing
-        if (!this.quranWordByWord) {
-          this._wordByWordAutoEnabled = true;
-          this.quranWordByWord = true;
-        }
-        API.playAyahAudio(ayah.audio);
-        if (API.audioPlayer) API.audioPlayer.playbackRate = this.quranAudioSpeed;
-        this.renderQuran();
-
-        // Scroll the playing ayah card into view
-        setTimeout(() => {
-          const card = document.querySelector(`.quran-ayah-card[data-ayah="${ayahNum}"]`);
-          if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 100);
+      this.quranPlayingAyah = ayahNum;
+      const ayah = this.quranAyahs.find(a => a.number === ayahNum);
+      if (ayah) {
+        API.playAudio(ayah.audio, this.quranAudioSpeed, () => {
+          this.quranPlayingAyah = null;
+          if (this.quranRepeatAyah) {
+            this.playAyah(ayahNum);
+          } else {
+            this.renderQuranReader(document.getElementById('screen-quran'));
+          }
+        });
+        this.renderQuranReader(document.getElementById('screen-quran'));
       }
     }
   },
 
   pauseAyah() {
-    API.pauseAudio();
-    this.quranPlayingAyah = null;
-    // Restore word-by-word if it was auto-enabled
-    if (this._wordByWordAutoEnabled) {
-      this.quranWordByWord = false;
-      this._wordByWordAutoEnabled = false;
-    }
-    this.renderQuran();
+    API.pauseAyah();
   },
 
   cycleAudioSpeed() {
-    const speeds = [0.5, 0.75, 1.0, 1.25, 1.5];
+    const speeds = [1.0, 1.25, 1.5, 0.75];
     const idx = speeds.indexOf(this.quranAudioSpeed);
     this.quranAudioSpeed = speeds[(idx + 1) % speeds.length];
-    if (API.audioPlayer) API.audioPlayer.playbackRate = this.quranAudioSpeed;
-    this.renderQuran();
-  },
-
-  onAyahAudioEnded() {
-    if (this.quranRepeatAyah && this.quranPlayingAyah) {
-      const ayahNum = this.quranPlayingAyah;
-      this.quranPlayingAyah = null;
-      setTimeout(() => this.playAyah(ayahNum), 300);
-    } else {
-      this.playNextAyah();
+    if (this.quranPlayingAyah) {
+      API.setAudioSpeed(this.quranAudioSpeed);
     }
+    this.renderQuranReader(document.getElementById('screen-quran'));
   },
 
-  playAllAyahs() {
-    if (this.quranAyahs && this.quranAyahs.length > 0) {
-      this.playAyah(this.quranAyahs[0].number);
-    }
+  toggleBookmark(surahNum) {
+    const bookmarks = Store.getBookmarks();
+    const idx = bookmarks.indexOf(surahNum);
+    if (idx >= 0) bookmarks.splice(idx, 1);
+    else bookmarks.push(surahNum);
+    Store.setBookmarks(bookmarks);
+    this.renderQuranList(document.getElementById('screen-quran'));
+    App.toast(idx >= 0 ? 'Removed from bookmarks' : 'Added to bookmarks');
   },
 
-  playNextAyah() {
-    if (this.quranPlayingAyah && this.quranAyahs) {
-      const currentIdx = this.quranAyahs.findIndex(a => a.number === this.quranPlayingAyah);
-      if (currentIdx < this.quranAyahs.length - 1) {
-        this.playAyah(this.quranAyahs[currentIdx + 1].number);
-      }
-    }
-  },
-
-  playPrevAyah() {
-    if (this.quranPlayingAyah && this.quranAyahs) {
-      const currentIdx = this.quranAyahs.findIndex(a => a.number === this.quranPlayingAyah);
-      if (currentIdx > 0) {
-        this.playAyah(this.quranAyahs[currentIdx - 1].number);
-      }
-    }
-  },
-
-  onAudioTimeUpdate() {
-    if (!this.quranPlayingAyah || !this.quranAyahs) return;
-    const ayah = this.quranAyahs.find(a => a.number === this.quranPlayingAyah);
-    if (!ayah || !API.audioPlayer || !API.audioPlayer.duration) return;
-
-    const duration = API.audioPlayer.duration;
-    const currentTime = API.audioPlayer.currentTime;
-    const progress = currentTime / duration;
-
-    // Update progress bar
-    const progressBar = document.getElementById('ayahProgressBar');
-    if (progressBar) progressBar.style.width = (progress * 100) + '%';
-
-    // Word highlighting with weighted timing (longer words get more time)
-    const words = ayah.words;
-    const totalChars = words.reduce((sum, w) => sum + w.length, 0);
-    let cumulative = 0;
-    let wordIdx = 0;
-    for (let i = 0; i < words.length; i++) {
-      cumulative += words[i].length / totalChars;
-      if (progress < cumulative) { wordIdx = i; break; }
-      if (i === words.length - 1) wordIdx = i;
-    }
-
-    // Get only words belonging to the currently playing ayah
-    const ayahWords = document.querySelectorAll(`.quran-word[data-ayah-num="${this.quranPlayingAyah}"]`);
-
-    if (wordIdx !== this.quranWordHighlightIdx) {
-      this.quranWordHighlightIdx = wordIdx;
-
-      ayahWords.forEach((el, idx) => {
-        el.classList.remove('quran-word-active', 'quran-word-read', 'quran-word-upcoming');
-        if (idx < wordIdx) {
-          el.classList.add('quran-word-read');
-        } else if (idx === wordIdx) {
-          el.classList.add('quran-word-active');
-        } else {
-          el.classList.add('quran-word-upcoming');
-        }
-      });
-
-      // Auto-scroll to keep active word in view
-      const activeWord = ayahWords[wordIdx];
-      if (activeWord) {
-        const rect = activeWord.getBoundingClientRect();
-        const viewportH = window.innerHeight;
-        if (rect.top < 80 || rect.bottom > viewportH - 120) {
-          activeWord.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }
-    }
-  },
-
-  toggleTransliteration() {
-    this.quranShowTranslit = !this.quranShowTranslit;
-    Store.setSetting('showTranslit', this.quranShowTranslit);
-    this.renderQuran();
-  },
-
-  toggleWordByWord() {
-    this.quranWordByWord = !this.quranWordByWord;
-    Store.setSetting('wordByWord', this.quranWordByWord);
-    this.renderQuran();
-  },
-
-  async renderQuranSearch(el) {
-    el.innerHTML = `
-      <div class="search-bar">
-        <span>🔍</span>
-        <input type="text" placeholder="Search Quran..." id="quran-search-input" onkeydown="if(event.key==='Enter')Screens.searchQuranAction()" value="${this.quranSearch}">
-      </div>
-      ${this.quranSearchResults.length > 0 ? `
-        ${this.quranSearchResults.map(r => `
-          <div class="quran-search-result" onclick="Screens.openSurah(${r.surah})">
-            <div style="font-weight:600">${r.surahName} ${r.ayah}</div>
-            <div style="font-size:13px;color:var(--text-sec);margin-top:4px">${r.text.substring(0, 100)}...</div>
-          </div>
-        `).join('')}
-      ` : this.quranSearch ? '<div class="empty-state"><div class="empty-icon">📖</div><div>No results found</div></div>' : ''}
-    `;
-  },
-
-  async searchQuranAction() {
-    const input = document.getElementById('quran-search-input');
-    if (input && input.value.trim()) {
-      this.quranSearch = input.value.trim();
-      this.quranSearchResults = await API.searchQuran(this.quranSearch, this.quranSelectedTranslation);
-      this.renderQuran();
-    }
-  },
-
-  copyAyah(surah, ayahNum) {
+  copyAyah(surahNum, ayahNum) {
     const ayah = this.quranAyahs?.find(a => a.number === ayahNum);
     if (ayah) {
-      navigator.clipboard.writeText(ayah.arabic).then(() => App.toast('Copied to clipboard'));
+      const text = `${ayah.arabic}\n\n${ayah.translation}\n\n— Surah ${surahNum}:${ayahNum}`;
+      navigator.clipboard.writeText(text).then(() => App.toast('Ayah copied to clipboard'));
     }
-  },
-
-  toggleBookmark(num) {
-    Store.toggleBookmark(num);
-    this.renderQuran();
-    App.toast('Bookmark updated');
   },
 
   // ==== HADITH SCREEN ====
-  hadithCollection: 'bukhari',
+  hadithCollection: 'sahih_bukhari',
   hadithSearch: '',
 
   renderHadith() {
@@ -599,33 +518,58 @@ const Screens = {
     }
     const activeCol = collections.find(c => c.id === this.hadithCollection);
 
+    const scrollSVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:32px;height:32px">
+      <rect x="25" y="15" width="50" height="70" fill="none" stroke="rgba(212,168,67,0.8)" stroke-width="2" rx="3"/>
+      <line x1="35" y1="25" x2="65" y2="25" stroke="rgba(212,168,67,0.6)" stroke-width="1.5"/>
+      <line x1="35" y1="35" x2="65" y2="35" stroke="rgba(212,168,67,0.4)" stroke-width="1"/>
+      <line x1="35" y1="45" x2="65" y2="45" stroke="rgba(212,168,67,0.4)" stroke-width="1"/>
+      <line x1="35" y1="55" x2="65" y2="55" stroke="rgba(212,168,67,0.4)" stroke-width="1"/>
+    </svg>`;
+
+    const gradeColor = (grade) => {
+      if (grade === 'Sahih') return 'rgba(46,204,113,.25)';
+      if (grade === 'Hasan') return 'rgba(52,152,219,.25)';
+      return 'rgba(155,89,182,.25)';
+    };
+
+    const gradeTextColor = (grade) => {
+      if (grade === 'Sahih') return 'var(--green)';
+      if (grade === 'Hasan') return 'var(--blue)';
+      return 'var(--purple)';
+    };
+
     el.innerHTML = `
+      ${this._screenHeader('📜', 'Prophetic Hadith', 'الحديث النبوي')}
       <div class="search-bar">
-        <span>\uD83D\uDD0D</span>
+        <span>🔍</span>
         <input type="text" placeholder="Search hadith..." value="${this.hadithSearch}" oninput="Screens.hadithSearch=this.value;Screens.renderHadith()">
       </div>
       <div style="overflow-x:auto;white-space:nowrap;margin-bottom:12px;padding-bottom:4px">
         ${collections.map(c => `
-          <span class="chip ${c.id === this.hadithCollection ? 'active' : ''}" onclick="Screens.hadithCollection='${c.id}';Screens.hadithSearch='';Screens.renderHadith()">
+          <span class="chip ${c.id === this.hadithCollection ? 'active' : ''}" style="border-radius:20px;padding:8px 16px" onclick="Screens.hadithCollection='${c.id}';Screens.hadithSearch='';Screens.renderHadith()">
             ${c.icon} ${c.name.split(' ').pop()}
           </span>
         `).join('')}
       </div>
-      <div class="card mb-8">
+      <div class="card" style="border-left:4px solid var(--gold-light)">
         <div style="font-weight:600">${activeCol.name}</div>
-        <div class="text-xs text-sec">${activeCol.count.toLocaleString()} hadith \u00B7 Showing ${filtered.length} sample</div>
+        <div class="text-xs text-sec">${activeCol.count.toLocaleString()} hadith · Showing ${filtered.length} sample</div>
       </div>
       ${filtered.map(h => `
-        <div class="card mb-8">
+        <div class="card islamic-card" style="border-left:3px solid var(--gold-light);position:relative">
+          <div class="islamic-corner-bracket" style="top:8px;left:8px;font-size:16px;color:var(--gold-light)">◛</div>
           <div class="row mb-8" style="justify-content:space-between">
-            <span class="badge" style="background:rgba(13,124,102,.2);color:var(--primary-light)">#${h.num}</span>
-            <span class="badge" style="background:rgba(46,204,113,.15);color:var(--green)">${h.grade}</span>
+            <span class="badge" style="background:rgba(212,168,67,.15);color:var(--gold-light);border-radius:20px">#${h.num}</span>
+            <span class="badge" style="background:${gradeColor(h.grade)};color:${gradeTextColor(h.grade)};border-radius:20px;font-weight:600">${h.grade}</span>
           </div>
-          <div style="font-size:14px;line-height:1.6;margin-bottom:8px">${h.text}</div>
-          <div class="text-xs text-sec">Narrated by ${h.narrator} \u00B7 Book of ${h.book}</div>
+          <div style="font-size:14px;line-height:1.7;margin-bottom:12px;color:var(--text-primary)">${h.text}</div>
+          <div style="padding-top:8px;border-top:1px solid rgba(212,168,67,0.15)">
+            <div class="text-xs text-sec">📖 ${h.book} · Narrator: ${h.narrator}</div>
+          </div>
+          <div class="islamic-corner-bracket" style="bottom:8px;right:8px;font-size:16px;color:var(--gold-light);transform:scale(-1,-1)">◛</div>
         </div>
       `).join('')}
-      ${filtered.length === 0 ? '<div class="empty-state"><div class="empty-icon">\uD83D\uDCDC</div>No hadith found matching your search.</div>' : ''}
+      ${filtered.length === 0 ? '<div class="empty-state"><div class="empty-icon">📜</div><div>No hadith found matching your search.</div></div>' : ''}
     `;
   },
 
@@ -636,15 +580,25 @@ const Screens = {
 
   renderAI() {
     const el = document.getElementById('screen-ai');
+    const scholarSVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:32px;height:32px">
+      <circle cx="50" cy="30" r="15" fill="rgba(212,168,67,0.6)" stroke="rgba(212,168,67,0.8)" stroke-width="2"/>
+      <path d="M50 48 L50 70 M50 55 L35 65 M50 55 L65 65" stroke="rgba(212,168,67,0.6)" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M30 20 Q50 10 70 20" stroke="rgba(212,168,67,0.4)" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>`;
+
     el.innerHTML = `
+      ${this._screenHeader('✨', 'Islamic Scholar', 'العالم الإسلامي')}
       <div class="chat-area" id="chat-messages">
         ${this.aiMessages.map(m => `
-          <div class="chat-bubble ${m.role}">${m.text}</div>
+          <div class="chat-bubble ${m.role}" style="${m.role === 'ai' ? 'background:linear-gradient(135deg,rgba(212,168,67,0.1),rgba(212,168,67,0.05));border-left:3px solid var(--gold-light);border-radius:12px 12px 4px 12px' : 'background:rgba(52,152,219,0.2);border-radius:12px 4px 12px 12px'}">
+            ${m.role === 'ai' ? '<div style="font-size:11px;color:var(--gold-light);font-weight:600;margin-bottom:4px;text-transform:uppercase">Islamic Scholar</div>' : ''}
+            ${m.text}
+          </div>
         `).join('')}
       </div>
-      <div class="chat-input-wrap">
-        <input class="chat-input" id="ai-input" type="text" placeholder="Ask about Islam..." onkeydown="if(event.key==='Enter')Screens.sendAI()">
-        <button class="chat-send" onclick="Screens.sendAI()">\u27A4</button>
+      <div class="chat-input-wrap" style="border-top:1px solid rgba(212,168,67,0.15);padding-top:12px">
+        <input class="chat-input" id="ai-input" type="text" placeholder="Ask about Islam..." style="border:1px solid var(--gold-light);border-radius:20px;padding:10px 16px" onkeydown="if(event.key==='Enter')Screens.sendAI()">
+        <button class="chat-send" style="background:var(--primary-dark);color:var(--gold-light);border-radius:50%;width:40px;height:40px" onclick="Screens.sendAI()">⤴</button>
       </div>
     `;
     const msgs = document.getElementById('chat-messages');
@@ -671,30 +625,65 @@ const Screens = {
     const el = document.getElementById('screen-tasbih');
     const total = Store.getTasbihTotal();
     const progress = (this.tasbihCount / this.tasbihTarget) * 360;
-    const phrases = ['SubhanAllah', 'Alhamdulillah', 'Allahu Akbar', 'La ilaha illallah', 'Astaghfirullah'];
+    const phrases = [
+      { en: 'SubhanAllah', ar: 'سُبْحَانَ اللَّهِ' },
+      { en: 'Alhamdulillah', ar: 'الْحَمْدُ لِلَّهِ' },
+      { en: 'Allahu Akbar', ar: 'اللَّهُ أَكْبَرُ' },
+      { en: 'La ilaha illallah', ar: 'لَا إِلٰهَ إِلَّا اللَّهُ' },
+      { en: 'Astaghfirullah', ar: 'أَسْتَغْفِرُ اللَّهَ' }
+    ];
+
+    const rosarySVG = `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+      <defs>
+        <linearGradient id="beadGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="rgba(212,168,67,0.9)"/>
+          <stop offset="100" stop-color="rgba(180,140,50,0.9)"/>
+        </linearGradient>
+      </defs>
+      <!-- Ring -->
+      <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(212,168,67,0.3)" stroke-width="8" opacity="0.3"/>
+      <!-- Geometric star pattern -->
+      <g stroke="rgba(212,168,67,0.2)" stroke-width="1" fill="none">
+        ${Array.from({length:8}, (_, i) => {
+          const angle = (i / 8) * Math.PI * 2;
+          const x1 = 100 + 80 * Math.cos(angle);
+          const y1 = 100 + 80 * Math.sin(angle);
+          return `<line x1="100" y1="100" x2="${x1}" y2="${y1}"/>`;
+        }).join('')}
+      </g>
+      <!-- Beads -->
+      ${Array.from({length:33}, (_, i) => {
+        const angle = (i / 33) * Math.PI * 2;
+        const x = 100 + 70 * Math.cos(angle);
+        const y = 100 + 70 * Math.sin(angle);
+        const isActive = i < this.tasbihCount;
+        return `<circle cx="${x}" cy="${y}" r="5" fill="${isActive ? 'var(--gold-light)' : 'rgba(212,168,67,0.3)'}" stroke="rgba(212,168,67,0.5)" stroke-width="1"/>`;
+      }).join('')}
+    </svg>`;
 
     el.innerHTML = `
-      <div class="text-center mt-16">
+      ${this._screenHeader('📿', 'Glorification', 'التسبيح')}
+      <div class="text-center mt-8">
+        <div style="font-family:'Amiri',serif;font-size:28px;color:var(--gold-light);margin-bottom:12px;letter-spacing:1px">${phrases.find(p => p.en === this.tasbihPhrase)?.ar || ''}</div>
         <div class="tasbih-phrases">
           ${phrases.map(p => `
-            <span class="tasbih-phrase ${p === this.tasbihPhrase ? 'active' : ''}" onclick="Screens.tasbihPhrase='${p}';Screens.renderTasbih()">${p}</span>
+            <span class="tasbih-phrase ${p.en === this.tasbihPhrase ? 'active' : ''}" style="border-radius:20px;padding:8px 12px;border:2px solid ${p.en === this.tasbihPhrase ? 'var(--gold-light)' : 'rgba(212,168,67,0.3)'};color:${p.en === this.tasbihPhrase ? 'var(--gold-light)' : 'var(--text-sec)'}" onclick="Screens.tasbihPhrase='${p.en}';Screens.renderTasbih()">${p.en}</span>
           `).join('')}
         </div>
-        <div class="tasbih-count">${this.tasbihCount}</div>
-        <div class="tasbih-target">of ${this.tasbihTarget}</div>
-        <div class="tasbih-ring" onclick="Screens.incrementTasbih()">
-          <div class="tasbih-ring-progress" style="transform:rotate(${progress}deg)"></div>
-          <div class="tasbih-ring-text">TAP</div>
+        <div style="margin:24px 0">
+          ${rosarySVG}
         </div>
-        <div class="row" style="justify-content:center;gap:12px;margin-bottom:20px">
+        <div class="tasbih-count" style="font-size:48px;font-weight:700;color:var(--gold-light);margin:16px 0">${this.tasbihCount}</div>
+        <div class="tasbih-target" style="font-size:16px;color:var(--text-sec)">of ${this.tasbihTarget}</div>
+        <div class="tasbih-ring" style="width:140px;height:140px;margin:20px auto;border:4px solid var(--gold-light);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;background:radial-gradient(circle,rgba(212,168,67,0.05),transparent);font-size:32px;font-weight:700;color:var(--gold-light);transition:all 0.2s" onclick="Screens.incrementTasbih()">TAP</div>
+        <div class="row" style="justify-content:center;gap:12px;margin:24px 0">
           <button class="btn btn-outline" onclick="Screens.tasbihCount=0;Screens.renderTasbih()">Reset</button>
           <button class="btn btn-primary" onclick="Screens.tasbihTarget=Screens.tasbihTarget===33?99:Screens.tasbihTarget===99?100:33;Screens.renderTasbih()">Target: ${this.tasbihTarget}</button>
         </div>
-        <div class="card">
-          <div class="row" style="justify-content:space-between">
-            <div class="text-sec text-sm">Lifetime Total</div>
-            <div style="font-weight:700;color:var(--primary-light)">${total.toLocaleString()}</div>
-          </div>
+        <div class="card" style="border:2px solid var(--gold-light);border-radius:12px">
+          <div style="font-size:12px;color:var(--gold-light);text-transform:uppercase;font-weight:600;margin-bottom:8px">Lifetime Total</div>
+          <div style="font-weight:700;font-size:24px;color:var(--gold-light)">${total.toLocaleString()}</div>
+          <div style="font-size:11px;color:var(--text-sec);margin-top:6px">Keep glorifying Allah</div>
         </div>
       </div>
     `;
@@ -724,24 +713,62 @@ const Screens = {
     if (!this.location) this.location = await API.getLocation();
     this.qiblaAngle = API.calculateQibla(this.location.lat, this.location.lng);
 
+    const compassSVG = `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:160px;height:160px">
+      <defs>
+        <linearGradient id="compassGrad" x1="0" y1="0" x2="100" y2="100">
+          <stop offset="0" stop-color="rgba(212,168,67,0.2)"/>
+          <stop offset="100" stop-color="rgba(212,168,67,0.05)"/>
+        </linearGradient>
+      </defs>
+      <!-- Outer geometric ring -->
+      <circle cx="100" cy="100" r="95" fill="none" stroke="var(--gold-light)" stroke-width="3" opacity="0.5"/>
+      <!-- 8-point star -->
+      <g stroke="rgba(212,168,67,0.3)" stroke-width="2" fill="none">
+        ${Array.from({length:8}, (_, i) => {
+          const angle = (i / 8) * Math.PI * 2;
+          const x1 = 100 + 90 * Math.cos(angle);
+          const y1 = 100 + 90 * Math.sin(angle);
+          return `<line x1="100" y1="100" x2="${x1}" y2="${y1}"/>`;
+        }).join('')}
+      </g>
+      <!-- Cardinal directions -->
+      <text x="100" y="25" text-anchor="middle" font-size="14" fill="var(--gold-light)" font-weight="600">N</text>
+      <text x="175" y="105" text-anchor="middle" font-size="14" fill="var(--text-sec)">E</text>
+      <text x="100" y="185" text-anchor="middle" font-size="14" fill="var(--text-sec)">S</text>
+      <text x="25" y="105" text-anchor="middle" font-size="14" fill="var(--text-sec)">W</text>
+      <!-- Center circle -->
+      <circle cx="100" cy="100" r="15" fill="rgba(212,168,67,0.2)" stroke="var(--gold-light)" stroke-width="2"/>
+      <!-- Kaaba icon -->
+      <text x="100" y="108" text-anchor="middle" font-size="18">🕋</text>
+    </svg>`;
+
+    const minaretSVG = `<svg viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg" style="width:40px;height:60px;opacity:0.6">
+      <circle cx="50" cy="30" r="12" fill="rgba(212,168,67,0.7)"/>
+      <rect x="45" y="40" width="10" height="70" fill="rgba(212,168,67,0.5)"/>
+      <path d="M40 75 L50 70 L60 75" fill="rgba(212,168,67,0.4)"/>
+    </svg>`;
+
     el.innerHTML = `
+      ${this._screenHeader('🧭', 'Qibla Direction', 'اتجاه القبلة')}
       <div class="text-center mt-16">
-        <div style="font-size:14px;color:var(--text-sec);margin-bottom:4px">Direction to Makkah</div>
-        <div class="compass-degrees">${Math.round(this.qiblaAngle)}\u00B0</div>
-        <div class="compass-wrap">
-          <div class="compass-ring">
-            <div class="compass-needle" style="transform:rotate(${this.qiblaAngle}deg)"></div>
-            <div class="compass-kaaba">\uD83D\uDD4B</div>
+        <div style="font-size:14px;color:var(--text-sec);margin-bottom:8px">Direction to Makkah</div>
+        <div class="compass-degrees" style="font-size:32px;font-weight:700;color:var(--gold-light)">${Math.round(this.qiblaAngle)}°</div>
+        <div class="compass-wrap" style="position:relative;margin:24px auto;width:200px;height:200px;display:flex;align-items:center;justify-content:center">
+          <div style="position:absolute;left:-50px;top:50%;transform:translateY(-50%)">${minaretSVG}</div>
+          <div style="position:absolute;right:-50px;top:50%;transform:translateY(-50%)">${minaretSVG}</div>
+          <div style="position:relative;width:160px;height:160px">
+            ${compassSVG}
+            <div class="compass-needle" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(${this.qiblaAngle}deg);width:3px;height:70px;background:linear-gradient(180deg,var(--gold-light),rgba(212,168,67,0.3));border-radius:2px;box-shadow:0 0 12px rgba(212,168,67,0.6);transition:transform 0.3s"></div>
           </div>
         </div>
-        <div class="compass-label">Point your device north, then face the needle direction</div>
-        <div class="card mt-16">
+        <div class="compass-label" style="font-size:13px;color:var(--text-sec);margin-top:8px">Point your device north, then face the needle direction</div>
+        <div class="card" style="border-left:4px solid var(--gold-light);margin-top:20px">
           <div class="text-sm text-sec">Your Location</div>
-          <div style="font-weight:600">${this.location.lat.toFixed(4)}\u00B0N, ${Math.abs(this.location.lng).toFixed(4)}\u00B0${this.location.lng >= 0 ? 'E' : 'W'}</div>
+          <div style="font-weight:600;font-family:monospace">${this.location.lat.toFixed(4)}°N, ${Math.abs(this.location.lng).toFixed(4)}°${this.location.lng >= 0 ? 'E' : 'W'}</div>
         </div>
-        <div class="card">
+        <div class="card" style="border-left:4px solid var(--gold-light)">
           <div class="text-sm text-sec">Distance to Kaaba</div>
-          <div style="font-weight:600">${this._distToKaaba(this.location.lat, this.location.lng)} km</div>
+          <div style="font-weight:600;font-size:18px;color:var(--gold-light)">${this._distToKaaba(this.location.lat, this.location.lng)} km</div>
         </div>
       </div>
     `;
@@ -779,21 +806,16 @@ const Screens = {
     const favs = Store.get('duaFavorites', []);
 
     el.innerHTML = `
-      <div class="dua-header-bar">
-        <div class="dua-header-info">
-          <div class="dua-header-icon">${cat ? cat.icon : '\uD83E\uDD32'}</div>
-          <div>
-            <div class="dua-header-title">${cat ? cat.name : ''} Duas</div>
-            <div class="dua-header-count">${duas.length} supplications from Hisnul Muslim</div>
-          </div>
-        </div>
-        <button class="quran-toggle ${this.duaShowTranslit ? 'active' : ''}" onclick="Screens.duaShowTranslit=!Screens.duaShowTranslit;Screens.renderDuas()">Transliteration</button>
+      ${this._screenHeader('🤲', 'Supplications', 'الدعاء')}
+      <div class="dua-header-bar" style="margin-bottom:16px">
+        <div style="font-weight:600;margin-bottom:8px">${cat ? cat.name : ''} Duas</div>
+        <div class="text-xs text-sec">${duas.length} supplications from Hisnul Muslim</div>
       </div>
 
       <div style="overflow-x:auto;white-space:nowrap;margin-bottom:14px;padding-bottom:4px">
         ${categories.map(c => `
-          <span class="chip ${c.id === this.duaCategory ? 'active' : ''}" onclick="Screens.duaCategory='${c.id}';Screens.stopDuaAudio();Screens.renderDuas()">
-            ${c.icon} ${c.name} <span class="dua-cat-badge">${c.count}</span>
+          <span class="chip ${c.id === this.duaCategory ? 'active' : ''}" style="border-radius:20px;padding:8px 14px;border:2px solid ${c.id === this.duaCategory ? 'var(--gold-light)' : 'rgba(212,168,67,0.3)'};background:${c.id === this.duaCategory ? 'rgba(212,168,67,0.15)' : 'transparent'}" onclick="Screens.duaCategory='${c.id}';Screens.stopDuaAudio();Screens.renderDuas()">
+            ${c.icon} ${c.name}
           </span>
         `).join('')}
       </div>
@@ -803,28 +825,29 @@ const Screens = {
         const isPlaying = this.duaPlayingId === d.id;
         const isFav = favs.includes(d.id);
         return `
-          <div class="dua-card-premium ${isPlaying ? 'dua-playing' : ''}" data-dua-id="${d.id}">
-            <div class="dua-card-top">
-              <div class="dua-num-badge">${i + 1}</div>
-              <div class="dua-card-btns">
-                ${d.repeat > 1 ? '<span class="dua-repeat-badge">' + d.repeat + 'x</span>' : ''}
-                <button class="dua-action-btn ${isFav ? 'dua-fav-active' : ''}" onclick="event.stopPropagation();Screens.toggleDuaFav('${d.id}');">\u2764\uFE0F</button>
-                <button class="dua-action-btn" onclick="event.stopPropagation();Screens.copyDua('${d.id}');">\uD83D\uDCCB</button>
+          <div class="dua-card-premium ${isPlaying ? 'dua-playing' : ''}" style="border-left:4px solid var(--gold-light);border-radius:12px;padding:14px;position:relative" data-dua-id="${d.id}">
+            <div class="islamic-corner-bracket" style="top:6px;left:6px;font-size:14px;color:var(--gold-light)">◛</div>
+            <div class="dua-card-top" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div class="dua-num-badge" style="background:rgba(212,168,67,0.2);color:var(--gold-light);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px">${i + 1}</div>
+              <div class="dua-card-btns" style="display:flex;gap:8px">
+                ${d.repeat > 1 ? '<span class="dua-repeat-badge" style="background:rgba(212,168,67,0.15);color:var(--gold-light);border-radius:12px;padding:4px 10px;font-size:11px;font-weight:600">' + d.repeat + 'x</span>' : ''}
+                <button class="dua-action-btn ${isFav ? 'dua-fav-active' : ''}" style="background:none;border:none;cursor:pointer;font-size:16px" onclick="event.stopPropagation();Screens.toggleDuaFav('${d.id}');">${isFav ? '❤️' : '🧡'}</button>
+                <button class="dua-action-btn" style="background:none;border:none;cursor:pointer;font-size:16px" onclick="event.stopPropagation();Screens.copyDua('${d.id}');">📋</button>
               </div>
             </div>
 
-            <div class="dua-arabic-premium" data-dua-id="${d.id}">
+            <div class="dua-arabic-premium" style="font-family:'Amiri',serif;font-size:20px;text-align:right;margin-bottom:12px;line-height:2" data-dua-id="${d.id}">
               ${words.map((w, idx) => '<span class="dua-word" data-word-idx="' + idx + '" data-dua-id="' + d.id + '">' + w + '</span>').join(' ')}
             </div>
 
-            ${this.duaShowTranslit && d.translit ? '<div class="dua-translit-line">' + d.translit + '</div>' : ''}
+            ${this.duaShowTranslit && d.translit ? '<div class="dua-translit-line" style="font-size:12px;color:var(--text-sec);margin-bottom:8px;font-style:italic">' + d.translit + '</div>' : ''}
 
-            <div class="dua-trans-line">${d.trans}</div>
+            <div class="dua-trans-line" style="font-size:13px;line-height:1.6;margin-bottom:12px;color:var(--text-primary)">${d.trans}</div>
 
-            <div class="dua-card-footer">
-              <div class="dua-ref-line">\uD83D\uDCDA ${d.ref}</div>
-              <button class="dua-play-btn ${isPlaying ? 'playing' : ''}" onclick="Screens.playDua('${d.id}')">
-                ${isPlaying ? '\u23F8\uFE0F' : '\u25B6\uFE0F'}
+            <div class="dua-card-footer" style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid rgba(212,168,67,0.15)">
+              <div class="dua-ref-line" style="font-size:11px;color:var(--text-sec)">📖 ${d.ref}</div>
+              <button class="dua-play-btn ${isPlaying ? 'playing' : ''}" style="background:none;border:none;cursor:pointer;font-size:18px" onclick="Screens.playDua('${d.id}')">
+                ${isPlaying ? '⏸️' : '▶️'}
               </button>
             </div>
 
@@ -833,7 +856,7 @@ const Screens = {
         `;
       }).join('')}
 
-      ${duas.length === 0 ? '<div class="empty-state"><div class="empty-icon">\uD83E\uDD32</div>No duas in this category.</div>' : ''}
+      ${duas.length === 0 ? '<div class="empty-state"><div class="empty-icon">🤲</div><div>No duas in this category.</div></div>' : ''}
     `;
   },
 
@@ -849,10 +872,8 @@ const Screens = {
     var pickVoice = function() {
       var voices = speechSynthesis.getVoices();
       if (!voices.length) return false;
-      // Prefer Arabic voices, then any voice
       var arabic = voices.filter(function(v) { return v.lang && v.lang.indexOf('ar') === 0; });
       if (arabic.length) {
-        // Prefer Google Arabic if available (higher quality)
         var google = arabic.filter(function(v) { return v.name.toLowerCase().indexOf('google') >= 0; });
         self._duaArabicVoice = google.length ? google[0] : arabic[0];
         self._duaAudioMode = 'tts';
@@ -863,16 +884,12 @@ const Screens = {
       self._duaVoicesLoaded = true;
       return true;
     };
-    // Try immediate
     if (!pickVoice()) {
-      // Chrome loads voices async — wait for event
       speechSynthesis.onvoiceschanged = function() {
         pickVoice();
       };
-      // Also try after a small delay as fallback
       setTimeout(function() {
         if (!self._duaVoicesLoaded) pickVoice();
-        // If still no voices after 2s, go reading mode
         if (!self._duaVoicesLoaded) {
           self._duaAudioMode = 'reading';
           self._duaVoicesLoaded = true;
@@ -887,27 +904,23 @@ const Screens = {
     var dua = duas.find(function(d) { return d.id === duaId; });
     if (!dua) return;
 
-    // Toggle off if already playing
     if (this.duaPlayingId === duaId) {
       this.stopDuaAudio();
       this.renderDuas();
       return;
     }
 
-    // Stop any existing playback (dua or Quran)
     this.stopDuaAudio();
     if (this.quranPlayingAyah) this.pauseAyah();
 
-    // Ensure voices are initialized
     this._initDuaVoices();
 
     this.duaPlayingId = duaId;
     this.duaWordHighlightIdx = -1;
     this._duaWords = dua.arabic.split(/\s+/);
 
-    // Calculate word timing based on character weight
     var totalChars = this._duaWords.reduce(function(s, w) { return s + w.length; }, 0);
-    var msPerWord = this._duaAudioMode === 'tts' ? 480 : 600; // reading mode is slower pace
+    var msPerWord = this._duaAudioMode === 'tts' ? 480 : 600;
     this._duaEstDuration = Math.max(this._duaWords.length * msPerWord, 2500);
     this._duaStartTime = Date.now();
 
@@ -921,10 +934,8 @@ const Screens = {
         if (self._duaArabicVoice) utterance.voice = self._duaArabicVoice;
         self._duaUtterance = utterance;
 
-        // Use boundary events for real word sync if available
         utterance.onboundary = function(e) {
           if (e.name === 'word' && self.duaPlayingId) {
-            // Map character index to word index
             var charIdx = e.charIndex;
             var pos = 0;
             for (var i = 0; i < self._duaWords.length; i++) {
@@ -932,7 +943,7 @@ const Screens = {
                 self._syncDuaWordHighlight(i);
                 break;
               }
-              pos += self._duaWords[i].length + 1; // +1 for space
+              pos += self._duaWords[i].length + 1;
             }
           }
         };
@@ -940,7 +951,6 @@ const Screens = {
         var ttsStarted = false;
         utterance.onstart = function() {
           ttsStarted = true;
-          // Re-estimate duration once TTS actually starts
           self._duaStartTime = Date.now();
         };
 
@@ -949,12 +959,10 @@ const Screens = {
         };
 
         utterance.onerror = function(e) {
-          // If TTS fails, switch to reading mode for this playback
           if (!ttsStarted && self.duaPlayingId === duaId) {
             self._duaAudioMode = 'reading';
             self._duaStartTime = Date.now();
             self._duaEstDuration = Math.max(self._duaWords.length * 600, 2500);
-            // Show reading mode indicator
             self._showDuaToast('Reading mode — follow the highlighted words');
           } else {
             Screens.onDuaAudioEnded();
@@ -963,7 +971,6 @@ const Screens = {
 
         speechSynthesis.speak(utterance);
 
-        // Safety: if TTS doesn't start within 1.5s, fall back to reading mode
         setTimeout(function() {
           if (!ttsStarted && self.duaPlayingId === duaId) {
             self._duaAudioMode = 'reading';
@@ -973,15 +980,12 @@ const Screens = {
           }
         }, 1500);
       } else {
-        // Pure reading mode — no audio, just word-by-word highlighting
         self._showDuaToast('Reading mode — follow along with the highlighted words');
       }
 
-      // Start the universal word highlighting timer
       self._duaTimer = setInterval(function() { Screens.onDuaTimeUpdate(); }, 50);
     };
 
-    // If voices haven't loaded yet, wait briefly then start
     if (!this._duaVoicesLoaded) {
       setTimeout(function() { startPlayback(); }, 300);
     } else {
@@ -990,7 +994,6 @@ const Screens = {
 
     this.renderDuas();
 
-    // Scroll playing card into view
     setTimeout(function() {
       var card = document.querySelector('.dua-card-premium[data-dua-id="' + duaId + '"]');
       if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1010,7 +1013,6 @@ const Screens = {
   },
 
   _showDuaToast(msg) {
-    // Remove existing toast
     var old = document.getElementById('dua-toast');
     if (old) old.remove();
     var toast = document.createElement('div');
@@ -1037,11 +1039,9 @@ const Screens = {
     var elapsed = Date.now() - this._duaStartTime;
     var progress = Math.min(elapsed / this._duaEstDuration, 1);
 
-    // Update progress bar
     var progressBar = document.getElementById('duaProgressBar');
     if (progressBar) progressBar.style.width = (progress * 100) + '%';
 
-    // Weighted timing based on word character length (same algorithm as Quran)
     var words = this._duaWords;
     var totalChars = words.reduce(function(sum, w) { return sum + w.length; }, 0);
     var cumulative = 0;
@@ -1068,7 +1068,6 @@ const Screens = {
         }
       });
 
-      // Auto-scroll to keep active word visible
       var activeWord = duaWords[wordIdx];
       if (activeWord) {
         var rect = activeWord.getBoundingClientRect();
@@ -1079,7 +1078,6 @@ const Screens = {
       }
     }
 
-    // End when progress reaches 1
     if (progress >= 1) {
       this.onDuaAudioEnded();
     }
@@ -1094,12 +1092,10 @@ const Screens = {
     this._duaWords = [];
     if ('speechSynthesis' in window) speechSynthesis.cancel();
 
-    // Auto-play next dua in category
     if (wasPlaying) {
       var duas = API.getDuas(this.duaCategory);
       var idx = duas.findIndex(function(d) { return d.id === wasPlaying; });
       if (idx >= 0 && idx < duas.length - 1) {
-        // Small delay before next dua
         setTimeout(function() { Screens.playDua(duas[idx + 1].id); }, 800);
         return;
       }
@@ -1127,7 +1123,7 @@ const Screens = {
       if (dua) break;
     }
     if (dua) {
-      var text = dua.arabic + '\n\n' + dua.translit + '\n\n' + dua.trans + '\n\n\u2014 ' + dua.ref;
+      var text = dua.arabic + '\n\n' + dua.translit + '\n\n' + dua.trans + '\n\n— ' + dua.ref;
       navigator.clipboard.writeText(text).then(function() { App.toast('Dua copied to clipboard'); });
     }
   },
@@ -1135,19 +1131,27 @@ const Screens = {
   // ==== ZAKAT SCREEN ====
   renderZakat() {
     const el = document.getElementById('screen-zakat');
+    const zakatSVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:32px;height:32px;margin-bottom:8px">
+      <path d="M50 10 L70 30 L70 70 Q70 80 60 85 L40 85 Q30 80 30 70 L30 30 Z" fill="rgba(212,168,67,0.7)" stroke="rgba(212,168,67,0.9)" stroke-width="2"/>
+      <line x1="40" y1="40" x2="60" y2="40" stroke="rgba(30,40,60,0.6)" stroke-width="1.5"/>
+      <line x1="40" y1="55" x2="60" y2="55" stroke="rgba(30,40,60,0.4)" stroke-width="1"/>
+    </svg>`;
+
     el.innerHTML = `
-      <div class="card" style="border:1px solid var(--gold);background:rgba(212,168,67,.08)">
-        <div style="font-size:14px;color:var(--gold)">Nisab Threshold: ~$5,500 USD</div>
-        <div class="text-xs text-sec mt-8">2.5% of qualifying wealth held for one lunar year</div>
+      ${this._screenHeader('💰', 'Purification of Wealth', 'الزكاة')}
+      <div class="card" style="border:2px solid var(--gold-light);background:linear-gradient(135deg,rgba(212,168,67,0.1),rgba(212,168,67,0.05))">
+        <div style="font-size:13px;color:var(--gold-light);text-transform:uppercase;font-weight:600">Nisab Threshold</div>
+        <div style="font-size:20px;font-weight:700;color:var(--text-primary);margin:6px 0">~$5,500 USD</div>
+        <div class="text-xs text-sec">2.5% of qualifying wealth held for one lunar year</div>
       </div>
       <div class="section-title">Calculate Your Zakat</div>
-      <div class="form-group"><label class="form-label">Gold & Jewelry Value ($)</label><input class="form-input" type="number" id="z-gold" placeholder="0.00"></div>
-      <div class="form-group"><label class="form-label">Silver Value ($)</label><input class="form-input" type="number" id="z-silver" placeholder="0.00"></div>
-      <div class="form-group"><label class="form-label">Cash & Bank Balances ($)</label><input class="form-input" type="number" id="z-cash" placeholder="0.00"></div>
-      <div class="form-group"><label class="form-label">Stocks & Investments ($)</label><input class="form-input" type="number" id="z-stocks" placeholder="0.00"></div>
-      <div class="form-group"><label class="form-label">Business / Rental Property ($)</label><input class="form-input" type="number" id="z-property" placeholder="0.00"></div>
-      <div class="form-group"><label class="form-label">Debts & Liabilities ($)</label><input class="form-input" type="number" id="z-debts" placeholder="0.00"></div>
-      <button class="btn btn-primary w-full mt-8" onclick="Screens.calcZakat()">Calculate Zakat</button>
+      <div class="form-group"><label class="form-label" style="color:var(--gold-light);font-weight:600">Gold & Jewelry Value ($)</label><input class="form-input" type="number" id="z-gold" placeholder="0.00" style="border:1px solid rgba(212,168,67,0.3)"></div>
+      <div class="form-group"><label class="form-label" style="color:var(--gold-light);font-weight:600">Silver Value ($)</label><input class="form-input" type="number" id="z-silver" placeholder="0.00" style="border:1px solid rgba(212,168,67,0.3)"></div>
+      <div class="form-group"><label class="form-label" style="color:var(--gold-light);font-weight:600">Cash & Bank Balances ($)</label><input class="form-input" type="number" id="z-cash" placeholder="0.00" style="border:1px solid rgba(212,168,67,0.3)"></div>
+      <div class="form-group"><label class="form-label" style="color:var(--gold-light);font-weight:600">Stocks & Investments ($)</label><input class="form-input" type="number" id="z-stocks" placeholder="0.00" style="border:1px solid rgba(212,168,67,0.3)"></div>
+      <div class="form-group"><label class="form-label" style="color:var(--gold-light);font-weight:600">Business / Rental Property ($)</label><input class="form-input" type="number" id="z-property" placeholder="0.00" style="border:1px solid rgba(212,168,67,0.3)"></div>
+      <div class="form-group"><label class="form-label" style="color:var(--gold-light);font-weight:600">Debts & Liabilities ($)</label><input class="form-input" type="number" id="z-debts" placeholder="0.00" style="border:1px solid rgba(212,168,67,0.3)"></div>
+      <button class="btn btn-primary w-full mt-8" style="border-radius:8px;font-weight:600" onclick="Screens.calcZakat()">Calculate Zakat</button>
       <div id="zakat-result"></div>
     `;
   },
@@ -1157,10 +1161,10 @@ const Screens = {
     const result = API.calculateZakat(v('z-gold'), v('z-silver'), v('z-cash'), v('z-stocks'), v('z-property'), v('z-debts'));
     Store.unlockAchievement('zakat_calc');
     document.getElementById('zakat-result').innerHTML = `
-      <div class="zakat-result mt-16">
-        <div style="font-size:13px;opacity:.8">${result.eligible ? 'Your Zakat Due' : 'Below Nisab Threshold'}</div>
-        <div class="zakat-amount">$${result.amount.toFixed(2)}</div>
-        <div class="zakat-label-sm">Net assets: $${result.net.toLocaleString()} | Nisab: $${result.nisab.toLocaleString()}</div>
+      <div class="zakat-result mt-16" style="background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.05));border:2px solid var(--gold-light);border-radius:12px;padding:16px;text-align:center">
+        <div style="font-size:12px;opacity:.8;color:var(--text-sec);text-transform:uppercase;font-weight:600">${result.eligible ? 'Your Zakat Due' : 'Below Nisab Threshold'}</div>
+        <div class="zakat-amount" style="font-size:36px;font-weight:700;color:var(--gold-light);margin:12px 0">$${result.amount.toFixed(2)}</div>
+        <div class="zakat-label-sm" style="font-size:12px;color:var(--text-sec)">Net assets: $${result.net.toLocaleString()} | Nisab: $${result.nisab.toLocaleString()}</div>
       </div>
     `;
   },
@@ -1193,16 +1197,26 @@ const Screens = {
     });
     const eventDays = monthEvents.map(e => new Date(e.date).getDate());
 
+    const crescentSVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:24px;height:24px;margin-right:8px">
+      <path d="M50 20 A30 30 0 1 1 50 80 A25 25 0 1 0 50 20" fill="var(--gold-light)" opacity="0.8"/>
+    </svg>`;
+
     el.innerHTML = `
-      <div class="card" style="background:linear-gradient(135deg,var(--primary-dark),var(--primary))">
-        <div style="font-size:13px;opacity:.8">Islamic Date</div>
-        <div style="font-size:20px;font-weight:700">${hijri.day} ${hijri.monthName} ${hijri.year} AH</div>
+      ${this._screenHeader('📅', 'Hijri Calendar', 'التقويم الهجري')}
+      <div class="card" style="background:linear-gradient(135deg,var(--primary-dark),var(--primary));border-left:4px solid var(--gold-light)">
+        <div style="display:flex;align-items:center;gap:8px">
+          ${crescentSVG}
+          <div>
+            <div style="font-size:12px;opacity:.8;text-transform:uppercase;font-weight:600">Islamic Date</div>
+            <div style="font-size:18px;font-weight:700">${hijri.day} ${hijri.monthName} ${hijri.year} AH</div>
+          </div>
+        </div>
       </div>
 
       <div class="row mb-16" style="justify-content:space-between;align-items:center">
-        <button class="back-btn" onclick="Screens.calMonth--;if(Screens.calMonth<0){Screens.calMonth=11;Screens.calYear--;}Screens.renderCalendar()">\u2190</button>
+        <button class="back-btn" onclick="Screens.calMonth--;if(Screens.calMonth<0){Screens.calMonth=11;Screens.calYear--;}Screens.renderCalendar()">←</button>
         <div style="font-weight:700;font-size:16px">${months[this.calMonth]} ${this.calYear}</div>
-        <button class="back-btn" onclick="Screens.calMonth++;if(Screens.calMonth>11){Screens.calMonth=0;Screens.calYear++;}Screens.renderCalendar()">\u2192</button>
+        <button class="back-btn" onclick="Screens.calMonth++;if(Screens.calMonth>11){Screens.calMonth=0;Screens.calYear++;}Screens.renderCalendar()">→</button>
       </div>
 
       <div class="cal-grid">
@@ -1212,15 +1226,15 @@ const Screens = {
           const day = i + 1;
           const isToday = isCurrentMonth && day === today.getDate();
           const isEvent = eventDays.includes(day);
-          return `<div class="cal-day ${isToday ? 'today' : ''} ${isEvent ? 'event-day' : ''}">${day}</div>`;
+          return `<div class="cal-day ${isToday ? 'today' : ''} ${isEvent ? 'event-day' : ''}" style="${isToday ? 'background:var(--gold-light);color:var(--dark);box-shadow:0 0 12px rgba(212,168,67,0.6);border-radius:50%' : ''}">${day}</div>`;
         }).join('')}
       </div>
 
       ${monthEvents.length > 0 ? `
         <div class="section-title">Events This Month</div>
         ${monthEvents.map(e => `
-          <div class="card row mb-8">
-            <div style="width:4px;height:36px;border-radius:2px;background:${e.color};flex-shrink:0"></div>
+          <div class="card row mb-8" style="border-left:4px solid ${e.color};border-radius:8px">
+            <div style="flex-shrink:0;margin-right:12px">🕌</div>
             <div class="flex-1">
               <div style="font-weight:600">${e.name}</div>
               <div class="text-xs text-sec">${new Date(e.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</div>
@@ -1249,47 +1263,57 @@ const Screens = {
     ];
 
     el.innerHTML = `
+      ${this._screenHeader('👥', 'The Ummah', 'الأمة')}
       <div style="display:flex;gap:8px;margin-bottom:12px">
-        ${tabs.map(t => `<span class="chip ${t.toLowerCase() === this.communityTab ? 'active' : ''}" onclick="Screens.communityTab='${t.toLowerCase()}';Screens.renderCommunity()">${t}</span>`).join('')}
+        ${tabs.map(t => `<span class="chip ${t.toLowerCase() === this.communityTab ? 'active' : ''}" style="border-radius:20px;padding:8px 14px;border:2px solid ${t.toLowerCase() === this.communityTab ? 'var(--gold-light)' : 'rgba(212,168,67,0.3)'};background:${t.toLowerCase() === this.communityTab ? 'rgba(212,168,67,0.15)' : 'transparent'}" onclick="Screens.communityTab='${t.toLowerCase()}';Screens.renderCommunity()">${t}</span>`).join('')}
       </div>
       ${this.communityTab === 'feed' ? `
         ${posts.map(p => `
-          <div class="card post-card">
-            <div class="post-header">
-              <div class="post-avatar">${p.initials}</div>
-              <div class="post-meta"><div class="post-name">${p.name}</div><div class="post-time">${p.time}</div></div>
+          <div class="card post-card" style="border-top:3px solid var(--gold-light);border-radius:12px">
+            <div class="post-header" style="margin-bottom:12px">
+              <div class="post-avatar" style="background:linear-gradient(135deg,var(--gold-light),rgba(212,168,67,0.5));border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);flex-shrink:0">${p.initials}</div>
+              <div class="post-meta"><div class="post-name" style="font-weight:600">${p.name}</div><div class="post-time" style="font-size:11px;color:var(--text-sec)">${p.time}</div></div>
             </div>
-            <div class="post-body">${p.text}</div>
-            <div class="post-actions">
-              <span class="post-action">\u2764\uFE0F ${p.likes}</span>
-              <span class="post-action">\uD83D\uDCAC ${p.comments}</span>
-              <span class="post-action">\uD83D\uDD01 Share</span>
+            <div class="post-body" style="line-height:1.6;margin-bottom:12px">${p.text}</div>
+            <div class="post-actions" style="display:flex;gap:16px;padding-top:8px;border-top:1px solid rgba(212,168,67,0.15)">
+              <span class="post-action" style="font-size:13px;color:var(--text-sec)">❤️ ${p.likes}</span>
+              <span class="post-action" style="font-size:13px;color:var(--text-sec)">💬 ${p.comments}</span>
+              <span class="post-action" style="font-size:13px;color:var(--text-sec)">🔁 Share</span>
             </div>
           </div>
         `).join('')}
       ` : this.communityTab === 'events' ? `
-        <div class="card mb-8" style="border-left:4px solid var(--gold)">
-          <div style="font-weight:700">Community Iftar</div>
-          <div class="text-sm text-sec">Friday, 6:30 PM \u00B7 Islamic Center of Dallas</div>
-          <button class="btn btn-outline mt-8" style="font-size:12px;padding:6px 12px">RSVP</button>
+        <div class="card mb-8" style="border-left:4px solid var(--gold);border-radius:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:20px">🌙</span>
+            <div style="font-weight:700">Community Iftar</div>
+          </div>
+          <div class="text-sm text-sec">Friday, 6:30 PM · Islamic Center of Dallas</div>
+          <button class="btn btn-outline mt-8" style="font-size:12px;padding:6px 12px;border:1px solid var(--gold-light);color:var(--gold-light);border-radius:20px">RSVP</button>
         </div>
-        <div class="card mb-8" style="border-left:4px solid var(--green)">
-          <div style="font-weight:700">Quran Study Circle</div>
-          <div class="text-sm text-sec">Saturday, 10:00 AM \u00B7 Online (Zoom)</div>
-          <button class="btn btn-outline mt-8" style="font-size:12px;padding:6px 12px">Join</button>
+        <div class="card mb-8" style="border-left:4px solid var(--green);border-radius:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:20px">📖</span>
+            <div style="font-weight:700">Quran Study Circle</div>
+          </div>
+          <div class="text-sm text-sec">Saturday, 10:00 AM · Online (Zoom)</div>
+          <button class="btn btn-outline mt-8" style="font-size:12px;padding:6px 12px;border:1px solid var(--green);color:var(--green);border-radius:20px">Join</button>
         </div>
-        <div class="card mb-8" style="border-left:4px solid var(--blue)">
-          <div style="font-weight:700">Youth Basketball Tournament</div>
-          <div class="text-sm text-sec">Sunday, 2:00 PM \u00B7 EPIC Gymnasium</div>
-          <button class="btn btn-outline mt-8" style="font-size:12px;padding:6px 12px">Register</button>
+        <div class="card mb-8" style="border-left:4px solid var(--blue);border-radius:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:20px">🏀</span>
+            <div style="font-weight:700">Youth Basketball Tournament</div>
+          </div>
+          <div class="text-sm text-sec">Sunday, 2:00 PM · EPIC Gymnasium</div>
+          <button class="btn btn-outline mt-8" style="font-size:12px;padding:6px 12px;border:1px solid var(--blue);color:var(--blue);border-radius:20px">Register</button>
         </div>
       ` : `
         ${mosques.map(m => `
-          <div class="card row mb-8">
-            <div style="width:44px;height:44px;border-radius:12px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:20px">\uD83D\uDD4C</div>
+          <div class="card row mb-8" style="border-left:4px solid var(--gold-light);border-radius:12px">
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(212,168,67,0.15);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🕌</div>
             <div class="flex-1">
               <div style="font-weight:600">${m.name}</div>
-              <div class="text-xs text-sec">${m.dist} \u00B7 \u2B50 ${m.rating}</div>
+              <div class="text-xs text-sec">${m.dist} · ⭐ ${m.rating}</div>
             </div>
           </div>
         `).join('')}
@@ -1308,7 +1332,7 @@ const Screens = {
       <div class="azan-settings-panel">
         <!-- Master Azan Toggle -->
         <div class="setting-item">
-          <span class="setting-label">\uD83D\uDD14 Azan Enabled</span>
+          <span class="setting-label">🔔 Azan Enabled</span>
           <div class="toggle ${s.enabled ? 'on' : ''}" onclick="Store.setAzanSetting('enabled',!Store.getAzanSettings().enabled);Screens.renderProfile()">
             <div class="toggle-knob"></div>
           </div>
@@ -1319,46 +1343,48 @@ const Screens = {
           <div class="azan-section-title">Muezzin Voice</div>
           <div class="azan-voice-grid">
             ${lib.map(a => `
-              <div class="azan-voice-card ${s.voice === a.id ? 'selected' : ''}" onclick="Store.setAzanSetting('voice','${a.id}');Screens.renderProfile()">
-                <div class="azan-voice-icon">${a.id === 'makkah' ? '\uD83D\uDD4B' : a.id === 'madinah' ? '\uD83C\uDF1F' : a.id.includes('mishary') ? '\uD83C\uDFA4' : a.id === 'turkish' ? '\uD83C\uDDF9\uD83C\uDDF7' : a.id === 'alaqsa' ? '\uD83C\uDDFA\uD83C\uDDE6' : a.id === 'egyptian' ? '\uD83C\uDDEA\uD83C\uDDEC' : a.id === 'peaceful' ? '\uD83C\uDF3F' : a.id === 'short' ? '\u23F1' : '\uD83D\uDD4C'}</div>
-                <div class="azan-voice-name">${a.name}</div>
-                <div class="azan-voice-origin">${a.origin}</div>
-                ${s.voice === a.id ? '<div class="azan-voice-check">\u2713</div>' : ''}
+              <div class="azan-voice-card ${s.voice === a.id ? 'selected' : ''}" style="border:2px solid ${s.voice === a.id ? 'var(--gold-light)' : 'rgba(212,168,67,0.2)'};border-radius:12px;padding:12px;cursor:pointer;text-align:center;background:${s.voice === a.id ? 'rgba(212,168,67,0.1)' : 'transparent'}" onclick="Store.setAzanSetting('voice','${a.id}');Screens.renderProfile()">
+                <div class="azan-voice-icon" style="font-size:24px;margin-bottom:6px">${a.id === 'makkah' ? '🕋' : a.id === 'madinah' ? '⭐' : a.id.includes('mishary') ? '🎤' : a.id === 'turkish' ? '🇹🇷' : a.id === 'alaqsa' ? '🇵🇸' : a.id === 'egyptian' ? '🇪🇬' : a.id === 'peaceful' ? '🌿' : a.id === 'short' ? '⏱' : '🕌'}</div>
+                <div class="azan-voice-name" style="font-weight:600;font-size:12px">${a.name}</div>
+                <div class="azan-voice-origin" style="font-size:10px;color:var(--text-sec)">${a.origin}</div>
+                ${s.voice === a.id ? '<div class="azan-voice-check" style="margin-top:6px;color:var(--gold-light)">✓</div>' : ''}
               </div>
             `).join('')}
           </div>
           <!-- Preview Button -->
-          <div class="azan-preview-row">
-            <button class="azan-preview-btn ${isPlaying ? 'playing' : ''}" onclick="${isPlaying ? 'API.stopAzan();Screens.renderProfile()' : `App.testAzan('${s.voice}');setTimeout(()=>Screens.renderProfile(),300)`}">
-              ${isPlaying ? '\u23F9 Stop Preview' : `\u25B6 Preview: ${currentAzan.name}`}
+          <div class="azan-preview-row" style="margin-top:12px">
+            <button class="azan-preview-btn ${isPlaying ? 'playing' : ''}" style="width:100%;background:var(--primary-dark);color:var(--gold-light);border:1px solid var(--gold-light);border-radius:8px;padding:10px;font-weight:600" onclick="${isPlaying ? 'API.stopAzan();Screens.renderProfile()' : `App.testAzan('${s.voice}');setTimeout(()=>Screens.renderProfile(),300)`}">
+              ${isPlaying ? '⏹ Stop Preview' : `▶ Preview: ${currentAzan.name}`}
             </button>
           </div>
         </div>
 
         <!-- Volume Control -->
-        <div class="azan-volume-section">
-          <div class="azan-section-title">\uD83D\uDD0A Volume: ${s.volume}%</div>
-          <div class="azan-volume-row">
-            <span class="azan-vol-label">\uD83D\uDD07</span>
+        <div class="azan-volume-section" style="margin-top:16px">
+          <div class="azan-section-title">🔊 Volume: ${s.volume}%</div>
+          <div class="azan-volume-row" style="display:flex;align-items:center;gap:8px;margin-top:8px">
+            <span style="font-size:12px">🔇</span>
             <input type="range" class="azan-volume-slider" min="0" max="100" value="${s.volume}"
               oninput="Store.setAzanSetting('volume',parseInt(this.value));document.querySelector('.azan-vol-pct').textContent=this.value+'%'"
-              onchange="Store.setAzanSetting('volume',parseInt(this.value))">
-            <span class="azan-vol-label">\uD83D\uDD0A</span>
-            <span class="azan-vol-pct">${s.volume}%</span>
+              onchange="Store.setAzanSetting('volume',parseInt(this.value))" style="flex:1">
+            <span style="font-size:12px">🔊</span>
+            <span class="azan-vol-pct" style="font-weight:600;width:40px">${s.volume}%</span>
           </div>
         </div>
 
         <!-- Per-Prayer Azan Toggles -->
-        <div class="azan-prayer-toggles">
+        <div class="azan-prayer-toggles" style="margin-top:16px">
           <div class="azan-section-title">Per-Prayer Azan</div>
           ${['fajr','dhuhr','asr','maghrib','isha'].map(p => {
-            const icons = {fajr:'\uD83C\uDF19',dhuhr:'\u2600\uFE0F',asr:'\uD83C\uDF24\uFE0F',maghrib:'\uD83C\uDF05',isha:'\uD83C\uDF1B'};
+            const icons = {fajr:'🌙',dhuhr:'☀️',asr:'🌤️',maghrib:'🌅',isha:'🌛'};
             const names = {fajr:'Fajr',dhuhr:'Dhuhr',asr:'Asr',maghrib:'Maghrib',isha:'Isha'};
             return `
-            <div class="azan-prayer-row">
-              <span class="azan-prayer-icon">${icons[p]}</span>
-              <span class="azan-prayer-name">${names[p]}</span>
-              <div class="toggle ${s.prayers[p] ? 'on' : ''}" onclick="Store.setSetting('azan${names[p]}',!Store.getSetting('azan${names[p]}',true));Screens.renderProfile()">
+            <div class="azan-prayer-row" style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(212,168,67,0.1)">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:18px">${icons[p]}</span>
+                <span style="font-weight:600">${names[p]}</span>
+              </div>
+              <div class="toggle ${s.prayers[p] ? 'on' : ''}" style="cursor:pointer" onclick="Store.setSetting('azan${names[p]}',!Store.getSetting('azan${names[p]}',true));Screens.renderProfile()">
                 <div class="toggle-knob"></div>
               </div>
             </div>`;
@@ -1366,50 +1392,51 @@ const Screens = {
         </div>
 
         <!-- Fajr Special Voice -->
-        <div class="azan-fajr-special">
+        <div class="azan-fajr-special" style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(212,168,67,0.15)">
           <div class="setting-item">
-            <span class="setting-label">\uD83C\uDF19 Special Fajr Voice</span>
+            <span class="setting-label">🌙 Special Fajr Voice</span>
             <div class="toggle ${s.fajrSpecial ? 'on' : ''}" onclick="Store.setAzanSetting('fajrSpecial',!Store.getAzanSettings().fajrSpecial);Screens.renderProfile()">
               <div class="toggle-knob"></div>
             </div>
           </div>
           ${s.fajrSpecial ? `
-            <select class="quran-select" style="width:100%;margin-top:8px" onchange="Store.setAzanSetting('fajrVoice',this.value)">
+            <select class="quran-select" style="width:100%;margin-top:8px;border:1px solid rgba(212,168,67,0.3);border-radius:8px;padding:8px" onchange="Store.setAzanSetting('fajrVoice',this.value)">
               ${lib.map(a => `<option value="${a.id}" ${s.fajrVoice === a.id ? 'selected' : ''}>${a.name} - ${a.muezzin}</option>`).join('')}
             </select>
           ` : ''}
         </div>
 
         <!-- Pre-Azan Alert -->
-        <div class="azan-prealert-section">
-          <div class="azan-section-title">\u23F0 Pre-Azan Alert</div>
-          <div class="azan-prealert-options">
+        <div class="azan-prealert-section" style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(212,168,67,0.15)">
+          <div class="azan-section-title">⏰ Pre-Azan Alert</div>
+          <div class="azan-prealert-options" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
             ${[0, 5, 10, 15, 30].map(m => `
               <button class="azan-prealert-btn ${s.preAlert === m ? 'active' : ''}"
+                style="flex:1;min-width:60px;padding:8px;border-radius:20px;border:2px solid ${s.preAlert === m ? 'var(--gold-light)' : 'rgba(212,168,67,0.3)'};background:${s.preAlert === m ? 'rgba(212,168,67,0.15)' : 'transparent'};color:${s.preAlert === m ? 'var(--gold-light)' : 'var(--text-sec)'};font-weight:600;cursor:pointer"
                 onclick="Store.setAzanSetting('preAlert',${m});Screens.renderProfile()">
-                ${m === 0 ? 'Off' : m + ' min'}
+                ${m === 0 ? 'Off' : m + 'm'}
               </button>
             `).join('')}
           </div>
         </div>
 
         <!-- Notification & Display Settings -->
-        <div class="azan-notif-section">
+        <div class="azan-notif-section" style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(212,168,67,0.15)">
           <div class="azan-section-title">Notification & Display</div>
-          <div class="setting-item">
-            <span class="setting-label">\uD83D\uDD14 Browser Notifications</span>
+          <div class="setting-item" style="padding:8px 0">
+            <span class="setting-label">🔔 Browser Notifications</span>
             <div class="toggle ${s.notifications ? 'on' : ''}" onclick="Store.setAzanSetting('notify',!Store.getAzanSettings().notifications);if(!Store.getAzanSettings().notifications)Notification.requestPermission();Screens.renderProfile()">
               <div class="toggle-knob"></div>
             </div>
           </div>
-          <div class="setting-item">
-            <span class="setting-label">\uD83D\uDCF1 Full-Screen Azan</span>
+          <div class="setting-item" style="padding:8px 0">
+            <span class="setting-label">📱 Full-Screen Azan</span>
             <div class="toggle ${s.fullScreen ? 'on' : ''}" onclick="Store.setAzanSetting('fullScreen',!Store.getAzanSettings().fullScreen);Screens.renderProfile()">
               <div class="toggle-knob"></div>
             </div>
           </div>
-          <div class="setting-item">
-            <span class="setting-label">\uD83D\uDCF3 Vibration</span>
+          <div class="setting-item" style="padding:8px 0">
+            <span class="setting-label">📳 Vibration</span>
             <div class="toggle ${s.vibrate ? 'on' : ''}" onclick="Store.setAzanSetting('vibrate',!Store.getAzanSettings().vibrate);Screens.renderProfile()">
               <div class="toggle-knob"></div>
             </div>
@@ -1417,8 +1444,8 @@ const Screens = {
         </div>
 
         <!-- Test Azan Button -->
-        <button class="azan-test-btn" onclick="App.triggerAzan({key:'test',name:'Test',time:new Date().getHours()+':'+String(new Date().getMinutes()).padStart(2,'0'),icon:'\uD83D\uDD4C'},Store.getAzanSettings())">
-          \uD83D\uDD4C Test Full Azan Experience
+        <button class="azan-test-btn" style="width:100%;margin-top:20px;background:linear-gradient(135deg,var(--gold-light),rgba(212,168,67,0.7));color:var(--dark);border:none;border-radius:8px;padding:12px;font-weight:700;font-size:14px;cursor:pointer" onclick="App.triggerAzan({key:'test',name:'Test',time:new Date().getHours()+':'+String(new Date().getMinutes()).padStart(2,'0'),icon:'🕌'},Store.getAzanSettings())">
+          🕌 Test Full Azan Experience
         </button>
       </div>
     `;
@@ -1430,44 +1457,54 @@ const Screens = {
     const stats = Store.getStats();
     const achievements = Store.getAchievements();
     const achievementList = [
-      { id: 'first_prayer', icon: '\uD83E\uDDF3', name: 'First Prayer', desc: 'Log your first prayer' },
-      { id: 'week_streak', icon: '\uD83D\uDD25', name: '7-Day Streak', desc: 'Maintain a 7-day streak' },
-      { id: 'quran_reader', icon: '\uD83D\uDCD6', name: 'Quran Reader', desc: 'Read a complete surah' },
-      { id: 'tasbih_100', icon: '\uD83D\uDCFF', name: 'Dhikr Devotee', desc: 'Complete 100 tasbih' },
-      { id: 'tasbih_1000', icon: '\u2728', name: 'Dhikr Master', desc: 'Complete 1,000 tasbih' },
-      { id: 'zakat_calc', icon: '\uD83D\uDCB0', name: 'Zakat Calculator', desc: 'Calculate your zakat' },
-      { id: 'scholar_chat', icon: '\uD83E\uDDD1\u200D\uD83C\uDF93', name: 'Knowledge Seeker', desc: 'Ask the AI Scholar' }
+      { id: 'first_prayer', icon: '🧎', name: 'First Prayer', desc: 'Log your first prayer' },
+      { id: 'week_streak', icon: '🔥', name: '7-Day Streak', desc: 'Maintain a 7-day streak' },
+      { id: 'quran_reader', icon: '📖', name: 'Quran Reader', desc: 'Read a complete surah' },
+      { id: 'tasbih_100', icon: '📿', name: 'Dhikr Devotee', desc: 'Complete 100 tasbih' },
+      { id: 'tasbih_1000', icon: '✨', name: 'Dhikr Master', desc: 'Complete 1,000 tasbih' },
+      { id: 'zakat_calc', icon: '💰', name: 'Zakat Calculator', desc: 'Calculate your zakat' },
+      { id: 'scholar_chat', icon: '🧑‍🎓', name: 'Knowledge Seeker', desc: 'Ask the AI Scholar' }
     ];
 
     el.innerHTML = `
-      <div class="profile-card">
-        <div class="profile-avatar">A</div>
-        <div class="profile-name">Allen</div>
-        <div class="profile-level">Level ${stats.level} \u00B7 ${stats.xp} XP</div>
-        <div class="xp-bar-wrap">
-          <div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${(stats.xp % 500) / 5}%"></div></div>
-          <div class="xp-text">${500 - (stats.xp % 500)} XP to level ${stats.level + 1}</div>
+      ${this._screenHeader('👤', 'Profile', 'الملف الشخصي')}
+      <div class="profile-card" style="background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.05));border:2px solid var(--gold-light);border-radius:16px;padding:20px;text-align:center;margin-bottom:20px">
+        <div class="profile-avatar" style="background:linear-gradient(135deg,var(--gold-light),rgba(212,168,67,0.5));border-radius:50%;width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;color:var(--dark);margin:0 auto 12px"">A</div>
+        <div class="profile-name" style="font-size:18px;font-weight:700;margin-bottom:4px">Allen</div>
+        <div class="profile-level" style="font-size:14px;color:var(--gold-light);font-weight:600">Level ${stats.level} · ${stats.xp} XP</div>
+        <div class="xp-bar-wrap" style="margin-top:12px">
+          <div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${(stats.xp % 500) / 5}%;background:linear-gradient(90deg,var(--gold-light),rgba(212,168,67,0.7))"></div></div>
+          <div class="xp-text" style="font-size:10px;color:var(--text-sec);margin-top:4px">${500 - (stats.xp % 500)} XP to level ${stats.level + 1}</div>
         </div>
       </div>
 
       <div class="stats-grid">
-        <div class="card stat-card"><div class="stat-num">${stats.streak}</div><div class="stat-label">Day Streak</div></div>
-        <div class="card stat-card"><div class="stat-num">${stats.totalPrayers}</div><div class="stat-label">Prayers</div></div>
-        <div class="card stat-card"><div class="stat-num">${stats.tasbihTotal}</div><div class="stat-label">Tasbih</div></div>
+        <div class="card stat-card" style="background:linear-gradient(135deg,rgba(212,168,67,0.1),transparent);border:1px solid rgba(212,168,67,0.3);border-radius:12px;text-align:center;padding:16px">
+          <div class="stat-num" style="font-size:24px;font-weight:700;color:var(--gold-light)">${stats.streak}</div>
+          <div class="stat-label" style="font-size:12px;color:var(--text-sec);margin-top:4px">Day Streak</div>
+        </div>
+        <div class="card stat-card" style="background:linear-gradient(135deg,rgba(52,152,219,0.1),transparent);border:1px solid rgba(52,152,219,0.3);border-radius:12px;text-align:center;padding:16px">
+          <div class="stat-num" style="font-size:24px;font-weight:700;color:var(--blue)">${stats.totalPrayers}</div>
+          <div class="stat-label" style="font-size:12px;color:var(--text-sec);margin-top:4px">Prayers</div>
+        </div>
+        <div class="card stat-card" style="background:linear-gradient(135deg,rgba(46,204,113,0.1),transparent);border:1px solid rgba(46,204,113,0.3);border-radius:12px;text-align:center;padding:16px">
+          <div class="stat-num" style="font-size:24px;font-weight:700;color:var(--green)">${stats.tasbihTotal}</div>
+          <div class="stat-label" style="font-size:12px;color:var(--text-sec);margin-top:4px">Tasbih</div>
+        </div>
       </div>
 
       <div class="section-title">Achievements</div>
       ${achievementList.map(a => `
-        <div class="achievement-item">
-          <div class="achievement-icon ${achievements[a.id] ? 'unlocked' : ''}">${a.icon}</div>
-          <div class="achievement-info">
-            <div class="achievement-name" style="${achievements[a.id] ? '' : 'opacity:.5'}">${a.name}</div>
-            <div class="achievement-desc">${achievements[a.id] ? 'Unlocked!' : a.desc}</div>
+        <div class="achievement-item" style="display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:8px;background:${achievements[a.id] ? 'rgba(212,168,67,0.1)' : 'rgba(255,255,255,0.02)'};border-radius:12px;border:1px solid ${achievements[a.id] ? 'rgba(212,168,67,0.3)' : 'rgba(212,168,67,0.1)'}">
+          <div class="achievement-icon" style="width:40px;height:40px;border-radius:50%;background:${achievements[a.id] ? 'rgba(212,168,67,0.3)' : 'rgba(255,255,255,0.05)'};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;border:2px solid ${achievements[a.id] ? 'var(--gold-light)' : 'rgba(212,168,67,0.2)'}">${a.icon}</div>
+          <div class="achievement-info" style="flex:1">
+            <div class="achievement-name" style="font-weight:600;${!achievements[a.id] ? 'opacity:.5' : 'color:var(--gold-light)'}">${a.name}</div>
+            <div class="achievement-desc" style="font-size:11px;color:var(--text-sec)">${achievements[a.id] ? 'Unlocked!' : a.desc}</div>
           </div>
         </div>
       `).join('')}
 
-      <div class="section-title mt-16">\uD83D\uDD4C Azan Settings</div>
+      <div class="section-title mt-16">🕌 Azan Settings</div>
       ${Screens.renderAzanSettings()}
 
       <div class="section-title mt-16">Settings</div>
@@ -1476,14 +1513,14 @@ const Screens = {
         <div class="toggle on"><div class="toggle-knob"></div></div>
       </div>
 
-      <div class="card mt-16 text-center" style="border:1px solid var(--surface)">
-        <div style="font-size:13px;color:var(--text-sec)">\uD83D\uDD12 Privacy First</div>
+      <div class="card mt-16 text-center" style="border:1px solid var(--gold-light);background:rgba(212,168,67,0.05)">
+        <div style="font-size:12px;color:var(--gold-light);font-weight:600">🔒 PRIVACY FIRST</div>
         <div class="text-xs text-sec mt-8">All data stays on your device. Zero tracking. Zero data collection.</div>
       </div>
 
       <div class="text-center mt-16 mb-16">
         <div class="text-xs text-sec">DeenHub v2.0.0</div>
-        <div class="text-xs text-sec">Built with \u2764\uFE0F for the Ummah</div>
+        <div class="text-xs text-sec">Built with ❤️ for the Ummah</div>
       </div>
     `;
   }
