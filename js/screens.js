@@ -593,46 +593,84 @@ const Screens = {
   ],
 
   renderAI() {
-    const el = document.getElementById('screen-ai');
-    el.innerHTML = `
-      ${this._screenHeader('✨', 'AI Scholar', 'العالم الإسلامي')}
-      <div class="chat-area" id="chat-messages">
-        ${this.aiMessages.map(m => m.role === 'user' ? this._aiUserBubble(m.text) : this._aiScholarBubble(m)).join('')}
-      </div>
-      <div id="ai-suggestions" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 8px">
-        ${this._aiSuggestionPills()}
-      </div>
-      <div class="chat-input-wrap">
-        <input class="chat-input" id="ai-input" type="text" placeholder="Ask about Islam..." onkeydown="if(event.key==='Enter')Screens.sendAI()">
-        <button class="chat-send" onclick="Screens.sendAI()">&#10148;</button>
-      </div>
-    `;
-    const msgs = document.getElementById('chat-messages');
-    if (msgs) setTimeout(function() { msgs.scrollTop = msgs.scrollHeight; }, 50);
-  },
+    var self = this;
+    var el = document.getElementById('screen-ai');
+    if (!el) return;
 
-  _aiSuggestionPills() {
-    const pills = [
+    // Build messages HTML
+    var messagesHTML = '';
+    for (var i = 0; i < self.aiMessages.length; i++) {
+      var m = self.aiMessages[i];
+      if (m.role === 'user') {
+        messagesHTML += '<div style="display:flex;justify-content:flex-end;margin:8px 0"><div style="background:rgba(52,152,219,0.2);border-radius:16px 4px 16px 16px;padding:10px 14px;max-width:80%;font-size:14px;line-height:1.5">' + m.text + '</div></div>';
+      } else {
+        messagesHTML += self._aiScholarBubble(m);
+      }
+    }
+
+    // Build suggestion pills
+    var pills = [
       { label: 'What is Halal?', q: 'what is halal' },
       { label: 'Five Pillars', q: 'five pillars of islam' },
       { label: 'How to Pray?', q: 'how to perform salah' },
       { label: 'Wudu Steps', q: 'how to perform wudu' },
-      { label: 'Ramadan Fasting', q: 'fasting in ramadan' },
-      { label: 'Zakat Rules', q: 'what is zakat' }
+      { label: 'Ramadan', q: 'fasting in ramadan' },
+      { label: 'Zakat', q: 'what is zakat' }
     ];
-    return pills.map(function(p) {
-      return '<button onclick="Screens.aiAsk(\'' + p.q + '\')" style="padding:5px 12px;border-radius:16px;border:1px solid rgba(212,168,67,0.2);background:rgba(212,168,67,0.06);color:var(--text-primary);font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">' + p.label + '</button>';
-    }).join('');
+    var pillsHTML = '';
+    for (var i = 0; i < pills.length; i++) {
+      pillsHTML += '<button class="ai-pill" data-q="' + pills[i].q + '">' + pills[i].label + '</button>';
+    }
+
+    // Set full HTML — NO inline onclick handlers
+    el.innerHTML =
+      self._screenHeader('\u2728', 'AI Scholar', '\u0627\u0644\u0639\u0627\u0644\u0645 \u0627\u0644\u0625\u0633\u0644\u0627\u0645\u064a') +
+      '<div class="chat-area" id="chat-messages">' + messagesHTML + '</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 8px">' + pillsHTML + '</div>' +
+      '<div class="chat-input-wrap">' +
+        '<input class="chat-input" id="ai-input" type="text" placeholder="Ask about Islam...">' +
+        '<button class="chat-send" id="ai-send-btn">\u27A4</button>' +
+      '</div>';
+
+    // Attach event listeners programmatically (works on all mobile browsers)
+    var sendBtn = document.getElementById('ai-send-btn');
+    var inputEl = document.getElementById('ai-input');
+
+    if (sendBtn) {
+      sendBtn.addEventListener('click', function() { self.sendAI(); });
+      sendBtn.addEventListener('touchend', function(e) { e.preventDefault(); self.sendAI(); });
+    }
+    if (inputEl) {
+      inputEl.addEventListener('keydown', function(e) { if (e.key === 'Enter') self.sendAI(); });
+      inputEl.focus();
+    }
+
+    // Attach pill click listeners
+    var pillBtns = el.querySelectorAll('.ai-pill');
+    for (var i = 0; i < pillBtns.length; i++) {
+      (function(btn) {
+        btn.addEventListener('click', function() { self.aiAsk(btn.getAttribute('data-q')); });
+        btn.addEventListener('touchend', function(e) { e.preventDefault(); self.aiAsk(btn.getAttribute('data-q')); });
+      })(pillBtns[i]);
+    }
+
+    // Attach related topic button listeners
+    var relBtns = el.querySelectorAll('.ai-related-btn');
+    for (var i = 0; i < relBtns.length; i++) {
+      (function(btn) {
+        btn.addEventListener('click', function() { self.aiAsk(btn.getAttribute('data-q')); });
+        btn.addEventListener('touchend', function(e) { e.preventDefault(); self.aiAsk(btn.getAttribute('data-q')); });
+      })(relBtns[i]);
+    }
+
+    // Scroll to bottom
+    var msgs = document.getElementById('chat-messages');
+    if (msgs) setTimeout(function() { msgs.scrollTop = msgs.scrollHeight; }, 50);
   },
 
-  _aiUserBubble(text) {
-    return '<div style="display:flex;justify-content:flex-end;margin:8px 0"><div class="chat-bubble" style="background:rgba(52,152,219,0.2);border-radius:16px 4px 16px 16px;padding:10px 14px;max-width:80%;font-size:14px;line-height:1.5">' + text + '</div></div>';
-  },
-
-  _aiScholarBubble(msg) {
+  _aiScholarBubble: function(msg) {
     var entry = (msg && msg.data) || {};
     var rawText = entry.text || (msg && msg.text) || '';
-    // Format bold markers and newlines
     var text = rawText.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--gold-light)">$1</strong>').replace(/\n/g, '<br>');
     var sources = entry.sources || [];
     var related = entry.related || [];
@@ -640,25 +678,37 @@ const Screens = {
 
     var catLabel = '';
     if (category && typeof Scholar !== 'undefined') {
-      var catObj = Scholar.categories.find(function(c) { return c.id === category; });
-      if (catObj) catLabel = '<span style="font-size:10px;background:rgba(212,168,67,0.1);padding:2px 8px;border-radius:10px;color:var(--text-secondary)">' + catObj.icon + ' ' + catObj.name + '</span>';
+      for (var i = 0; i < Scholar.categories.length; i++) {
+        if (Scholar.categories[i].id === category) {
+          catLabel = ' <span style="font-size:10px;background:rgba(212,168,67,0.1);padding:2px 8px;border-radius:10px;color:var(--text-secondary)">' + Scholar.categories[i].icon + ' ' + Scholar.categories[i].name + '</span>';
+          break;
+        }
+      }
     }
 
     var sourcesHTML = '';
     if (sources.length > 0) {
-      sourcesHTML = '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(212,168,67,0.1)"><div style="font-size:10px;color:var(--gold-light);font-weight:600;text-transform:uppercase;margin-bottom:4px">Sources</div><div style="display:flex;flex-wrap:wrap;gap:4px">' +
-        sources.map(function(s) { return '<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(212,168,67,0.08);color:var(--text-secondary);border:1px solid rgba(212,168,67,0.12)">' + s + '</span>'; }).join('') +
-        '</div></div>';
+      var srcTags = '';
+      for (var i = 0; i < sources.length; i++) {
+        srcTags += '<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(212,168,67,0.08);color:var(--text-secondary);border:1px solid rgba(212,168,67,0.12)">' + sources[i] + '</span>';
+      }
+      sourcesHTML = '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(212,168,67,0.1)">' +
+        '<div style="font-size:10px;color:var(--gold-light);font-weight:600;text-transform:uppercase;margin-bottom:4px">Sources</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:4px">' + srcTags + '</div></div>';
     }
 
     var relatedHTML = '';
     if (related.length > 0) {
-      relatedHTML = '<div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(212,168,67,0.08)"><div style="font-size:10px;color:var(--text-secondary);margin-bottom:4px">Related:</div><div style="display:flex;flex-wrap:wrap;gap:4px">' +
-        related.map(function(r) {
-          var label = r.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
-          return '<button onclick="Screens.aiAsk(\'' + r.replace(/_/g, ' ') + '\')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1px solid rgba(52,152,219,0.2);background:rgba(52,152,219,0.06);color:var(--text-primary);cursor:pointer;font-family:inherit">' + label + '</button>';
-        }).join('') +
-        '</div></div>';
+      var relTags = '';
+      for (var i = 0; i < related.length; i++) {
+        var r = related[i];
+        var label = r.replace(/_/g, ' ');
+        label = label.charAt(0).toUpperCase() + label.slice(1);
+        relTags += '<button class="ai-related-btn" data-q="' + r.replace(/_/g, ' ') + '">' + label + '</button>';
+      }
+      relatedHTML = '<div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(212,168,67,0.08)">' +
+        '<div style="font-size:10px;color:var(--text-secondary);margin-bottom:4px">Related:</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:4px">' + relTags + '</div></div>';
     }
 
     return '<div style="margin:8px 0"><div style="background:linear-gradient(135deg,rgba(212,168,67,0.1),rgba(212,168,67,0.03));border-left:3px solid var(--gold-light);border-radius:12px;padding:12px 14px">' +
@@ -668,7 +718,7 @@ const Screens = {
     '</div></div>';
   },
 
-  sendAI() {
+  sendAI: function() {
     var input = document.getElementById('ai-input');
     if (!input || !input.value.trim()) return;
     var q = input.value.trim();
@@ -676,7 +726,6 @@ const Screens = {
 
     this.aiMessages.push({ role: 'user', text: q });
 
-    // Get response immediately — no fake delay
     try {
       var result = API.getAIResponse(q);
       if (typeof result === 'string') {
@@ -690,36 +739,14 @@ const Screens = {
 
     Store.unlockAchievement('scholar_chat');
     this.renderAI();
-
-    // Check for Quran verse references
-    this._checkQuranVerse(q);
   },
 
-  aiAsk(question) {
+  aiAsk: function(question) {
     var input = document.getElementById('ai-input');
     if (input) {
       input.value = question;
       this.sendAI();
     }
-  },
-
-  async _checkQuranVerse(q) {
-    var verseMatch = q.match(/(\d{1,3})\s*:\s*(\d{1,3})/);
-    if (!verseMatch) return;
-    var surah = parseInt(verseMatch[1]);
-    var ayah = parseInt(verseMatch[2]);
-    if (surah < 1 || surah > 114 || ayah < 1) return;
-    try {
-      var verse = await Scholar.fetchQuranVerse(surah, ayah);
-      if (verse) {
-        this.aiMessages.push({
-          role: 'ai',
-          text: '<div style="text-align:center;font-family:Scheherazade New,Amiri,serif;font-size:22px;line-height:2;color:var(--gold-light);direction:rtl;margin:6px 0">' + verse.arabic + '</div><div style="font-style:italic;color:var(--text-secondary);font-size:13px;margin:4px 0">' + verse.translation + '</div><div style="font-size:12px;color:var(--text-secondary)">— ' + verse.reference + '</div>',
-          data: { text: '', sources: [verse.reference], category: 'quran', related: ['quran', 'tafsir'] }
-        });
-        this.renderAI();
-      }
-    } catch(e) { /* silent */ }
   },
 
   // ==== TASBIH SCREEN ====
