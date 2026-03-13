@@ -915,34 +915,24 @@ const Screens = {
   // Dua audio player (HTML5 Audio element for real audio playback)
   _duaAudioPlayer: null,
 
-  // Build audio URL for Quranic duas from their reference (e.g. "Quran 2:201" -> ayah audio URL)
-  // Uses Al-Quran Cloud API endpoint: /v1/ayah/{surah}:{ayah}/ar.alafasy which returns audio
+  // Cumulative ayah offsets: _surahOffsets[n] = total ayahs in surahs 1..n
+  // So global ayah number = _surahOffsets[surahNum - 1] + ayahInSurah
+  _surahOffsets: [0,7,293,493,669,789,954,1160,1235,1364,1473,1596,1707,1750,1802,1901,2029,2140,2250,2348,2483,2595,2673,2791,2855,2932,3159,3252,3340,3409,3469,3503,3533,3606,3660,3705,3788,3970,4058,4133,4218,4272,4325,4414,4473,4510,4545,4583,4671,4723,4768,4828,4877,4939,4994,5072,5168,5197,5219,5243,5256,5270,5281,5292,5310,5322,5334,5364,5416,5468,5512,5540,5568,5588,5644,5684,5715,5765,5805,5851,5893,5922,5941,5977,6002,6024,6041,6060,6086,6116,6136,6151,6172,6183,6191,6199,6218,6223,6231,6239,6250,6261,6269,6272,6281,6286,6290,6297,6300,6306,6309,6314,6318,6323],
+
+  // Build direct CDN audio URL for Quranic duas — NO API call, instant playback
   _getDuaAudioUrl(dua) {
     if (dua.audioUrl) return dua.audioUrl;
-    // Parse Quranic references like "Quran 2:201", "Quran 20:25-28", "Quran 43:13-14"
     var ref = dua.ref || '';
     var match = ref.match(/Quran\s+(\d+):(\d+)/i);
     if (match) {
       var surahNum = parseInt(match[1]);
       var ayahNum = parseInt(match[2]);
-      if (surahNum >= 1 && surahNum <= 114 && ayahNum >= 1) {
-        // This returns JSON with audio URL — we'll fetch it dynamically
-        return 'API:' + surahNum + ':' + ayahNum;
+      if (surahNum >= 1 && surahNum <= 114 && ayahNum >= 1 && this._surahOffsets[surahNum - 1] !== undefined) {
+        var globalAyah = this._surahOffsets[surahNum - 1] + ayahNum;
+        return 'https://cdn.islamic.network/quran/audio/128/ar.alafasy/' + globalAyah + '.mp3';
       }
     }
     return null;
-  },
-
-  // Fetch actual audio URL from API for a Quranic ayah
-  _fetchQuranAudioUrl(surah, ayah, callback) {
-    var url = 'https://api.alquran.cloud/v1/ayah/' + surah + ':' + ayah + '/ar.alafasy';
-    fetch(url).then(function(res) { return res.json(); }).then(function(data) {
-      if (data.code === 200 && data.data && data.data.audio) {
-        callback(data.data.audio);
-      } else {
-        callback(null);
-      }
-    }).catch(function() { callback(null); });
   },
 
   playDua(duaId) {
@@ -968,93 +958,66 @@ const Screens = {
     this.duaWordHighlightIdx = -1;
     this._duaWords = dua.arabic.split(/\s+/);
 
-    // Try to resolve an audio URL (Quranic duas get real recitation audio)
-    var audioRef = this._getDuaAudioUrl(dua);
-
-    var startPlayback = function() {
-      // STRATEGY 1: Real audio file from Al-Quran Cloud API (for Quranic duas)
-      var playAudioFile = function(audioUrl) {
-        self._duaAudioPlayer = new Audio(audioUrl);
-        self._duaAudioPlayer.volume = 0.8;
-        self._duaAudioPlayer.crossOrigin = 'anonymous';
-
-        self._duaAudioPlayer.addEventListener('loadedmetadata', function() {
-          self._duaEstDuration = self._duaAudioPlayer.duration * 1000;
-          self._duaStartTime = Date.now();
-        });
-
-        self._duaAudioPlayer.addEventListener('timeupdate', function() {
-          if (!self.duaPlayingId || !self._duaAudioPlayer) return;
-          var duration = self._duaAudioPlayer.duration || 1;
-          var progress = self._duaAudioPlayer.currentTime / duration;
-          // Update progress bar
-          var progressBar = document.getElementById('duaProgressBar');
-          if (progressBar) progressBar.style.width = (progress * 100) + '%';
-          // Weighted word highlighting
-          var words = self._duaWords;
-          var totalChars = words.reduce(function(sum, w) { return sum + w.length; }, 0);
-          var cumulative = 0;
-          var wordIdx = 0;
-          for (var i = 0; i < words.length; i++) {
-            cumulative += words[i].length / totalChars;
-            if (progress < cumulative) { wordIdx = i; break; }
-            if (i === words.length - 1) wordIdx = i;
-          }
-          self._syncDuaWordHighlight(wordIdx);
-        });
-
-        self._duaAudioPlayer.addEventListener('ended', function() {
-          Screens.onDuaAudioEnded();
-        });
-
-        self._duaAudioPlayer.addEventListener('error', function() {
-          // Audio file failed — fall back to TTS
-          self._duaAudioPlayer = null;
-          self._startDuaTTS(dua, duaId);
-        });
-
-        self._duaAudioPlayer.play().then(function() {
-          self._showDuaToast('🔊 ' + I18n.t('playingDua'));
-        }).catch(function() {
-          // Autoplay blocked — fall back to TTS
-          self._duaAudioPlayer = null;
-          self._startDuaTTS(dua, duaId);
-        });
-      };
-
-      // If we have an API reference, fetch the audio URL first
-      if (audioRef && audioRef.indexOf('API:') === 0) {
-        var parts = audioRef.replace('API:', '').split(':');
-        self._showDuaToast('🔊 Loading recitation...');
-        self._fetchQuranAudioUrl(parts[0], parts[1], function(url) {
-          if (url && self.duaPlayingId === duaId) {
-            playAudioFile(url);
-          } else {
-            self._startDuaTTS(dua, duaId);
-          }
-        });
-        return;
-      }
-
-      // Direct audio URL
-      if (audioRef) {
-        playAudioFile(audioRef);
-        return;
-      }
-
-      // STRATEGY 2: TTS or reading mode (for non-Quranic duas / hadith duas)
-      self._startDuaTTS(dua, duaId);
-    };
+    // Get direct audio URL (instant — no API call)
+    var audioUrl = this._getDuaAudioUrl(dua);
 
     // Calculate initial timing estimates
     var msPerWord = 480;
     this._duaEstDuration = Math.max(this._duaWords.length * msPerWord, 2500);
     this._duaStartTime = Date.now();
 
-    if (!this._duaVoicesLoaded) {
-      setTimeout(function() { startPlayback(); }, 300);
+    // CRITICAL: Create Audio element IMMEDIATELY on user click (preserves user gesture for autoplay)
+    if (audioUrl) {
+      self._duaAudioPlayer = new Audio(audioUrl);
+      self._duaAudioPlayer.volume = 0.8;
+
+      self._duaAudioPlayer.addEventListener('loadedmetadata', function() {
+        self._duaEstDuration = self._duaAudioPlayer.duration * 1000;
+        self._duaStartTime = Date.now();
+      });
+
+      self._duaAudioPlayer.addEventListener('timeupdate', function() {
+        if (!self.duaPlayingId || !self._duaAudioPlayer) return;
+        var duration = self._duaAudioPlayer.duration || 1;
+        var progress = self._duaAudioPlayer.currentTime / duration;
+        var progressBar = document.getElementById('duaProgressBar');
+        if (progressBar) progressBar.style.width = (progress * 100) + '%';
+        // Word highlighting synced to audio progress
+        var words = self._duaWords;
+        var totalChars = words.reduce(function(sum, w) { return sum + w.length; }, 0);
+        var cumulative = 0;
+        var wordIdx = 0;
+        for (var i = 0; i < words.length; i++) {
+          cumulative += words[i].length / totalChars;
+          if (progress < cumulative) { wordIdx = i; break; }
+          if (i === words.length - 1) wordIdx = i;
+        }
+        self._syncDuaWordHighlight(wordIdx);
+      });
+
+      self._duaAudioPlayer.addEventListener('ended', function() {
+        Screens.onDuaAudioEnded();
+      });
+
+      self._duaAudioPlayer.addEventListener('error', function() {
+        self._duaAudioPlayer = null;
+        self._startDuaTTS(dua, duaId);
+      });
+
+      // Play immediately — user gesture is still active
+      self._duaAudioPlayer.play().then(function() {
+        self._showDuaToast('🔊 ' + I18n.t('playingDua'));
+      }).catch(function() {
+        self._duaAudioPlayer = null;
+        self._startDuaTTS(dua, duaId);
+      });
     } else {
-      startPlayback();
+      // Non-Quranic dua — use TTS or reading mode
+      if (!this._duaVoicesLoaded) {
+        setTimeout(function() { self._startDuaTTS(dua, duaId); }, 300);
+      } else {
+        self._startDuaTTS(dua, duaId);
+      }
     }
 
     this.renderDuas();
