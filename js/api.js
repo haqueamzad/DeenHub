@@ -592,30 +592,17 @@ const API = {
     return { total, net, nisab, eligible, amount };
   },
 
-  // ---- AI Scholar (keyword-based) ----
-  aiResponses: {
-    prayer: "Prayer (Salah) is the second pillar of Islam. Muslims pray five times daily: Fajr (dawn), Dhuhr (noon), Asr (afternoon), Maghrib (sunset), and Isha (night). Each prayer connects the believer directly to Allah. The Prophet (PBUH) said: 'The first matter that the slave will be brought to account for on the Day of Judgment is prayer.'",
-    quran: "The Quran is the holy book of Islam, revealed to Prophet Muhammad (PBUH) over 23 years through Angel Jibreel. It contains 114 surahs (chapters) and 6,236 ayahs (verses). It is the primary source of Islamic law and guidance. The Prophet said: 'The best of you are those who learn the Quran and teach it.'",
-    ramadan: "Ramadan is the ninth month of the Islamic calendar, during which Muslims fast from dawn to sunset. It commemorates the first revelation of the Quran to Prophet Muhammad (PBUH). Fasting during Ramadan is one of the Five Pillars of Islam. It includes increased prayer, Quran recitation, charity, and self-reflection.",
-    hajj: "Hajj is the annual Islamic pilgrimage to Makkah, Saudi Arabia. It is the fifth pillar of Islam and is obligatory for every able-bodied Muslim who can afford it, at least once in their lifetime. The rituals include Tawaf (circling the Kaaba), Sa'i (walking between Safa and Marwa), and standing at Arafat.",
-    zakat: "Zakat is the third pillar of Islam — obligatory charity of 2.5% of qualifying wealth annually. It purifies wealth and helps those in need. It is calculated on savings held for one lunar year that exceed the Nisab threshold (approximately 85 grams of gold). Recipients include the poor, needy, and travelers.",
-    fasting: "Fasting (Sawm) is the fourth pillar of Islam. During Ramadan, Muslims abstain from food, drink, and other physical needs from dawn to sunset. The purpose is to develop self-discipline, God-consciousness (taqwa), and empathy for the less fortunate.",
-    wudu: "Wudu (ablution) is the Islamic ritual of washing before prayer. The steps are: intention (niyyah), washing hands 3x, rinsing mouth 3x, nose 3x, face 3x, arms to elbows 3x, wiping the head once, and washing feet to ankles 3x. Wudu is required before Salah and touching the Quran.",
-    shahada: "The Shahada is the Islamic declaration of faith: 'La ilaha illallah, Muhammadur Rasulullah' — There is no god but Allah, and Muhammad is His Messenger. It is the first pillar of Islam and the most fundamental expression of belief.",
-    default: "As-salamu alaykum! I can help you learn about Islamic topics including prayer, the Quran, Hadith, Ramadan, Hajj, Zakat, fasting, Wudu, and more. Please ask me any question about Islam and I'll do my best to provide accurate, sourced information."
-  },
-
+  // ---- AI Scholar (powered by Scholar engine) ----
   getAIResponse(question) {
-    const q = question.toLowerCase();
-    for (const [key, response] of Object.entries(this.aiResponses)) {
-      if (key !== 'default' && q.includes(key)) return response;
-    }
-    if (q.includes('salah') || q.includes('pray')) return this.aiResponses.prayer;
-    if (q.includes('fast') || q.includes('sawm')) return this.aiResponses.fasting;
-    if (q.includes('ablution') || q.includes('wash')) return this.aiResponses.wudu;
-    if (q.includes('pillar')) return "The Five Pillars of Islam are: 1) Shahada (declaration of faith), 2) Salah (five daily prayers), 3) Zakat (obligatory charity of 2.5%), 4) Sawm (fasting during Ramadan), and 5) Hajj (pilgrimage to Makkah). These are the foundation of a Muslim's faith and practice.";
-    if (q.includes('prophet') || q.includes('muhammad') || q.includes('pbuh')) return "Prophet Muhammad (PBUH) was the final messenger of Allah, born in Makkah in 570 CE. He received the first revelation of the Quran at age 40 in the Cave of Hira. His life (Sunnah) and sayings (Hadith) form the second most important source of Islamic guidance after the Quran.";
-    return this.aiResponses.default;
+    const result = Scholar.search(question);
+    if (result) return result;
+    return {
+      key: 'default',
+      text: "As-salamu alaykum! I can help you learn about a wide range of Islamic topics. Try asking about prayer, Quran, Hadith, fasting, Hajj, Zakat, Islamic history, fiqh, and more. You can also tap any topic category above or try one of the suggested questions to get started.",
+      sources: [],
+      category: '',
+      related: ['five_pillars', 'prayer', 'quran', 'fasting']
+    };
   },
 
   // ---- Islamic Calendar (approximate) ----

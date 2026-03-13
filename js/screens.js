@@ -588,46 +588,238 @@ const Screens = {
   },
 
   // ==== AI SCHOLAR SCREEN ====
-  aiMessages: [
-    { role: 'ai', text: "As-salamu alaykum! I'm your AI Islamic Scholar. Ask me anything about Islam — prayer, Quran, Hadith, fiqh, history, and more. All answers are sourced from authentic Islamic scholarship." }
-  ],
+  aiMessages: [],
+  aiShowWelcome: true,
 
   renderAI() {
     const el = document.getElementById('screen-ai');
-    const scholarSVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:32px;height:32px">
-      <circle cx="50" cy="30" r="15" fill="rgba(212,168,67,0.6)" stroke="rgba(212,168,67,0.8)" stroke-width="2"/>
-      <path d="M50 48 L50 70 M50 55 L35 65 M50 55 L65 65" stroke="rgba(212,168,67,0.6)" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <path d="M30 20 Q50 10 70 20" stroke="rgba(212,168,67,0.4)" stroke-width="2" fill="none" stroke-linecap="round"/>
-    </svg>`;
+    const cats = Scholar.categories;
+    const suggestions = Scholar.suggestedQuestions;
 
     el.innerHTML = `
-      ${this._screenHeader('✨', 'Islamic Scholar', 'العالم الإسلامي')}
-      <div class="chat-area" id="chat-messages">
-        ${this.aiMessages.map(m => `
-          <div class="chat-bubble ${m.role}" style="${m.role === 'ai' ? 'background:linear-gradient(135deg,rgba(212,168,67,0.1),rgba(212,168,67,0.05));border-left:3px solid var(--gold-light);border-radius:12px 12px 4px 12px' : 'background:rgba(52,152,219,0.2);border-radius:12px 4px 12px 12px'}">
-            ${m.role === 'ai' ? '<div style="font-size:11px;color:var(--gold-light);font-weight:600;margin-bottom:4px;text-transform:uppercase">Islamic Scholar</div>' : ''}
-            ${m.text}
-          </div>
+      ${this._screenHeader('✨', 'AI Islamic Scholar', 'العالم الإسلامي')}
+
+      <!-- Topic Category Chips -->
+      <div id="ai-topic-chips" style="display:flex;flex-wrap:wrap;gap:6px;padding:0 4px 8px;overflow-x:auto">
+        ${cats.map(c => `
+          <button onclick="Screens.aiSearchTopic('${c.id}')" style="
+            display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:20px;border:1px solid rgba(212,168,67,0.25);
+            background:rgba(212,168,67,0.06);color:var(--text-primary);font-size:12px;white-space:nowrap;cursor:pointer;
+            font-family:inherit;transition:all 0.2s
+          ">${c.icon} ${c.name}</button>
         `).join('')}
       </div>
-      <div class="chat-input-wrap" style="border-top:1px solid rgba(212,168,67,0.15);padding-top:12px">
-        <input class="chat-input" id="ai-input" type="text" placeholder="Ask about Islam..." style="border:1px solid var(--gold-light);border-radius:20px;padding:10px 16px" onkeydown="if(event.key==='Enter')Screens.sendAI()">
-        <button class="chat-send" style="background:var(--primary-dark);color:var(--gold-light);border-radius:50%;width:40px;height:40px" onclick="Screens.sendAI()">⤴</button>
+
+      <!-- Chat Messages Area -->
+      <div class="chat-area" id="chat-messages" style="flex:1;overflow-y:auto;padding:8px 0">
+        ${this.aiShowWelcome && this.aiMessages.length === 0 ? this._aiWelcomeCard(suggestions) : ''}
+        ${this.aiMessages.map(m => m.role === 'user' ? this._aiUserBubble(m.text) : this._aiResponseCard(m)).join('')}
+        <div id="ai-typing" style="display:none">
+          <div style="background:linear-gradient(135deg,rgba(212,168,67,0.08),rgba(212,168,67,0.03));border-left:3px solid var(--gold-light);border-radius:12px;padding:12px 16px;margin:8px 0">
+            <div style="display:flex;gap:4px;align-items:center">
+              <span style="font-size:11px;color:var(--gold-light);font-weight:600;text-transform:uppercase">Scholar</span>
+              <span class="ai-dot-anim" style="display:flex;gap:3px;margin-left:6px">
+                <span style="width:6px;height:6px;border-radius:50%;background:var(--gold-light);animation:aiBounce 1.4s ease-in-out infinite"></span>
+                <span style="width:6px;height:6px;border-radius:50%;background:var(--gold-light);animation:aiBounce 1.4s ease-in-out 0.2s infinite"></span>
+                <span style="width:6px;height:6px;border-radius:50%;background:var(--gold-light);animation:aiBounce 1.4s ease-in-out 0.4s infinite"></span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Bar -->
+      <div style="border-top:1px solid rgba(212,168,67,0.15);padding:10px 4px 6px;display:flex;gap:8px;align-items:center">
+        <input class="chat-input" id="ai-input" type="text" placeholder="Ask about Islam..."
+          style="flex:1;border:1px solid rgba(212,168,67,0.3);border-radius:24px;padding:11px 18px;font-size:14px;background:rgba(0,0,0,0.15);color:var(--text-primary);outline:none;font-family:inherit"
+          onkeydown="if(event.key==='Enter')Screens.sendAI()">
+        <button onclick="Screens.sendAI()" style="
+          background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:var(--gold-light);
+          border:none;border-radius:50%;width:42px;height:42px;font-size:18px;cursor:pointer;
+          display:flex;align-items:center;justify-content:center;flex-shrink:0
+        ">&#10148;</button>
+      </div>
+
+      <style>
+        @keyframes aiBounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+      </style>
+    `;
+
+    const msgs = document.getElementById('chat-messages');
+    if (msgs) setTimeout(() => msgs.scrollTop = msgs.scrollHeight, 50);
+  },
+
+  _aiWelcomeCard(suggestions) {
+    return `
+      <div style="text-align:center;padding:20px 12px 10px">
+        <div style="font-size:40px;margin-bottom:8px">&#128218;</div>
+        <div style="font-size:18px;font-weight:600;color:var(--gold-light);margin-bottom:4px;font-family:'Playfair Display',serif">
+          As-salamu Alaykum!
+        </div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.5;margin-bottom:16px">
+          I'm your AI Islamic Scholar. Ask me anything about Islam — prayer, Quran, Hadith, fiqh, history, and more. All answers include authentic sources.
+        </div>
+        <div style="font-size:12px;color:var(--gold-light);font-weight:600;text-transform:uppercase;margin-bottom:10px;letter-spacing:0.5px">
+          Popular Questions
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
+          ${suggestions.slice(0, 6).map(q => `
+            <button onclick="Screens.aiAskSuggestion('${q.replace(/'/g, "\\'")}')" style="
+              padding:7px 14px;border-radius:18px;border:1px solid rgba(212,168,67,0.2);
+              background:rgba(212,168,67,0.06);color:var(--text-primary);font-size:12px;
+              cursor:pointer;font-family:inherit;text-align:left;line-height:1.3;transition:all 0.2s
+            ">${q}</button>
+          `).join('')}
+        </div>
       </div>
     `;
-    const msgs = document.getElementById('chat-messages');
-    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+  },
+
+  _aiUserBubble(text) {
+    return `
+      <div style="display:flex;justify-content:flex-end;margin:8px 0">
+        <div style="
+          background:linear-gradient(135deg,rgba(52,152,219,0.25),rgba(52,152,219,0.12));
+          border-radius:18px 4px 18px 18px;padding:10px 16px;max-width:85%;
+          font-size:14px;line-height:1.5;color:var(--text-primary)
+        ">${text}</div>
+      </div>
+    `;
+  },
+
+  _aiResponseCard(msg) {
+    const entry = msg.data || {};
+    const text = (entry.text || msg.text || '').replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--gold-light)">$1</strong>');
+    const sources = entry.sources || [];
+    const related = entry.related || [];
+    const category = entry.category || '';
+    const catObj = category ? Scholar.categories.find(c => c.id === category) : null;
+
+    return `
+      <div style="margin:10px 0">
+        <div style="
+          background:linear-gradient(135deg,rgba(212,168,67,0.08),rgba(212,168,67,0.02));
+          border-left:3px solid var(--gold-light);border-radius:12px;padding:14px 16px
+        ">
+          <!-- Header -->
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+            <span style="font-size:11px;color:var(--gold-light);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Islamic Scholar</span>
+            ${catObj ? '<span style="font-size:10px;color:var(--text-secondary);background:rgba(212,168,67,0.1);padding:2px 8px;border-radius:10px">' + catObj.icon + ' ' + catObj.name + '</span>' : ''}
+          </div>
+
+          <!-- Main Text -->
+          <div style="font-size:14px;line-height:1.7;color:var(--text-primary)">${text}</div>
+
+          ${sources.length > 0 ? `
+            <!-- Sources -->
+            <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(212,168,67,0.1)">
+              <div style="font-size:10px;color:var(--gold-light);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">
+                &#128216; Sources
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:4px">
+                ${sources.map(s => `
+                  <span style="font-size:11px;padding:3px 10px;border-radius:12px;background:rgba(212,168,67,0.08);color:var(--text-secondary);border:1px solid rgba(212,168,67,0.12)">${s}</span>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          ${related.length > 0 ? `
+            <!-- Related Topics -->
+            <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(212,168,67,0.1)">
+              <div style="font-size:10px;color:var(--text-secondary);margin-bottom:5px">Related topics:</div>
+              <div style="display:flex;flex-wrap:wrap;gap:4px">
+                ${related.map(r => {
+                  const label = r.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                  return `<button onclick="Screens.aiSearchTopic('${r}')" style="
+                    font-size:11px;padding:4px 10px;border-radius:14px;border:1px solid rgba(52,152,219,0.25);
+                    background:rgba(52,152,219,0.08);color:var(--text-primary);cursor:pointer;font-family:inherit
+                  ">${label}</button>`;
+                }).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
   },
 
   sendAI() {
     const input = document.getElementById('ai-input');
     if (!input || !input.value.trim()) return;
     const q = input.value.trim();
+    input.value = '';
+    this.aiShowWelcome = false;
+
+    // Add user message
     this.aiMessages.push({ role: 'user', text: q });
-    const response = API.getAIResponse(q);
-    this.aiMessages.push({ role: 'ai', text: response });
+
+    // Show typing indicator
+    this.renderAI();
+    const typing = document.getElementById('ai-typing');
+    if (typing) typing.style.display = 'block';
+    const msgs = document.getElementById('chat-messages');
+    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+
+    // Simulate brief "thinking" delay for natural feel
+    setTimeout(() => {
+      const result = API.getAIResponse(q);
+      this.aiMessages.push({
+        role: 'ai',
+        text: result.text || result,
+        data: result
+      });
+      Store.unlockAchievement('scholar_chat');
+      this.renderAI();
+
+      // Check for Quran verse references in the query (e.g. "2:255" or "surah 2 ayah 255")
+      this._checkQuranVerseQuery(q);
+    }, 400 + Math.random() * 400);
+  },
+
+  aiSearchTopic(topicId) {
+    this.aiShowWelcome = false;
+    // Try direct knowledge lookup first
+    const result = Scholar.knowledge[topicId] ? Scholar._formatResponse(topicId) : Scholar.search(topicId.replace(/_/g, ' '));
+    if (result) {
+      this.aiMessages.push({ role: 'user', text: (result.key || topicId).replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) });
+      this.aiMessages.push({ role: 'ai', text: result.text, data: result });
+    } else {
+      this.aiMessages.push({ role: 'user', text: topicId.replace(/_/g, ' ') });
+      const fallback = API.getAIResponse(topicId);
+      this.aiMessages.push({ role: 'ai', text: fallback.text || fallback, data: fallback });
+    }
     Store.unlockAchievement('scholar_chat');
     this.renderAI();
+  },
+
+  aiAskSuggestion(question) {
+    const input = document.getElementById('ai-input');
+    if (input) input.value = question;
+    this.sendAI();
+  },
+
+  async _checkQuranVerseQuery(q) {
+    // Detect patterns like "2:255", "surah 2 ayah 255", "quran 3:185"
+    const verseMatch = q.match(/(\d{1,3})\s*:\s*(\d{1,3})/);
+    if (!verseMatch) return;
+    const surah = parseInt(verseMatch[1]);
+    const ayah = parseInt(verseMatch[2]);
+    if (surah < 1 || surah > 114 || ayah < 1) return;
+
+    try {
+      const verse = await Scholar.fetchQuranVerse(surah, ayah);
+      if (verse) {
+        this.aiMessages.push({
+          role: 'ai',
+          text: `<div style="text-align:center;font-family:'Scheherazade New','Amiri',serif;font-size:22px;line-height:2;color:var(--gold-light);margin:8px 0;direction:rtl">${verse.arabic}</div>
+<div style="font-style:italic;color:var(--text-secondary);margin:6px 0;font-size:13px">"${verse.translation}"</div>
+<div style="font-size:12px;color:var(--text-secondary)">— ${verse.reference}</div>`,
+          data: { text: '', sources: [verse.reference], category: 'quran', related: ['quran', 'tafsir', 'tajweed'] }
+        });
+        this.renderAI();
+      }
+    } catch (e) { /* silently fail */ }
   },
 
   // ==== TASBIH SCREEN ====
