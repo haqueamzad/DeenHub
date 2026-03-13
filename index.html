@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0D7C66">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DeenHub">
+  <meta name="description" content="DeenHub — Your complete Islamic companion. Prayer times, Quran, Hadith, AI Scholar, Tasbih, Qibla, Duas, Zakat Calculator and more.">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Amiri&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css">
+  <title>DeenHub</title>
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <div class="header">
+      <button id="header-back" class="header-icon hidden" onclick="App.goBack()" aria-label="Go back">&larr;</button>
+      <div>
+        <div id="header-title" class="header-title">DeenHub</div>
+        <div id="header-subtitle" class="header-subtitle">Your Islamic Companion</div>
+      </div>
+      <button class="header-icon" onclick="App.navigate('profile')" aria-label="Profile">&#9787;</button>
+    </div>
+
+    <!-- Screen Area -->
+    <div class="screen-area">
+      <div id="screen-home" class="screen active"></div>
+      <div id="screen-quran" class="screen"></div>
+      <div id="screen-hadith" class="screen"></div>
+      <div id="screen-ai" class="screen"></div>
+      <div id="screen-community" class="screen"></div>
+      <div id="screen-profile" class="screen"></div>
+      <div id="screen-tasbih" class="screen"></div>
+      <div id="screen-qibla" class="screen"></div>
+      <div id="screen-duas" class="screen"></div>
+      <div id="screen-zakat" class="screen"></div>
+      <div id="screen-calendar" class="screen"></div>
+    </div>
+
+    <!-- Bottom Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item active" data-tab="home" onclick="App.navigate('home')">
+        <div class="tab-icon">&#127968;</div>
+        <div>Home</div>
+        <div class="tab-dot"></div>
+      </div>
+      <div class="tab-item" data-tab="quran" onclick="App.navigate('quran')">
+        <div class="tab-icon">&#128214;</div>
+        <div>Quran</div>
+        <div class="tab-dot"></div>
+      </div>
+      <div class="tab-item" data-tab="hadith" onclick="App.navigate('hadith')">
+        <div class="tab-icon">&#128220;</div>
+        <div>Hadith</div>
+        <div class="tab-dot"></div>
+      </div>
+      <div class="tab-item" data-tab="ai" onclick="App.navigate('ai')">
+        <div class="tab-icon">&#10024;</div>
+        <div>AI</div>
+        <div class="tab-dot"></div>
+      </div>
+      <div class="tab-item" data-tab="community" onclick="App.navigate('community')">
+        <div class="tab-icon">&#128101;</div>
+        <div>Ummah</div>
+        <div class="tab-dot"></div>
+      </div>
+      <div class="tab-item" data-tab="profile" onclick="App.navigate('profile')">
+        <div class="tab-icon">&#128100;</div>
+        <div>Profile</div>
+        <div class="tab-dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/screens.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
