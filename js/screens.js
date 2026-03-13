@@ -919,9 +919,10 @@ const Screens = {
   // So global ayah number = _surahOffsets[surahNum - 1] + ayahInSurah
   _surahOffsets: [0,7,293,493,669,789,954,1160,1235,1364,1473,1596,1707,1750,1802,1901,2029,2140,2250,2348,2483,2595,2673,2791,2855,2932,3159,3252,3340,3409,3469,3503,3533,3606,3660,3705,3788,3970,4058,4133,4218,4272,4325,4414,4473,4510,4545,4583,4671,4723,4768,4828,4877,4939,4994,5072,5168,5197,5219,5243,5256,5270,5281,5292,5310,5322,5334,5364,5416,5468,5512,5540,5568,5588,5644,5684,5715,5765,5805,5851,5893,5922,5941,5977,6002,6024,6041,6060,6086,6116,6136,6151,6172,6183,6191,6199,6218,6223,6231,6239,6250,6261,6269,6272,6281,6286,6290,6297,6300,6306,6309,6314,6318,6323],
 
-  // Build direct CDN audio URL for Quranic duas — NO API call, instant playback
+  // Build audio URL for ANY dua — Quranic CDN or Google Translate TTS
   _getDuaAudioUrl(dua) {
     if (dua.audioUrl) return dua.audioUrl;
+    // Quranic duas: direct CDN URL
     var ref = dua.ref || '';
     var match = ref.match(/Quran\s+(\d+):(\d+)/i);
     if (match) {
@@ -932,7 +933,66 @@ const Screens = {
         return 'https://cdn.islamic.network/quran/audio/128/ar.alafasy/' + globalAyah + '.mp3';
       }
     }
+    // All other duas: Google Translate TTS for Arabic text
+    if (dua.arabic) {
+      var text = dua.arabic;
+      // Google TTS has ~200 char limit; truncate if needed
+      if (text.length > 200) text = text.substring(0, 200);
+      return 'https://translate.google.com/translate_tts?ie=UTF-8&tl=ar&client=tw-ob&q=' + encodeURIComponent(text);
+    }
     return null;
+  },
+
+  // Setup Audio element with all event listeners for dua playback
+  _setupDuaAudio(audioUrl, dua, duaId) {
+    var self = this;
+    self._duaAudioPlayer = new Audio(audioUrl);
+    self._duaAudioPlayer.volume = 0.8;
+
+    self._duaAudioPlayer.addEventListener('loadedmetadata', function() {
+      if (self._duaAudioPlayer) {
+        self._duaEstDuration = self._duaAudioPlayer.duration * 1000;
+        self._duaStartTime = Date.now();
+      }
+    });
+
+    self._duaAudioPlayer.addEventListener('timeupdate', function() {
+      if (!self.duaPlayingId || !self._duaAudioPlayer) return;
+      var duration = self._duaAudioPlayer.duration || 1;
+      var progress = self._duaAudioPlayer.currentTime / duration;
+      var progressBar = document.getElementById('duaProgressBar');
+      if (progressBar) progressBar.style.width = (progress * 100) + '%';
+      var words = self._duaWords;
+      var totalChars = words.reduce(function(sum, w) { return sum + w.length; }, 0);
+      var cumulative = 0;
+      var wordIdx = 0;
+      for (var i = 0; i < words.length; i++) {
+        cumulative += words[i].length / totalChars;
+        if (progress < cumulative) { wordIdx = i; break; }
+        if (i === words.length - 1) wordIdx = i;
+      }
+      self._syncDuaWordHighlight(wordIdx);
+    });
+
+    self._duaAudioPlayer.addEventListener('ended', function() {
+      Screens.onDuaAudioEnded();
+    });
+
+    self._duaAudioPlayer.addEventListener('error', function() {
+      clearTimeout(self._duaLoadTimeout);
+      self._duaAudioPlayer = null;
+      // Audio failed — fall back to TTS then reading mode
+      self._startDuaTTS(dua, duaId);
+    });
+
+    // Timeout: if audio doesn't load within 5s, fall back
+    self._duaLoadTimeout = setTimeout(function() {
+      if (self._duaAudioPlayer && self._duaAudioPlayer.readyState === 0) {
+        self._duaAudioPlayer.pause();
+        self._duaAudioPlayer = null;
+        self._startDuaTTS(dua, duaId);
+      }
+    }, 5000);
   },
 
   playDua(duaId) {
@@ -952,13 +1012,11 @@ const Screens = {
     this.stopDuaAudio();
     if (this.quranPlayingAyah) this.pauseAyah();
 
-    this._initDuaVoices();
-
     this.duaPlayingId = duaId;
     this.duaWordHighlightIdx = -1;
     this._duaWords = dua.arabic.split(/\s+/);
 
-    // Get direct audio URL (instant — no API call)
+    // Get audio URL — works for ALL duas (Quranic CDN or Google TTS)
     var audioUrl = this._getDuaAudioUrl(dua);
 
     // Calculate initial timing estimates
@@ -966,55 +1024,9 @@ const Screens = {
     this._duaEstDuration = Math.max(this._duaWords.length * msPerWord, 2500);
     this._duaStartTime = Date.now();
 
-    // CRITICAL: Create Audio element IMMEDIATELY on user click (preserves user gesture for autoplay)
+    // CRITICAL: Create Audio element IMMEDIATELY on user click (preserves user gesture)
     if (audioUrl) {
-      self._duaAudioPlayer = new Audio(audioUrl);
-      self._duaAudioPlayer.volume = 0.8;
-
-      self._duaAudioPlayer.addEventListener('loadedmetadata', function() {
-        self._duaEstDuration = self._duaAudioPlayer.duration * 1000;
-        self._duaStartTime = Date.now();
-      });
-
-      self._duaAudioPlayer.addEventListener('timeupdate', function() {
-        if (!self.duaPlayingId || !self._duaAudioPlayer) return;
-        var duration = self._duaAudioPlayer.duration || 1;
-        var progress = self._duaAudioPlayer.currentTime / duration;
-        var progressBar = document.getElementById('duaProgressBar');
-        if (progressBar) progressBar.style.width = (progress * 100) + '%';
-        // Word highlighting synced to audio progress
-        var words = self._duaWords;
-        var totalChars = words.reduce(function(sum, w) { return sum + w.length; }, 0);
-        var cumulative = 0;
-        var wordIdx = 0;
-        for (var i = 0; i < words.length; i++) {
-          cumulative += words[i].length / totalChars;
-          if (progress < cumulative) { wordIdx = i; break; }
-          if (i === words.length - 1) wordIdx = i;
-        }
-        self._syncDuaWordHighlight(wordIdx);
-      });
-
-      self._duaAudioPlayer.addEventListener('ended', function() {
-        Screens.onDuaAudioEnded();
-      });
-
-      self._duaAudioPlayer.addEventListener('error', function() {
-        clearTimeout(self._duaLoadTimeout);
-        self._duaAudioPlayer = null;
-        self._startDuaTTS(dua, duaId);
-      });
-
-      // Timeout: if audio doesn't start within 5s, fall back to TTS/reading
-      self._duaLoadTimeout = setTimeout(function() {
-        if (self._duaAudioPlayer && self._duaAudioPlayer.readyState === 0) {
-          self._duaAudioPlayer.pause();
-          self._duaAudioPlayer = null;
-          self._startDuaTTS(dua, duaId);
-        }
-      }, 5000);
-
-      // Play immediately — user gesture is still active
+      self._setupDuaAudio(audioUrl, dua, duaId);
       self._duaAudioPlayer.play().then(function() {
         clearTimeout(self._duaLoadTimeout);
         self._showDuaToast('🔊 ' + I18n.t('playingDua'));
@@ -1025,7 +1037,6 @@ const Screens = {
         self._startDuaTTS(dua, duaId);
       });
     } else {
-      // Non-Quranic dua — always try TTS first (no voice check gate)
       self._startDuaTTS(dua, duaId);
     }
 
