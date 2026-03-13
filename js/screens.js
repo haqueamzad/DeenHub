@@ -1037,34 +1037,61 @@ const Screens = {
     }, 150);
   },
 
-  // TTS-based dua playback with robust fallback to reading mode
+  // TTS-based dua playback: Arabic voice → English transliteration → reading mode
   _startDuaTTS(dua, duaId) {
     var self = this;
 
-    // Always try speechSynthesis first — don't pre-check voices.
-    // Many browsers (Chrome, Edge, Safari) have Arabic TTS but getVoices()
-    // may return empty before the async voiceschanged event fires.
-    if ('speechSynthesis' in window) {
-      speechSynthesis.cancel();
-      var utterance = new SpeechSynthesisUtterance(dua.arabic);
-      utterance.lang = 'ar-SA';
-      utterance.rate = 0.8;
-      utterance.pitch = 1;
+    if (!('speechSynthesis' in window)) {
+      self._startDuaReadingMode();
+      self._duaTimer = setInterval(function() { Screens.onDuaTimeUpdate(); }, 50);
+      return;
+    }
 
-      // Try to use a known good Arabic voice if available
-      var voices = speechSynthesis.getVoices();
-      var arabicVoice = null;
-      for (var i = 0; i < voices.length; i++) {
-        if (voices[i].lang && voices[i].lang.indexOf('ar') === 0) {
-          arabicVoice = voices[i];
-          // Prefer Google voices for quality
-          if (voices[i].name.toLowerCase().indexOf('google') >= 0) break;
-        }
+    var voices = speechSynthesis.getVoices();
+    var hasArabic = voices.some(function(v) { return v.lang && v.lang.indexOf('ar') === 0; });
+
+    if (hasArabic) {
+      // Use Arabic voice with Arabic text
+      self._speakWithTTS(dua.arabic, 'ar-SA', 0.8, dua, duaId, true);
+    } else if (dua.translit) {
+      // No Arabic voice — use English voice with transliteration (actual audio!)
+      self._speakWithTTS(dua.translit, 'en-US', 0.85, dua, duaId, false);
+    } else {
+      // No transliteration available — silent reading mode
+      self._startDuaReadingMode();
+    }
+
+    // Start the universal word highlighting timer
+    if (!self._duaTimer) {
+      self._duaTimer = setInterval(function() { Screens.onDuaTimeUpdate(); }, 50);
+    }
+  },
+
+  // Shared TTS speaker — handles onstart/onend/onerror with fallback to reading mode
+  _speakWithTTS(text, lang, rate, dua, duaId, isArabic) {
+    var self = this;
+    speechSynthesis.cancel();
+
+    var utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang;
+    utterance.rate = rate;
+    utterance.pitch = 1;
+
+    // Pick the best voice for this language
+    var voices = speechSynthesis.getVoices();
+    var bestVoice = null;
+    for (var i = 0; i < voices.length; i++) {
+      if (voices[i].lang && voices[i].lang.indexOf(lang.split('-')[0]) === 0) {
+        bestVoice = voices[i];
+        if (voices[i].name.toLowerCase().indexOf('google') >= 0) break;
       }
-      if (arabicVoice) utterance.voice = arabicVoice;
-      self._duaUtterance = utterance;
-      self._duaTTSActive = true;
+    }
+    if (bestVoice) utterance.voice = bestVoice;
+    self._duaUtterance = utterance;
+    self._duaTTSActive = true;
 
+    // Word boundary highlighting (works best with Arabic text)
+    if (isArabic) {
       utterance.onboundary = function(e) {
         if (e.name === 'word' && self.duaPlayingId) {
           var charIdx = e.charIndex;
@@ -1078,46 +1105,63 @@ const Screens = {
           }
         }
       };
-
-      var ttsStarted = false;
-      utterance.onstart = function() {
-        ttsStarted = true;
-        self._duaTTSActive = true;
-        self._duaStartTime = Date.now();
-        self._showDuaToast('🔊 ' + I18n.t('playingDua'));
-      };
-
-      utterance.onend = function() {
-        self._duaTTSActive = false;
-        Screens.onDuaAudioEnded();
-      };
-
-      utterance.onerror = function(e) {
-        self._duaTTSActive = false;
-        if (!ttsStarted && self.duaPlayingId === duaId) {
-          self._startDuaReadingMode();
-        } else {
-          Screens.onDuaAudioEnded();
-        }
-      };
-
-      speechSynthesis.speak(utterance);
-
-      // Safety: if TTS doesn't start within 3s, fall back to reading mode
-      setTimeout(function() {
-        if (!ttsStarted && self.duaPlayingId === duaId) {
-          speechSynthesis.cancel();
-          self._duaTTSActive = false;
-          self._startDuaReadingMode();
-        }
-      }, 3000);
-    } else {
-      // Browser has no speechSynthesis at all — reading mode
-      self._startDuaReadingMode();
     }
 
-    // Start the universal word highlighting timer
-    self._duaTimer = setInterval(function() { Screens.onDuaTimeUpdate(); }, 50);
+    var ttsStarted = false;
+    var ttsHandled = false;
+
+    utterance.onstart = function() {
+      ttsStarted = true;
+      self._duaTTSActive = true;
+      self._duaStartTime = Date.now();
+      if (isArabic) {
+        self._showDuaToast('🔊 ' + I18n.t('playingDua'));
+      } else {
+        self._showDuaToast('🔊 ' + I18n.t('playingDua') + ' (transliteration)');
+      }
+    };
+
+    utterance.onend = function() {
+      self._duaTTSActive = false;
+      if (ttsHandled) return;
+      ttsHandled = true;
+      if (ttsStarted) {
+        Screens.onDuaAudioEnded();
+      } else if (isArabic && dua.translit) {
+        // Arabic TTS completed silently — try English transliteration
+        self._speakWithTTS(dua.translit, 'en-US', 0.85, dua, duaId, false);
+      } else {
+        self._startDuaReadingMode();
+      }
+    };
+
+    utterance.onerror = function(e) {
+      self._duaTTSActive = false;
+      if (ttsHandled) return;
+      ttsHandled = true;
+      if (isArabic && dua.translit) {
+        // Arabic TTS errored — try English transliteration
+        self._speakWithTTS(dua.translit, 'en-US', 0.85, dua, duaId, false);
+      } else {
+        self._startDuaReadingMode();
+      }
+    };
+
+    speechSynthesis.speak(utterance);
+
+    // Safety timeout
+    setTimeout(function() {
+      if (!ttsStarted && self.duaPlayingId === duaId && !ttsHandled) {
+        ttsHandled = true;
+        speechSynthesis.cancel();
+        self._duaTTSActive = false;
+        if (isArabic && dua.translit) {
+          self._speakWithTTS(dua.translit, 'en-US', 0.85, dua, duaId, false);
+        } else {
+          self._startDuaReadingMode();
+        }
+      }
+    }, 3000);
   },
 
   // Pure reading mode — word-by-word highlighting at a steady pace with visual feedback
