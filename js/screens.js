@@ -54,12 +54,13 @@ const Screens = {
 
     // Determine next prayer
     const now = new Date();
+    const t = (k) => I18n.t(k);
     const prayers = [
-      { name: 'Fajr', time: pt.fajr },
-      { name: 'Dhuhr', time: pt.dhuhr },
-      { name: 'Asr', time: pt.asr },
-      { name: 'Maghrib', time: pt.maghrib },
-      { name: 'Isha', time: pt.isha }
+      { name: t('fajr'), time: pt.fajr },
+      { name: t('dhuhr'), time: pt.dhuhr },
+      { name: t('asr'), time: pt.asr },
+      { name: t('maghrib'), time: pt.maghrib },
+      { name: t('isha'), time: pt.isha }
     ];
     let nextPrayer = prayers[prayers.length - 1];
     for (const p of prayers) {
@@ -89,14 +90,19 @@ const Screens = {
     // Ornamental divider
     const ornament = `<div class="islamic-ornament"><svg viewBox="0 0 200 20" xmlns="http://www.w3.org/2000/svg"><path d="M0 10 L70 10" stroke="rgba(212,168,67,0.3)" stroke-width="1" fill="none"/><path d="M130 10 L200 10" stroke="rgba(212,168,67,0.3)" stroke-width="1" fill="none"/><path d="M80 10 L90 5 L100 10 L110 15 L120 10" stroke="rgba(212,168,67,0.5)" stroke-width="1.5" fill="none"/><circle cx="100" cy="10" r="3" fill="rgba(212,168,67,0.4)"/><circle cx="85" cy="7" r="1.5" fill="rgba(212,168,67,0.3)"/><circle cx="115" cy="13" r="1.5" fill="rgba(212,168,67,0.3)"/></svg></div>`;
 
-    // Prayer icons
-    const prayerIcons = { Fajr: '🌙', Dhuhr: '☀️', Asr: '🌤️', Maghrib: '🌅', Isha: '🌛' };
+    // Prayer icons (use translated names as keys)
+    const prayerIcons = {};
+    prayerIcons[t('fajr')] = '🌙';
+    prayerIcons[t('dhuhr')] = '☀️';
+    prayerIcons[t('asr')] = '🌤️';
+    prayerIcons[t('maghrib')] = '🌅';
+    prayerIcons[t('isha')] = '🌛';
 
     el.innerHTML = `
       <div class="prayer-hero crescent-stars">
         ${mosqueSVG}
         <div class="prayer-hero-content">
-          <div class="prayer-label">✦ NEXT PRAYER ✦</div>
+          <div class="prayer-label">${t('nextPrayer')}</div>
           <div class="prayer-name">${nextPrayer.name}</div>
           <div class="prayer-time-big">${formatTime(nextPrayer.time)}</div>
           <div class="prayer-countdown">in ${hrs}h ${mins}m</div>
@@ -116,30 +122,30 @@ const Screens = {
       <div class="streak-bar card-hover" onclick="Screens.logDailyPrayer()">
         <div class="streak-flame">🔥</div>
         <div class="streak-info">
-          <div class="streak-count">${streak} Day Streak</div>
-          <div class="streak-label">${todayPrayers.length}/5 prayers logged</div>
+          <div class="streak-count">${streak} ${t('dayStreak')}</div>
+          <div class="streak-label">${todayPrayers.length}/5 ${t('prayersLogged')}</div>
         </div>
         <div class="streak-xp">+50 XP</div>
       </div>
 
       ${ornament}
 
-      <div class="section-title">✦ Quick Actions</div>
+      <div class="section-title">✦ ${t('quickActions')}</div>
       <div class="quick-grid">
-        <div class="quick-item" onclick="App.navigate('quran')"><div class="quick-icon">📖</div><div class="quick-label">Quran</div></div>
-        <div class="quick-item" onclick="App.navigate('hadith')"><div class="quick-icon">📜</div><div class="quick-label">Hadith</div></div>
-        <div class="quick-item" onclick="App.navigate('ai')"><div class="quick-icon">✨</div><div class="quick-label">AI Scholar</div></div>
-        <div class="quick-item" onclick="App.navigate('tasbih')"><div class="quick-icon">📿</div><div class="quick-label">Tasbih</div></div>
-        <div class="quick-item" onclick="App.navigate('azan')" style="border:1.5px solid var(--gold);background:rgba(212,168,67,0.08)"><div class="quick-icon">🕌</div><div class="quick-label" style="color:var(--gold-light)">Azan</div></div>
-        <div class="quick-item" onclick="App.navigate('qibla')"><div class="quick-icon">🧭</div><div class="quick-label">Qibla</div></div>
-        <div class="quick-item" onclick="App.navigate('duas')"><div class="quick-icon">🤲</div><div class="quick-label">Duas</div></div>
-        <div class="quick-item" onclick="App.navigate('zakat')"><div class="quick-icon">💰</div><div class="quick-label">Zakat</div></div>
-        <div class="quick-item" onclick="App.navigate('calendar')"><div class="quick-icon">📅</div><div class="quick-label">Calendar</div></div>
+        <div class="quick-item" onclick="App.navigate('quran')"><div class="quick-icon">📖</div><div class="quick-label">${t('quran')}</div></div>
+        <div class="quick-item" onclick="App.navigate('hadith')"><div class="quick-icon">📜</div><div class="quick-label">${t('hadith')}</div></div>
+        <div class="quick-item" onclick="App.navigate('ai')"><div class="quick-icon">✨</div><div class="quick-label">${t('aiScholar')}</div></div>
+        <div class="quick-item" onclick="App.navigate('tasbih')"><div class="quick-icon">📿</div><div class="quick-label">${t('tasbih')}</div></div>
+        <div class="quick-item" onclick="App.navigate('azan')" style="border:1.5px solid var(--gold);background:rgba(212,168,67,0.08)"><div class="quick-icon">🕌</div><div class="quick-label" style="color:var(--gold-light)">${t('azan')}</div></div>
+        <div class="quick-item" onclick="App.navigate('qibla')"><div class="quick-icon">🧭</div><div class="quick-label">${t('qibla')}</div></div>
+        <div class="quick-item" onclick="App.navigate('duas')"><div class="quick-icon">🤲</div><div class="quick-label">${t('duas')}</div></div>
+        <div class="quick-item" onclick="App.navigate('zakat')"><div class="quick-icon">💰</div><div class="quick-label">${t('zakat')}</div></div>
+        <div class="quick-item" onclick="App.navigate('calendar')"><div class="quick-icon">📅</div><div class="quick-label">${t('calendar')}</div></div>
       </div>
 
       ${ornament}
 
-      <div class="section-title">✦ Daily Verse</div>
+      <div class="section-title">✦ ${t('dailyVerse')}</div>
       <div class="verse-card card card-hover card-islamic" onclick="App.navigate('quran')">
         <div class="verse-bismillah">﷽</div>
         <div class="arabic-text" style="margin-bottom:12px;font-size:28px;line-height:2">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
@@ -150,10 +156,10 @@ const Screens = {
       <div class="card xp-card">
         <div class="row" style="justify-content:space-between">
           <div>
-            <div class="xp-level-text">✦ Level ${level}</div>
-            <div style="font-size:11px;color:var(--text-sec)">${xp} XP earned</div>
+            <div class="xp-level-text">✦ ${t('level')} ${level}</div>
+            <div style="font-size:11px;color:var(--text-sec)">${xp} ${t('xpEarned')}</div>
           </div>
-          <div style="font-size:11px;color:var(--text-sec)">${500 - (xp % 500)} XP to next level</div>
+          <div style="font-size:11px;color:var(--text-sec)">${500 - (xp % 500)} ${t('xpToNext')}</div>
         </div>
         <div class="xp-bar-wrap" style="max-width:100%;margin-top:8px">
           <div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${(xp % 500) / 5}%"></div></div>
@@ -388,10 +394,17 @@ const Screens = {
 
       <div class="quran-settings-row">
         <select class="quran-select" onchange="Screens.quranSelectedReciter=this.value;Screens.renderQuran()">
-          ${API.reciters.map(r => `<option value="${r.id}" ${r.id === this.quranSelectedReciter ? 'selected' : ''}>${r.name}</option>`).join('')}
+          ${(() => {
+            const styles = [...new Set(API.reciters.map(r => r.style || 'Other'))];
+            return styles.map(s => `<optgroup label="${s}">${API.reciters.filter(r => (r.style||'Other')===s).map(r => `<option value="${r.id}" ${r.id === this.quranSelectedReciter ? 'selected' : ''}>${r.flag||''} ${r.name}</option>`).join('')}</optgroup>`).join('');
+          })()}
         </select>
         <select class="quran-select" onchange="Screens.quranSelectedTranslation=this.value;Screens.renderQuran()">
-          ${API.translations.map(t => `<option value="${t.id}" ${t.id === this.quranSelectedTranslation ? 'selected' : ''}>${t.name}</option>`).join('')}
+          ${(() => {
+            const langs = [];
+            API.translations.forEach(t => { if (!langs.includes(t.lang)) langs.push(t.lang); });
+            return langs.map(l => `<optgroup label="${l}">${API.translations.filter(t => t.lang===l).map(t => `<option value="${t.id}" ${t.id === this.quranSelectedTranslation ? 'selected' : ''}>${t.flag||''} ${t.name}</option>`).join('')}</optgroup>`).join('');
+          })()}
         </select>
         <button class="quran-toggle ${this.quranShowTranslit ? 'active' : ''}" onclick="Screens.quranShowTranslit=!Screens.quranShowTranslit;Screens.renderQuran()">Transliteration</button>
         <button class="quran-toggle ${this.quranWordByWord ? 'active' : ''}" onclick="Screens.quranWordByWord=!Screens.quranWordByWord;Screens.renderQuran()">Word-by-Word</button>
@@ -1734,71 +1747,104 @@ const Screens = {
     const el = document.getElementById('screen-profile');
     const stats = Store.getStats();
     const achievements = Store.getAchievements();
+    const t = (k) => I18n.t(k);
+    const curLang = I18n.getCurrentLanguage();
     const achievementList = [
-      { id: 'first_prayer', icon: '🧎', name: 'First Prayer', desc: 'Log your first prayer' },
-      { id: 'week_streak', icon: '🔥', name: '7-Day Streak', desc: 'Maintain a 7-day streak' },
-      { id: 'quran_reader', icon: '📖', name: 'Quran Reader', desc: 'Read a complete surah' },
-      { id: 'tasbih_100', icon: '📿', name: 'Dhikr Devotee', desc: 'Complete 100 tasbih' },
-      { id: 'tasbih_1000', icon: '✨', name: 'Dhikr Master', desc: 'Complete 1,000 tasbih' },
-      { id: 'zakat_calc', icon: '💰', name: 'Zakat Calculator', desc: 'Calculate your zakat' },
-      { id: 'scholar_chat', icon: '🧑‍🎓', name: 'Knowledge Seeker', desc: 'Ask the AI Scholar' }
+      { id: 'first_prayer', icon: '🧎', name: t('achFirstPrayer'), desc: t('achFirstPrayerDesc') },
+      { id: 'week_streak', icon: '🔥', name: t('ach7DayStreak'), desc: t('ach7DayStreakDesc') },
+      { id: 'quran_reader', icon: '📖', name: t('achQuranReader'), desc: t('achQuranReaderDesc') },
+      { id: 'tasbih_100', icon: '📿', name: t('achDhikrDevotee'), desc: t('achDhikrDevoteeDesc') },
+      { id: 'tasbih_1000', icon: '✨', name: t('achDhikrMaster'), desc: t('achDhikrMasterDesc') },
+      { id: 'zakat_calc', icon: '💰', name: t('achZakat'), desc: t('achZakatDesc') },
+      { id: 'scholar_chat', icon: '🧑‍🎓', name: t('achKnowledge'), desc: t('achKnowledgeDesc') }
     ];
 
+    // Build language selector grid
+    const langGroups = I18n.getLanguageGroups();
+    let langSelectorHTML = '';
+    for (const [groupName, codes] of Object.entries(langGroups)) {
+      const langs = codes.map(c => I18n.supportedLanguages.find(l => l.code === c)).filter(Boolean);
+      langSelectorHTML += `<div style="font-size:11px;color:var(--gold-light);font-weight:600;margin:12px 0 6px;opacity:0.8">${groupName}</div>`;
+      langSelectorHTML += `<div style="display:flex;flex-wrap:wrap;gap:6px">`;
+      langSelectorHTML += langs.map(l => `
+        <button onclick="I18n.setLanguage('${l.code}')" style="
+          padding:6px 10px;border-radius:8px;font-size:12px;cursor:pointer;
+          border:1px solid ${I18n.currentLang === l.code ? 'var(--gold-light)' : 'rgba(212,168,67,0.2)'};
+          background:${I18n.currentLang === l.code ? 'rgba(212,168,67,0.2)' : 'transparent'};
+          color:${I18n.currentLang === l.code ? 'var(--gold-light)' : 'var(--text-sec)'};
+          font-weight:${I18n.currentLang === l.code ? '700' : '400'};
+          transition:all 0.2s">${l.flag} ${l.native}</button>
+      `).join('');
+      langSelectorHTML += `</div>`;
+    }
+
     el.innerHTML = `
-      ${this._screenHeader('👤', 'Profile', 'الملف الشخصي')}
+      ${this._screenHeader('👤', t('profile'), 'الملف الشخصي')}
       <div class="profile-card" style="background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.05));border:2px solid var(--gold-light);border-radius:16px;padding:20px;text-align:center;margin-bottom:20px">
-        <div class="profile-avatar" style="background:linear-gradient(135deg,var(--gold-light),rgba(212,168,67,0.5));border-radius:50%;width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;color:var(--dark);margin:0 auto 12px"">A</div>
+        <div class="profile-avatar" style="background:linear-gradient(135deg,var(--gold-light),rgba(212,168,67,0.5));border-radius:50%;width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;color:var(--dark);margin:0 auto 12px">A</div>
         <div class="profile-name" style="font-size:18px;font-weight:700;margin-bottom:4px">Allen</div>
-        <div class="profile-level" style="font-size:14px;color:var(--gold-light);font-weight:600">Level ${stats.level} · ${stats.xp} XP</div>
+        <div class="profile-level" style="font-size:14px;color:var(--gold-light);font-weight:600">${t('level')} ${stats.level} · ${stats.xp} XP</div>
         <div class="xp-bar-wrap" style="margin-top:12px">
           <div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${(stats.xp % 500) / 5}%;background:linear-gradient(90deg,var(--gold-light),rgba(212,168,67,0.7))"></div></div>
-          <div class="xp-text" style="font-size:10px;color:var(--text-sec);margin-top:4px">${500 - (stats.xp % 500)} XP to level ${stats.level + 1}</div>
+          <div class="xp-text" style="font-size:10px;color:var(--text-sec);margin-top:4px">${500 - (stats.xp % 500)} ${t('xpToNext')}</div>
         </div>
       </div>
 
       <div class="stats-grid">
         <div class="card stat-card" style="background:linear-gradient(135deg,rgba(212,168,67,0.1),transparent);border:1px solid rgba(212,168,67,0.3);border-radius:12px;text-align:center;padding:16px">
           <div class="stat-num" style="font-size:24px;font-weight:700;color:var(--gold-light)">${stats.streak}</div>
-          <div class="stat-label" style="font-size:12px;color:var(--text-sec);margin-top:4px">Day Streak</div>
+          <div class="stat-label" style="font-size:12px;color:var(--text-sec);margin-top:4px">${t('dayStreak')}</div>
         </div>
         <div class="card stat-card" style="background:linear-gradient(135deg,rgba(52,152,219,0.1),transparent);border:1px solid rgba(52,152,219,0.3);border-radius:12px;text-align:center;padding:16px">
           <div class="stat-num" style="font-size:24px;font-weight:700;color:var(--blue)">${stats.totalPrayers}</div>
-          <div class="stat-label" style="font-size:12px;color:var(--text-sec);margin-top:4px">Prayers</div>
+          <div class="stat-label" style="font-size:12px;color:var(--text-sec);margin-top:4px">${t('prayersLogged')}</div>
         </div>
         <div class="card stat-card" style="background:linear-gradient(135deg,rgba(46,204,113,0.1),transparent);border:1px solid rgba(46,204,113,0.3);border-radius:12px;text-align:center;padding:16px">
           <div class="stat-num" style="font-size:24px;font-weight:700;color:var(--green)">${stats.tasbihTotal}</div>
-          <div class="stat-label" style="font-size:12px;color:var(--text-sec);margin-top:4px">Tasbih</div>
+          <div class="stat-label" style="font-size:12px;color:var(--text-sec);margin-top:4px">${t('tasbih')}</div>
         </div>
       </div>
 
-      <div class="section-title">Achievements</div>
+      <div class="section-title">${t('achievements')}</div>
       ${achievementList.map(a => `
         <div class="achievement-item" style="display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:8px;background:${achievements[a.id] ? 'rgba(212,168,67,0.1)' : 'rgba(255,255,255,0.02)'};border-radius:12px;border:1px solid ${achievements[a.id] ? 'rgba(212,168,67,0.3)' : 'rgba(212,168,67,0.1)'}">
           <div class="achievement-icon" style="width:40px;height:40px;border-radius:50%;background:${achievements[a.id] ? 'rgba(212,168,67,0.3)' : 'rgba(255,255,255,0.05)'};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;border:2px solid ${achievements[a.id] ? 'var(--gold-light)' : 'rgba(212,168,67,0.2)'}">${a.icon}</div>
           <div class="achievement-info" style="flex:1">
             <div class="achievement-name" style="font-weight:600;${!achievements[a.id] ? 'opacity:.5' : 'color:var(--gold-light)'}">${a.name}</div>
-            <div class="achievement-desc" style="font-size:11px;color:var(--text-sec)">${achievements[a.id] ? 'Unlocked!' : a.desc}</div>
+            <div class="achievement-desc" style="font-size:11px;color:var(--text-sec)">${achievements[a.id] ? t('unlocked') : a.desc}</div>
           </div>
         </div>
       `).join('')}
 
-      <div class="section-title mt-16">🕌 Azan Settings</div>
+      <div class="section-title mt-16">🌍 ${t('language')}</div>
+      <div class="card" style="border:1px solid rgba(212,168,67,0.3);border-radius:12px;padding:16px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <span style="font-size:24px">${curLang.flag}</span>
+          <div>
+            <div style="font-weight:700;color:var(--gold-light)">${curLang.native}</div>
+            <div style="font-size:11px;color:var(--text-sec)">${curLang.name} · ${I18n.supportedLanguages.length} languages available</div>
+          </div>
+        </div>
+        ${langSelectorHTML}
+      </div>
+
+      <div class="section-title mt-16">🕌 ${t('azanSettings')}</div>
       ${Screens.renderAzanSettings()}
 
-      <div class="section-title mt-16">Settings</div>
+      <div class="section-title mt-16">${t('settings')}</div>
       <div class="setting-item">
-        <span class="setting-label">Dark Mode</span>
+        <span class="setting-label">${t('darkMode')}</span>
         <div class="toggle on"><div class="toggle-knob"></div></div>
       </div>
 
       <div class="card mt-16 text-center" style="border:1px solid var(--gold-light);background:rgba(212,168,67,0.05)">
-        <div style="font-size:12px;color:var(--gold-light);font-weight:600">🔒 PRIVACY FIRST</div>
-        <div class="text-xs text-sec mt-8">All data stays on your device. Zero tracking. Zero data collection.</div>
+        <div style="font-size:12px;color:var(--gold-light);font-weight:600">🔒 ${t('privacyFirst')}</div>
+        <div class="text-xs text-sec mt-8">${t('privacyDesc')}</div>
       </div>
 
       <div class="text-center mt-16 mb-16">
-        <div class="text-xs text-sec">DeenHub v2.0.0</div>
-        <div class="text-xs text-sec">Built with ❤️ for the Ummah</div>
+        <div class="text-xs text-sec">DeenHub v3.0.0</div>
+        <div class="text-xs text-sec">${t('builtWithLove')}</div>
       </div>
     `;
   }

@@ -46,20 +46,150 @@ const API = {
   quranCache: {},
 
   reciters: [
-    { id: 'ar.alafasy', name: 'Mishary Rashid' },
-    { id: 'ar.abdulbasitmurattal', name: 'Abdul Basit' },
-    { id: 'ar.abdurrahmaansudais', name: 'As-Sudais' },
-    { id: 'ar.husary', name: 'Al-Husary' },
-    { id: 'ar.minshawi', name: 'Minshawi' },
-    { id: 'ar.muhammadayyoub', name: 'Ayyoub' }
+    // ★ Popular
+    { id: 'ar.alafasy', name: 'Mishary Rashid Alafasy', flag: '🇰🇼', style: 'Murattal' },
+    { id: 'ar.abdulbasitmurattal', name: 'Abdul Basit (Murattal)', flag: '🇪🇬', style: 'Murattal' },
+    { id: 'ar.abdulbasitmujawwad', name: 'Abdul Basit (Mujawwad)', flag: '🇪🇬', style: 'Mujawwad' },
+    { id: 'ar.abdurrahmaansudais', name: 'Abdurrahmaan As-Sudais', flag: '🇸🇦', style: 'Murattal' },
+    { id: 'ar.husary', name: 'Mahmoud Khalil Al-Husary', flag: '🇪🇬', style: 'Murattal' },
+    { id: 'ar.husarymujawwad', name: 'Al-Husary (Mujawwad)', flag: '🇪🇬', style: 'Mujawwad' },
+    { id: 'ar.minshawi', name: 'Mohamed Siddiq El-Minshawi', flag: '🇪🇬', style: 'Murattal' },
+    { id: 'ar.minshawimujawwad', name: 'El-Minshawi (Mujawwad)', flag: '🇪🇬', style: 'Mujawwad' },
+    // ★ Renowned Reciters
+    { id: 'ar.muhammadayyoub', name: 'Muhammad Ayyub', flag: '🇸🇦', style: 'Murattal' },
+    { id: 'ar.ahmedajamy', name: 'Ahmed ibn Ali al-Ajamy', flag: '🇸🇦', style: 'Murattal' },
+    { id: 'ar.maaborali', name: 'Maher Al-Muaiqly', flag: '🇸🇦', style: 'Murattal' },
+    { id: 'ar.parhizgar', name: 'Shahriar Parhizgar', flag: '🇮🇷', style: 'Murattal' },
+    { id: 'ar.ibrahimakhbar', name: 'Ibrahim Al-Akhdar', flag: '🇸🇦', style: 'Murattal' },
+    { id: 'ar.abdullahbasfar', name: 'Abdullah Basfar', flag: '🇸🇦', style: 'Murattal' },
+    { id: 'ar.haboribrahim', name: 'Hani Ar-Rifai', flag: '🇸🇦', style: 'Murattal' },
+    { id: 'ar.mahermuaiqly', name: 'Maher Al Muaiqly', flag: '🇸🇦', style: 'Murattal' },
+    // ★ International Reciters
+    { id: 'ar.saaboramadan', name: 'Saad Al-Ghamdi', flag: '🇸🇦', style: 'Murattal' },
+    { id: 'ar.aaborahman', name: 'Abdurrahman Al-Ossi', flag: '🇸🇦', style: 'Murattal' },
+    { id: 'ar.walk', name: 'Ibrahim Walk', flag: '🇺🇸', style: 'English' },
+    { id: 'ar.shaatree', name: 'Abu Bakr Al-Shatri', flag: '🇸🇦', style: 'Murattal' },
+    { id: 'ar.khalifaaltoneiji', name: 'Khalifa Al-Tunaiji', flag: '🇦🇪', style: 'Murattal' },
+    { id: 'ar.muhammadjibreel', name: 'Muhammad Jibreel', flag: '🇪🇬', style: 'Murattal' },
+    { id: 'ar.abdulbari', name: 'Abdul Bari ath-Thubaity', flag: '🇸🇦', style: 'Murattal' },
+    { id: 'ar.nabilrifa', name: 'Nabil Ar-Rifai', flag: '🇸🇾', style: 'Murattal' },
+    { id: 'ar.hudhaify', name: 'Ali Al-Hudhaify', flag: '🇸🇦', style: 'Murattal' },
+    { id: 'ar.tablawy', name: 'Muhammad Al-Tablawi', flag: '🇪🇬', style: 'Mujawwad' }
   ],
 
   translations: [
-    { id: 'en.sahih', name: 'English (Sahih Intl)' },
-    { id: 'en.asad', name: 'Asad' },
-    { id: 'ur.ahmedali', name: 'Urdu (Ahmed Ali)' },
-    { id: 'ur.jalandhry', name: 'Urdu (Jalandhry)' },
-    { id: 'bn.bengali', name: 'Bangla' }
+    // ═══ English ═══
+    { id: 'en.sahih', name: 'Sahih International', lang: 'English', langCode: 'en', flag: '🇬🇧' },
+    { id: 'en.asad', name: 'Muhammad Asad', lang: 'English', langCode: 'en', flag: '🇬🇧' },
+    { id: 'en.pickthall', name: 'Pickthall', lang: 'English', langCode: 'en', flag: '🇬🇧' },
+    { id: 'en.yusufali', name: 'Yusuf Ali', lang: 'English', langCode: 'en', flag: '🇬🇧' },
+    { id: 'en.shakir', name: 'Shakir', lang: 'English', langCode: 'en', flag: '🇬🇧' },
+    { id: 'en.hilali', name: 'Hilali & Khan', lang: 'English', langCode: 'en', flag: '🇬🇧' },
+    { id: 'en.ahmedali', name: 'Ahmed Ali', lang: 'English', langCode: 'en', flag: '🇬🇧' },
+    { id: 'en.sarwar', name: 'Sarwar', lang: 'English', langCode: 'en', flag: '🇬🇧' },
+    // ═══ Urdu ═══
+    { id: 'ur.ahmedali', name: 'Ahmed Ali', lang: 'Urdu', langCode: 'ur', flag: '🇵🇰' },
+    { id: 'ur.jalandhry', name: 'Jalandhry', lang: 'Urdu', langCode: 'ur', flag: '🇵🇰' },
+    { id: 'ur.maududi', name: 'Maududi', lang: 'Urdu', langCode: 'ur', flag: '🇵🇰' },
+    // ═══ Bangla ═══
+    { id: 'bn.bengali', name: 'Muhiuddin Khan', lang: 'বাংলা', langCode: 'bn', flag: '🇧🇩' },
+    { id: 'bn.hoque', name: 'Zohurul Hoque', lang: 'বাংলা', langCode: 'bn', flag: '🇧🇩' },
+    // ═══ Arabic (Tafsir) ═══
+    { id: 'ar.jalalayn', name: 'Tafsir al-Jalalayn', lang: 'العربية', langCode: 'ar', flag: '🇸🇦' },
+    { id: 'ar.muyassar', name: 'Tafsir al-Muyassar', lang: 'العربية', langCode: 'ar', flag: '🇸🇦' },
+    // ═══ French ═══
+    { id: 'fr.hamidullah', name: 'Hamidullah', lang: 'Français', langCode: 'fr', flag: '🇫🇷' },
+    // ═══ Spanish ═══
+    { id: 'es.cortes', name: 'Julio Cortes', lang: 'Español', langCode: 'es', flag: '🇪🇸' },
+    { id: 'es.asad', name: 'Asad (Spanish)', lang: 'Español', langCode: 'es', flag: '🇪🇸' },
+    // ═══ German ═══
+    { id: 'de.aburida', name: 'Abu Rida', lang: 'Deutsch', langCode: 'de', flag: '🇩🇪' },
+    { id: 'de.bubenheim', name: 'Bubenheim & Elyas', lang: 'Deutsch', langCode: 'de', flag: '🇩🇪' },
+    // ═══ Turkish ═══
+    { id: 'tr.ates', name: 'Süleyman Ateş', lang: 'Türkçe', langCode: 'tr', flag: '🇹🇷' },
+    { id: 'tr.diyanet', name: 'Diyanet İşleri', lang: 'Türkçe', langCode: 'tr', flag: '🇹🇷' },
+    { id: 'tr.ozturk', name: 'Öztürk', lang: 'Türkçe', langCode: 'tr', flag: '🇹🇷' },
+    { id: 'tr.yazir', name: 'Elmalılı Yazır', lang: 'Türkçe', langCode: 'tr', flag: '🇹🇷' },
+    { id: 'tr.yildirim', name: 'Suat Yıldırım', lang: 'Türkçe', langCode: 'tr', flag: '🇹🇷' },
+    { id: 'tr.yuksel', name: 'Edip Yüksel', lang: 'Türkçe', langCode: 'tr', flag: '🇹🇷' },
+    // ═══ Russian ═══
+    { id: 'ru.kuliev', name: 'Kuliev', lang: 'Русский', langCode: 'ru', flag: '🇷🇺' },
+    { id: 'ru.osmanov', name: 'Osmanov', lang: 'Русский', langCode: 'ru', flag: '🇷🇺' },
+    { id: 'ru.krachkovsky', name: 'Krachkovsky', lang: 'Русский', langCode: 'ru', flag: '🇷🇺' },
+    // ═══ Indonesian / Malay ═══
+    { id: 'id.indonesian', name: 'Indonesian Ministry', lang: 'Bahasa Indonesia', langCode: 'id', flag: '🇮🇩' },
+    { id: 'id.muntakhab', name: 'Muntakhab', lang: 'Bahasa Indonesia', langCode: 'id', flag: '🇮🇩' },
+    { id: 'ms.basmeih', name: 'Basmeih', lang: 'Bahasa Melayu', langCode: 'ms', flag: '🇲🇾' },
+    // ═══ Persian (Farsi) ═══
+    { id: 'fa.makarem', name: 'Makarem', lang: 'فارسی', langCode: 'fa', flag: '🇮🇷' },
+    { id: 'fa.ansarian', name: 'Ansarian', lang: 'فارسی', langCode: 'fa', flag: '🇮🇷' },
+    { id: 'fa.fooladvand', name: 'Fooladvand', lang: 'فارسی', langCode: 'fa', flag: '🇮🇷' },
+    { id: 'fa.ghomshei', name: 'Ghomshei', lang: 'فارسی', langCode: 'fa', flag: '🇮🇷' },
+    // ═══ Hindi ═══
+    { id: 'hi.hindi', name: 'Suhel Farooq Khan', lang: 'हिन्दी', langCode: 'hi', flag: '🇮🇳' },
+    // ═══ Chinese ═══
+    { id: 'zh.jian', name: 'Ma Jian (Simplified)', lang: '中文', langCode: 'zh', flag: '🇨🇳' },
+    // ═══ Japanese ═══
+    { id: 'ja.japanese', name: 'Japanese Translation', lang: '日本語', langCode: 'ja', flag: '🇯🇵' },
+    // ═══ Korean ═══
+    { id: 'ko.korean', name: 'Korean Translation', lang: '한국어', langCode: 'ko', flag: '🇰🇷' },
+    // ═══ Italian ═══
+    { id: 'it.piccardo', name: 'Piccardo', lang: 'Italiano', langCode: 'it', flag: '🇮🇹' },
+    // ═══ Portuguese ═══
+    { id: 'pt.elhayek', name: 'El-Hayek', lang: 'Português', langCode: 'pt', flag: '🇧🇷' },
+    // ═══ Dutch ═══
+    { id: 'nl.keyzer', name: 'Keyzer', lang: 'Nederlands', langCode: 'nl', flag: '🇳🇱' },
+    // ═══ Swedish ═══
+    { id: 'sv.bernstrom', name: 'Bernström', lang: 'Svenska', langCode: 'sv', flag: '🇸🇪' },
+    // ═══ Polish ═══
+    { id: 'pl.bielawskiego', name: 'Bielawski', lang: 'Polski', langCode: 'pl', flag: '🇵🇱' },
+    // ═══ Czech ═══
+    { id: 'cs.hrbek', name: 'Hrbek', lang: 'Čeština', langCode: 'cs', flag: '🇨🇿' },
+    // ═══ Tamil ═══
+    { id: 'ta.tamil', name: 'Jan Turst Foundation', lang: 'தமிழ்', langCode: 'ta', flag: '🇮🇳' },
+    // ═══ Malayalam ═══
+    { id: 'ml.abdulhameed', name: 'Abdul Hameed & Parappur', lang: 'മലയാളം', langCode: 'ml', flag: '🇮🇳' },
+    // ═══ Thai ═══
+    { id: 'th.thai', name: 'Thai Translation', lang: 'ไทย', langCode: 'th', flag: '🇹🇭' },
+    // ═══ Swahili ═══
+    { id: 'sw.barwani', name: 'Al-Barwani', lang: 'Kiswahili', langCode: 'sw', flag: '🇹🇿' },
+    // ═══ Hausa ═══
+    { id: 'ha.gumi', name: 'Abubakar Gumi', lang: 'Hausa', langCode: 'ha', flag: '🇳🇬' },
+    // ═══ Somali ═══
+    { id: 'so.abduh', name: 'M. Abduh', lang: 'Soomaali', langCode: 'so', flag: '🇸🇴' },
+    // ═══ Amazigh ═══
+    { id: 'ber.mensur', name: 'Ramdane At Mansour', lang: 'ⵜⴰⵎⴰⵣⵉⵖⵜ', langCode: 'ber', flag: '🇩🇿' },
+    // ═══ Albanian ═══
+    { id: 'sq.ahmeti', name: 'Sherif Ahmeti', lang: 'Shqip', langCode: 'sq', flag: '🇦🇱' },
+    { id: 'sq.nahi', name: 'Feti Mehdiu', lang: 'Shqip', langCode: 'sq', flag: '🇦🇱' },
+    // ═══ Bosnian ═══
+    { id: 'bs.korkut', name: 'Korkut', lang: 'Bosanski', langCode: 'bs', flag: '🇧🇦' },
+    { id: 'bs.mlivo', name: 'Mlivo', lang: 'Bosanski', langCode: 'bs', flag: '🇧🇦' },
+    // ═══ Azerbaijani ═══
+    { id: 'az.mammadaliyev', name: 'Mammadaliyev & Bünyadov', lang: 'Azərbaycan', langCode: 'az', flag: '🇦🇿' },
+    { id: 'az.musayev', name: 'Musayev', lang: 'Azərbaycan', langCode: 'az', flag: '🇦🇿' },
+    // ═══ Uzbek ═══
+    { id: 'uz.sodik', name: 'Muhammad Sodik', lang: "O'zbek", langCode: 'uz', flag: '🇺🇿' },
+    // ═══ Kurdish ═══
+    { id: 'ku.asan', name: 'Burhan Muhammad-Amin', lang: 'Kurdî', langCode: 'ku', flag: '🇮🇶' },
+    // ═══ Tatar ═══
+    { id: 'tt.nugman', name: 'Yakub Ibn Nugman', lang: 'Татарча', langCode: 'tt', flag: '🇷🇺' },
+    // ═══ Sindhi ═══
+    { id: 'sd.amroti', name: 'Amroti', lang: 'سنڌي', langCode: 'sd', flag: '🇵🇰' },
+    // ═══ Pashto ═══
+    { id: 'ps.abdulwali', name: 'Abdulwali Khan', lang: 'پښتو', langCode: 'ps', flag: '🇦🇫' },
+    // ═══ Divehi (Maldivian) ═══
+    { id: 'dv.divehi', name: 'Office of the President', lang: 'ދިވެހި', langCode: 'dv', flag: '🇲🇻' },
+    // ═══ Uyghur ═══
+    { id: 'ug.saleh', name: 'Muhammad Saleh', lang: 'ئۇيغۇرچە', langCode: 'ug', flag: '🇨🇳' },
+    // ═══ Nepali ═══
+    { id: 'ne.nepali', name: 'Ahl-e-Hadith Central Soc.', lang: 'नेपाली', langCode: 'ne', flag: '🇳🇵' },
+    // ═══ Romanian ═══
+    { id: 'ro.grigore', name: 'Grigore', lang: 'Română', langCode: 'ro', flag: '🇷🇴' },
+    // ═══ Bulgarian ═══
+    { id: 'bg.theophanov', name: 'Theophanov', lang: 'Български', langCode: 'bg', flag: '🇧🇬' },
+    // ═══ Norwegian ═══
+    { id: 'no.berg', name: 'Einar Berg', lang: 'Norsk', langCode: 'no', flag: '🇳🇴' }
   ],
 
   juzData: [

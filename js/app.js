@@ -21,6 +21,10 @@ const App = {
       Store.set('streak', 0);
     }
 
+    // Initialize i18n system (auto-detect or load saved language)
+    I18n.init();
+    I18n.updateTabBar();
+
     // Request notification permission early
     this.requestNotificationPermission();
 
@@ -292,19 +296,20 @@ const App = {
   },
 
   updateHeader(screen) {
+    const t = (k) => I18n.t(k);
     const titles = {
-      home: ['DeenHub', 'Your Islamic Companion'],
-      quran: ['Quran', '114 Surahs'],
-      hadith: ['Hadith', '8 Collections'],
-      ai: ['AI Scholar', 'Ask Anything'],
-      community: ['Community', 'Ummah Connect'],
-      profile: ['Profile', 'Your Journey'],
-      tasbih: ['Tasbih', 'Digital Counter'],
-      qibla: ['Qibla', 'Find Direction'],
-      duas: ['Duas', 'Supplications'],
-      zakat: ['Zakat', 'Calculator'],
-      calendar: ['Calendar', 'Islamic Dates'],
-      azan: ['Azan', 'Call to Prayer']
+      home: [t('appName'), t('appSubtitle')],
+      quran: [t('quran'), '114 ' + t('surah')],
+      hadith: [t('hadith'), '8 Collections'],
+      ai: [t('aiScholar'), t('askAboutIslam')],
+      community: [t('ummah'), t('theUmmah')],
+      profile: [t('profile'), t('level')],
+      tasbih: [t('tasbih'), t('glorification')],
+      qibla: [t('qibla'), t('qiblaDirection')],
+      duas: [t('duas'), t('supplications')],
+      zakat: [t('zakat'), t('purificationWealth')],
+      calendar: [t('calendar'), t('hijriCalendar')],
+      azan: [t('azan'), t('azanPlayer')]
     };
     const [title, sub] = titles[screen] || ['DeenHub', ''];
     document.getElementById('header-title').textContent = title;

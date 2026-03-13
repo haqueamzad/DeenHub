@@ -3404,3 +3404,23 @@ body::after {
   border-radius: inherit;
   transition: width 0.5s ease;
 }
+
+/* ============================================================
+   RTL (Right-to-Left) Language Support
+   ============================================================ */
+[dir="rtl"] .header { flex-direction: row-reverse; }
+[dir="rtl"] .tab-bar { direction: ltr; }
+[dir="rtl"] .sub-header { flex-direction: row-reverse; }
+[dir="rtl"] .back-btn { transform: scaleX(-1); }
+[dir="rtl"] .quran-settings-row { direction: rtl; }
+[dir="rtl"] .achievement-item { flex-direction: row-reverse; text-align: right; }
+[dir="rtl"] .setting-item { flex-direction: row-reverse; }
+[dir="rtl"] .stats-grid { direction: rtl; }
+[dir="rtl"] .profile-card { direction: rtl; }
+[dir="rtl"] .quick-grid { direction: rtl; }
+[dir="rtl"] .card { direction: rtl; text-align: right; }
+[dir="rtl"] .section-title { text-align: right; }
+[dir="rtl"] .prayer-row { flex-direction: row-reverse; }
+[dir="rtl"] .hadith-card { direction: rtl; text-align: right; }
+[dir="rtl"] .dua-card { direction: rtl; text-align: right; }
+[dir="rtl"] .azan-voice-card { direction: rtl; }
