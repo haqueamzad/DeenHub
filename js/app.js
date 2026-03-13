@@ -236,7 +236,7 @@ const App = {
 
   navigate(screen) {
     // Sub-screens that overlay
-    const subScreens = ['tasbih', 'qibla', 'duas', 'zakat', 'calendar'];
+    const subScreens = ['tasbih', 'qibla', 'duas', 'zakat', 'calendar', 'azan'];
     const mainTabs = ['home', 'quran', 'hadith', 'ai', 'community', 'profile'];
 
     if (subScreens.includes(screen)) {
@@ -287,6 +287,7 @@ const App = {
       case 'duas': Screens.renderDuas(); break;
       case 'zakat': Screens.renderZakat(); break;
       case 'calendar': Screens.renderCalendar(); break;
+      case 'azan': Screens.renderAzan(); break;
     }
   },
 
@@ -302,7 +303,8 @@ const App = {
       qibla: ['Qibla', 'Find Direction'],
       duas: ['Duas', 'Supplications'],
       zakat: ['Zakat', 'Calculator'],
-      calendar: ['Calendar', 'Islamic Dates']
+      calendar: ['Calendar', 'Islamic Dates'],
+      azan: ['Azan', 'Call to Prayer']
     };
     const [title, sub] = titles[screen] || ['DeenHub', ''];
     document.getElementById('header-title').textContent = title;

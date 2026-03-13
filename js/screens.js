@@ -130,6 +130,7 @@ const Screens = {
         <div class="quick-item" onclick="App.navigate('hadith')"><div class="quick-icon">📜</div><div class="quick-label">Hadith</div></div>
         <div class="quick-item" onclick="App.navigate('ai')"><div class="quick-icon">✨</div><div class="quick-label">AI Scholar</div></div>
         <div class="quick-item" onclick="App.navigate('tasbih')"><div class="quick-icon">📿</div><div class="quick-label">Tasbih</div></div>
+        <div class="quick-item" onclick="App.navigate('azan')" style="border:1.5px solid var(--gold);background:rgba(212,168,67,0.08)"><div class="quick-icon">🕌</div><div class="quick-label" style="color:var(--gold-light)">Azan</div></div>
         <div class="quick-item" onclick="App.navigate('qibla')"><div class="quick-icon">🧭</div><div class="quick-label">Qibla</div></div>
         <div class="quick-item" onclick="App.navigate('duas')"><div class="quick-icon">🤲</div><div class="quick-label">Duas</div></div>
         <div class="quick-item" onclick="App.navigate('zakat')"><div class="quick-icon">💰</div><div class="quick-label">Zakat</div></div>
@@ -1402,7 +1403,203 @@ const Screens = {
     `;
   },
 
-  // ==== AZAN SETTINGS PANEL ====
+  // ==== AZAN PLAYER SCREEN ====
+  azanSelectedVoice: null,
+
+  renderAzan() {
+    const el = document.getElementById('screen-azan');
+    const lib = API.azanLibrary;
+    const settings = Store.getAzanSettings();
+    const isPlaying = API.isAzanPlaying();
+    const currentVoice = this.azanSelectedVoice || settings.voice || 'makkah';
+    const currentAzan = API.getAzanById(currentVoice);
+
+    // Mosque silhouette SVG for the player
+    const mosqueSVG = `<svg viewBox="0 0 300 100" style="width:100%;height:80px;margin-bottom:8px" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="azanMosque" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(212,168,67,0.15)"/><stop offset="1" stop-color="rgba(212,168,67,0)"/></linearGradient></defs>
+      <path d="M0 100 L0 70 Q0 60 10 60 L30 60 L30 40 Q40 20 50 10 Q52 5 55 10 Q65 20 75 40 L75 60 L100 60 L100 40 Q120 10 140 40 L140 60 L150 60 L150 30 Q150 10 160 5 Q162 0 165 5 Q175 10 175 30 L175 60 L190 60 L190 40 Q210 10 230 40 L230 60 L255 60 L255 40 Q265 20 275 10 Q277 5 280 10 Q290 20 300 40 L300 60 Q300 60 300 60 L300 100 Z" fill="url(#azanMosque)"/>
+      <circle cx="55" cy="6" r="3" fill="rgba(212,168,67,0.4)"/>
+      <circle cx="165" cy="2" r="4" fill="rgba(212,168,67,0.5)"/>
+      <circle cx="280" cy="6" r="3" fill="rgba(212,168,67,0.4)"/>
+    </svg>`;
+
+    // Audio wave animation bars
+    const waveBars = Array.from({length: 12}, (_, i) =>
+      `<div style="width:3px;height:${8 + Math.random()*20}px;background:${isPlaying ? 'var(--gold-light)' : 'var(--text-muted)'};border-radius:2px;transition:height 0.3s;animation:${isPlaying ? `azanWave 0.8s ease-in-out ${i*0.1}s infinite alternate` : 'none'}"></div>`
+    ).join('');
+
+    // Muezzin icon helper
+    const muezzinIcon = (id) => {
+      if (id === 'makkah') return '🕋';
+      if (id === 'madinah' || id === 'madinah1952') return '🌟';
+      if (id === 'mishary' || id === 'alafasy' || id === 'fajr') return '🎤';
+      if (id === 'egyptian' || id === 'abdulbaset') return '🇪🇬';
+      if (id === 'qatami' || id === 'tareq') return '🇸🇦';
+      if (id === 'halab') return '🇸🇾';
+      if (id === 'kurtish') return '🏔️';
+      return '🕌';
+    };
+
+    el.innerHTML = `
+      ${this._screenHeader('🕌', 'Azan Player', 'الأذان', '12 beautiful Azan recordings from around the world')}
+
+      <!-- Main Player Card -->
+      <div style="background:linear-gradient(135deg,rgba(13,124,102,0.2),rgba(17,29,51,0.9));border:2px solid rgba(212,168,67,0.2);border-radius:20px;padding:24px;margin-bottom:16px;text-align:center;position:relative;overflow:hidden">
+        ${mosqueSVG}
+        <div style="font-family:'Amiri',serif;font-size:32px;color:var(--gold-light);margin-bottom:4px;text-shadow:0 0 20px rgba(212,168,67,0.3)">
+          اللَّهُ أَكْبَرُ
+        </div>
+        <div style="font-size:13px;color:var(--text-sec);margin-bottom:16px">Allahu Akbar — God is the Greatest</div>
+
+        <!-- Now Playing Info -->
+        <div style="font-size:16px;font-weight:700;margin-bottom:4px">${currentAzan.name}</div>
+        <div style="font-size:12px;color:var(--text-sec);margin-bottom:4px">${currentAzan.muezzin}</div>
+        <div style="font-size:11px;color:var(--gold);margin-bottom:16px">${currentAzan.origin} · ${currentAzan.style}</div>
+
+        <!-- Wave Visualizer -->
+        <div style="display:flex;align-items:center;justify-content:center;gap:4px;height:32px;margin-bottom:16px">
+          ${waveBars}
+        </div>
+
+        <!-- Play/Stop Button -->
+        <div style="display:flex;justify-content:center;gap:12px;margin-bottom:12px">
+          <button onclick="Screens.playAzanFromScreen()" style="width:64px;height:64px;border-radius:50%;border:3px solid ${isPlaying ? 'var(--red)' : 'var(--gold-light)'};background:${isPlaying ? 'rgba(231,76,60,0.15)' : 'rgba(212,168,67,0.15)'};color:${isPlaying ? 'var(--red)' : 'var(--gold-light)'};font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;box-shadow:0 0 20px ${isPlaying ? 'rgba(231,76,60,0.2)' : 'rgba(212,168,67,0.2)'}">
+            ${isPlaying ? '⏹️' : '▶️'}
+          </button>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted)">${isPlaying ? 'Now playing — tap to stop' : 'Tap to play Azan'}</div>
+      </div>
+
+      <!-- Volume Control -->
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:16px">🔇</span>
+          <input type="range" min="0" max="100" value="${settings.volume}" style="flex:1;accent-color:var(--gold)" oninput="Store.setAzanSetting('volume',parseInt(this.value));document.getElementById('azan-vol-label').textContent=this.value+'%'" onchange="Store.setAzanSetting('volume',parseInt(this.value))">
+          <span style="font-size:16px">🔊</span>
+          <span id="azan-vol-label" style="font-size:12px;color:var(--text-sec);min-width:35px">${settings.volume}%</span>
+        </div>
+      </div>
+
+      <!-- Muezzin Selection Grid -->
+      <div class="section-title">✦ Choose Muezzin</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        ${lib.map(a => `
+          <div onclick="Screens.selectAzanVoice('${a.id}')" style="background:${currentVoice === a.id ? 'linear-gradient(135deg,rgba(212,168,67,0.15),rgba(13,124,102,0.15))' : 'rgba(17,29,51,0.6)'};border:2px solid ${currentVoice === a.id ? 'var(--gold-light)' : 'rgba(212,168,67,0.15)'};border-radius:14px;padding:14px 12px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden">
+            ${currentVoice === a.id ? '<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold-light),transparent)"></div>' : ''}
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+              <span style="font-size:22px">${muezzinIcon(a.id)}</span>
+              <div style="flex:1">
+                <div style="font-weight:700;font-size:13px;color:${currentVoice === a.id ? 'var(--gold-light)' : 'var(--text)'}">${a.name}</div>
+                <div style="font-size:11px;color:var(--text-sec)">${a.muezzin}</div>
+              </div>
+              ${currentVoice === a.id ? '<div style="color:var(--gold-light);font-weight:700">✓</div>' : ''}
+            </div>
+            <div style="font-size:10px;color:var(--text-muted)">${a.origin} · ${a.style}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- Azan Auto-Play Settings -->
+      <div class="section-title">✦ Auto Azan Settings</div>
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-weight:600">🔔 Auto Azan at Prayer Times</span>
+          <div class="toggle ${settings.enabled ? 'on' : ''}" onclick="Store.setAzanSetting('enabled',!Store.getAzanSettings().enabled);Screens.renderAzan()">
+            <div class="toggle-knob"></div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text-sec)">When enabled, Azan will play automatically at each prayer time</div>
+      </div>
+
+      ${settings.enabled ? `
+      <div class="card" style="margin-bottom:12px">
+        <div style="font-weight:600;margin-bottom:12px;color:var(--gold-light)">Per-Prayer Toggle</div>
+        ${['fajr','dhuhr','asr','maghrib','isha'].map(p => {
+          const icons = {fajr:'🌙',dhuhr:'☀️',asr:'🌤️',maghrib:'🌅',isha:'🌛'};
+          const names = {fajr:'Fajr',dhuhr:'Dhuhr',asr:'Asr',maghrib:'Maghrib',isha:'Isha'};
+          return `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;${p !== 'isha' ? 'border-bottom:1px solid rgba(212,168,67,0.1)' : ''}">
+            <span>${icons[p]} ${names[p]}</span>
+            <div class="toggle ${settings.prayers[p] ? 'on' : ''}" onclick="Store.setSetting('azan${names[p]}',!Store.getSetting('azan${names[p]}',true));Screens.renderAzan()">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span>📱 Browser Notifications</span>
+          <div class="toggle ${settings.notifications ? 'on' : ''}" onclick="Store.setAzanSetting('notify',!Store.getAzanSettings().notifications);if(!Store.getAzanSettings().notifications)Notification.requestPermission();Screens.renderAzan()">
+            <div class="toggle-knob"></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span>📺 Full-Screen Azan Display</span>
+          <div class="toggle ${settings.fullScreen ? 'on' : ''}" onclick="Store.setAzanSetting('fullScreen',!Store.getAzanSettings().fullScreen);Screens.renderAzan()">
+            <div class="toggle-knob"></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span>📳 Vibration</span>
+          <div class="toggle ${settings.vibrate ? 'on' : ''}" onclick="Store.setAzanSetting('vibrate',!Store.getAzanSettings().vibrate);Screens.renderAzan()">
+            <div class="toggle-knob"></div>
+          </div>
+        </div>
+      </div>
+      ` : ''}
+
+      <!-- Test Button -->
+      <button onclick="App.triggerAzan({key:'test',name:'Test',time:new Date().getHours()+':'+String(new Date().getMinutes()).padStart(2,'0'),icon:'🕌'},Store.getAzanSettings())" style="width:100%;padding:14px;border-radius:14px;border:2px solid var(--gold);background:rgba(212,168,67,0.1);color:var(--gold-light);font-weight:700;font-size:14px;cursor:pointer;margin-bottom:20px;transition:all 0.2s">
+        🕌 Test Full Azan Experience
+      </button>
+
+      <div style="text-align:center;padding:8px;font-size:11px;color:var(--text-muted)">
+        Audio sourced from Internet Archive · Free for personal use
+      </div>
+    `;
+
+    // Add CSS animation for wave bars
+    if (!document.getElementById('azan-wave-css')) {
+      const style = document.createElement('style');
+      style.id = 'azan-wave-css';
+      style.textContent = '@keyframes azanWave { 0% { height: 6px; } 100% { height: 28px; } }';
+      document.head.appendChild(style);
+    }
+  },
+
+  selectAzanVoice(voiceId) {
+    this.azanSelectedVoice = voiceId;
+    Store.setAzanSetting('voice', voiceId);
+    // If currently playing, stop and replay with new voice
+    if (API.isAzanPlaying()) {
+      API.stopAzan();
+      setTimeout(() => this.playAzanFromScreen(), 200);
+    }
+    this.renderAzan();
+  },
+
+  playAzanFromScreen() {
+    if (API.isAzanPlaying()) {
+      API.stopAzan();
+      this.renderAzan();
+      return;
+    }
+    const settings = Store.getAzanSettings();
+    const voiceId = this.azanSelectedVoice || settings.voice || 'makkah';
+    const vol = settings.volume / 100;
+    API.playAzan(voiceId, vol).then(() => {
+      this.renderAzan();
+      // Re-render when azan ends to update UI
+      window.addEventListener('azanEnded', () => {
+        this.renderAzan();
+      }, { once: true });
+    });
+    // Update UI immediately to show playing state
+    setTimeout(() => this.renderAzan(), 100);
+  },
+
+  // ==== AZAN SETTINGS PANEL (for Profile screen) ====
   renderAzanSettings() {
     const s = Store.getAzanSettings();
     const lib = API.azanLibrary;
