@@ -915,6 +915,36 @@ const Screens = {
   // Dua audio player (HTML5 Audio element for real audio playback)
   _duaAudioPlayer: null,
 
+  // Build audio URL for Quranic duas from their reference (e.g. "Quran 2:201" -> ayah audio URL)
+  // Uses Al-Quran Cloud API endpoint: /v1/ayah/{surah}:{ayah}/ar.alafasy which returns audio
+  _getDuaAudioUrl(dua) {
+    if (dua.audioUrl) return dua.audioUrl;
+    // Parse Quranic references like "Quran 2:201", "Quran 20:25-28", "Quran 43:13-14"
+    var ref = dua.ref || '';
+    var match = ref.match(/Quran\s+(\d+):(\d+)/i);
+    if (match) {
+      var surahNum = parseInt(match[1]);
+      var ayahNum = parseInt(match[2]);
+      if (surahNum >= 1 && surahNum <= 114 && ayahNum >= 1) {
+        // This returns JSON with audio URL — we'll fetch it dynamically
+        return 'API:' + surahNum + ':' + ayahNum;
+      }
+    }
+    return null;
+  },
+
+  // Fetch actual audio URL from API for a Quranic ayah
+  _fetchQuranAudioUrl(surah, ayah, callback) {
+    var url = 'https://api.alquran.cloud/v1/ayah/' + surah + ':' + ayah + '/ar.alafasy';
+    fetch(url).then(function(res) { return res.json(); }).then(function(data) {
+      if (data.code === 200 && data.data && data.data.audio) {
+        callback(data.data.audio);
+      } else {
+        callback(null);
+      }
+    }).catch(function() { callback(null); });
+  },
+
   playDua(duaId) {
     var self = this;
     var duas = API.getDuas(this.duaCategory);
@@ -938,12 +968,12 @@ const Screens = {
     this.duaWordHighlightIdx = -1;
     this._duaWords = dua.arabic.split(/\s+/);
 
-    // Try audio file first (for Quranic duas that have ayah references), then TTS, then reading mode
-    var audioUrl = dua.audioUrl || null;
+    // Try to resolve an audio URL (Quranic duas get real recitation audio)
+    var audioRef = this._getDuaAudioUrl(dua);
 
     var startPlayback = function() {
-      // STRATEGY 1: Real audio file (if dua has audioUrl)
-      if (audioUrl) {
+      // STRATEGY 1: Real audio file from Al-Quran Cloud API (for Quranic duas)
+      var playAudioFile = function(audioUrl) {
         self._duaAudioPlayer = new Audio(audioUrl);
         self._duaAudioPlayer.volume = 0.8;
         self._duaAudioPlayer.crossOrigin = 'anonymous';
@@ -983,15 +1013,36 @@ const Screens = {
           self._startDuaTTS(dua, duaId);
         });
 
-        self._duaAudioPlayer.play().catch(function() {
+        self._duaAudioPlayer.play().then(function() {
+          self._showDuaToast('🔊 ' + I18n.t('playingDua'));
+        }).catch(function() {
           // Autoplay blocked — fall back to TTS
           self._duaAudioPlayer = null;
           self._startDuaTTS(dua, duaId);
         });
+      };
+
+      // If we have an API reference, fetch the audio URL first
+      if (audioRef && audioRef.indexOf('API:') === 0) {
+        var parts = audioRef.replace('API:', '').split(':');
+        self._showDuaToast('🔊 Loading recitation...');
+        self._fetchQuranAudioUrl(parts[0], parts[1], function(url) {
+          if (url && self.duaPlayingId === duaId) {
+            playAudioFile(url);
+          } else {
+            self._startDuaTTS(dua, duaId);
+          }
+        });
         return;
       }
 
-      // STRATEGY 2: TTS or reading mode
+      // Direct audio URL
+      if (audioRef) {
+        playAudioFile(audioRef);
+        return;
+      }
+
+      // STRATEGY 2: TTS or reading mode (for non-Quranic duas / hadith duas)
       self._startDuaTTS(dua, duaId);
     };
 
@@ -1018,7 +1069,14 @@ const Screens = {
   _startDuaTTS(dua, duaId) {
     var self = this;
 
+    // Check if Arabic TTS is actually available before trying
+    var hasArabicTTS = false;
     if ('speechSynthesis' in window) {
+      var voices = speechSynthesis.getVoices();
+      hasArabicTTS = voices.some(function(v) { return v.lang && v.lang.indexOf('ar') === 0; });
+    }
+
+    if ('speechSynthesis' in window && hasArabicTTS) {
       speechSynthesis.cancel();
       var utterance = new SpeechSynthesisUtterance(dua.arabic);
       utterance.lang = 'ar';
@@ -1045,7 +1103,7 @@ const Screens = {
       utterance.onstart = function() {
         ttsStarted = true;
         self._duaStartTime = Date.now();
-        self._showDuaToast('🔊 Playing dua recitation');
+        self._showDuaToast('🔊 ' + I18n.t('playingDua'));
       };
 
       utterance.onend = function() {
@@ -1054,7 +1112,6 @@ const Screens = {
 
       utterance.onerror = function(e) {
         if (!ttsStarted && self.duaPlayingId === duaId) {
-          // TTS failed, switch to reading mode
           self._startDuaReadingMode();
         } else {
           Screens.onDuaAudioEnded();
@@ -1063,28 +1120,28 @@ const Screens = {
 
       speechSynthesis.speak(utterance);
 
-      // Safety: if TTS doesn't start within 2s, fall back to reading mode
+      // Safety: if TTS doesn't start within 1.5s, fall back to reading mode
       setTimeout(function() {
         if (!ttsStarted && self.duaPlayingId === duaId) {
           speechSynthesis.cancel();
           self._startDuaReadingMode();
         }
-      }, 2000);
+      }, 1500);
     } else {
-      // No TTS at all — use reading mode
+      // No Arabic TTS — go directly to reading mode (skip the 2s wait)
       self._startDuaReadingMode();
     }
 
-    // Start the universal word highlighting timer (for TTS boundary fallback and reading mode)
+    // Start the universal word highlighting timer
     self._duaTimer = setInterval(function() { Screens.onDuaTimeUpdate(); }, 50);
   },
 
-  // Pure reading mode — word-by-word highlighting at a steady pace
+  // Pure reading mode — word-by-word highlighting at a steady pace with visual feedback
   _startDuaReadingMode() {
     this._duaAudioMode = 'reading';
     this._duaStartTime = Date.now();
     this._duaEstDuration = Math.max(this._duaWords.length * 550, 3000);
-    this._showDuaToast('📖 Reading mode — follow the highlighted words');
+    this._showDuaToast('📖 ' + I18n.t('readingMode'));
     if (!this._duaTimer) {
       this._duaTimer = setInterval(function() { Screens.onDuaTimeUpdate(); }, 50);
     }
