@@ -52,17 +52,30 @@ const Screens = {
       return `${h > 12 ? h - 12 : h || 12}:${String(m).padStart(2, '0')} ${ampm}`;
     };
 
+    // Mosque silhouette SVG
+    const mosqueSVG = `<svg class="mosque-silhouette" viewBox="0 0 400 160" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(255,255,255,0.08)"/><stop offset="1" stop-color="rgba(255,255,255,0)"/></linearGradient></defs><path d="M0 160 L0 120 Q0 110 10 110 L30 110 L30 80 Q30 70 40 65 L50 60 Q55 40 60 30 Q62 25 65 30 Q70 40 75 60 L85 65 Q95 70 95 80 L95 110 L120 110 L120 90 Q150 50 180 90 L180 110 L200 110 L200 70 Q200 40 210 20 Q212 10 215 5 Q218 10 220 20 Q230 40 230 70 L230 110 L250 110 L250 90 Q280 50 310 90 L310 110 L335 110 L335 80 Q335 70 345 65 L355 60 Q360 40 365 30 Q367 25 370 30 Q375 40 380 60 L390 65 Q400 70 400 80 L400 110 Q400 110 400 110 L400 160 Z" fill="url(#mg)"/><circle cx="65" cy="18" r="4" fill="rgba(212,168,67,0.4)"/><circle cx="215" cy="3" r="5" fill="rgba(212,168,67,0.5)"/><circle cx="370" cy="18" r="4" fill="rgba(212,168,67,0.4)"/></svg>`;
+
+    // Ornamental divider
+    const ornament = `<div class="islamic-ornament"><svg viewBox="0 0 200 20" xmlns="http://www.w3.org/2000/svg"><path d="M0 10 L70 10" stroke="rgba(212,168,67,0.3)" stroke-width="1" fill="none"/><path d="M130 10 L200 10" stroke="rgba(212,168,67,0.3)" stroke-width="1" fill="none"/><path d="M80 10 L90 5 L100 10 L110 15 L120 10" stroke="rgba(212,168,67,0.5)" stroke-width="1.5" fill="none"/><circle cx="100" cy="10" r="3" fill="rgba(212,168,67,0.4)"/><circle cx="85" cy="7" r="1.5" fill="rgba(212,168,67,0.3)"/><circle cx="115" cy="13" r="1.5" fill="rgba(212,168,67,0.3)"/></svg></div>`;
+
+    // Prayer icons
+    const prayerIcons = { Fajr: '🌙', Dhuhr: '☀️', Asr: '🌤️', Maghrib: '🌅', Isha: '🌛' };
+
     el.innerHTML = `
       <div class="prayer-hero crescent-stars">
-        <div class="prayer-label">NEXT PRAYER</div>
-        <div class="prayer-name">${nextPrayer.name}</div>
-        <div class="prayer-time-big">${formatTime(nextPrayer.time)}</div>
-        <div class="prayer-countdown">in ${hrs}h ${mins}m</div>
+        ${mosqueSVG}
+        <div class="prayer-hero-content">
+          <div class="prayer-label">✦ NEXT PRAYER ✦</div>
+          <div class="prayer-name">${nextPrayer.name}</div>
+          <div class="prayer-time-big">${formatTime(nextPrayer.time)}</div>
+          <div class="prayer-countdown">in ${hrs}h ${mins}m</div>
+        </div>
       </div>
 
       <div class="prayer-times-row">
         ${prayers.map(p => `
           <div class="prayer-cell ${p.name === nextPrayer.name ? 'current' : ''}">
+            <div class="prayer-cell-icon">${prayerIcons[p.name] || ''}</div>
             <div class="prayer-cell-name">${p.name}</div>
             <div class="prayer-cell-time">${p.time}</div>
           </div>
@@ -78,29 +91,34 @@ const Screens = {
         <div class="streak-xp">+50 XP</div>
       </div>
 
-      <div class="section-title">Quick Actions</div>
+      ${ornament}
+
+      <div class="section-title">✦ Quick Actions</div>
       <div class="quick-grid">
-        <div class="quick-item" onclick="App.navigate('quran')"><div class="quick-icon">\uD83D\uDCD6</div><div class="quick-label">Quran</div></div>
-        <div class="quick-item" onclick="App.navigate('hadith')"><div class="quick-icon">\uD83D\uDCDC</div><div class="quick-label">Hadith</div></div>
-        <div class="quick-item" onclick="App.navigate('ai')"><div class="quick-icon">\u2728</div><div class="quick-label">AI Scholar</div></div>
-        <div class="quick-item" onclick="App.navigate('tasbih')"><div class="quick-icon">\uD83D\uDCFF</div><div class="quick-label">Tasbih</div></div>
-        <div class="quick-item" onclick="App.navigate('qibla')"><div class="quick-icon">\uD83E\uDDED</div><div class="quick-label">Qibla</div></div>
-        <div class="quick-item" onclick="App.navigate('duas')"><div class="quick-icon">\uD83E\uDD32</div><div class="quick-label">Duas</div></div>
-        <div class="quick-item" onclick="App.navigate('zakat')"><div class="quick-icon">\uD83D\uDCB0</div><div class="quick-label">Zakat</div></div>
-        <div class="quick-item" onclick="App.navigate('calendar')"><div class="quick-icon">\uD83D\uDCC5</div><div class="quick-label">Calendar</div></div>
+        <div class="quick-item" onclick="App.navigate('quran')"><div class="quick-icon">📖</div><div class="quick-label">Quran</div></div>
+        <div class="quick-item" onclick="App.navigate('hadith')"><div class="quick-icon">📜</div><div class="quick-label">Hadith</div></div>
+        <div class="quick-item" onclick="App.navigate('ai')"><div class="quick-icon">✨</div><div class="quick-label">AI Scholar</div></div>
+        <div class="quick-item" onclick="App.navigate('tasbih')"><div class="quick-icon">📿</div><div class="quick-label">Tasbih</div></div>
+        <div class="quick-item" onclick="App.navigate('qibla')"><div class="quick-icon">🧭</div><div class="quick-label">Qibla</div></div>
+        <div class="quick-item" onclick="App.navigate('duas')"><div class="quick-icon">🤲</div><div class="quick-label">Duas</div></div>
+        <div class="quick-item" onclick="App.navigate('zakat')"><div class="quick-icon">💰</div><div class="quick-label">Zakat</div></div>
+        <div class="quick-item" onclick="App.navigate('calendar')"><div class="quick-icon">📅</div><div class="quick-label">Calendar</div></div>
       </div>
 
-      <div class="section-title">Daily Verse</div>
+      ${ornament}
+
+      <div class="section-title">✦ Daily Verse</div>
       <div class="verse-card card card-hover card-islamic" onclick="App.navigate('quran')">
-        <div class="arabic-text" style="margin-bottom:8px">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
-        <div class="text-sm text-sec">In the name of Allah, the Most Gracious, the Most Merciful</div>
-        <div class="text-xs mt-8" style="color:var(--primary-light)">Surah Al-Fatihah 1:1</div>
+        <div class="verse-bismillah">﷽</div>
+        <div class="arabic-text" style="margin-bottom:12px;font-size:28px;line-height:2">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
+        <div class="verse-translation">In the name of Allah, the Most Gracious, the Most Merciful</div>
+        <div class="verse-reference">— Surah Al-Fatihah 1:1</div>
       </div>
 
-      <div class="card" style="background:linear-gradient(135deg,rgba(212,168,67,.15),rgba(13,124,102,.15));border:1px solid rgba(212,168,67,.2)">
+      <div class="card xp-card">
         <div class="row" style="justify-content:space-between">
           <div>
-            <div style="font-size:13px;color:var(--gold)">Level ${level}</div>
+            <div class="xp-level-text">✦ Level ${level}</div>
             <div style="font-size:11px;color:var(--text-sec)">${xp} XP earned</div>
           </div>
           <div style="font-size:11px;color:var(--text-sec)">${500 - (xp % 500)} XP to next level</div>
