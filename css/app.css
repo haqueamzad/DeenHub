@@ -3861,9 +3861,147 @@ body::after {
 .ummah-action-icon { font-size: 28px; margin-bottom: 6px; }
 .ummah-action-label { font-size: 11px; font-weight: 600; color: var(--text-sec); }
 
+/* Card entrance animation */
+@keyframes ummahCardIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.ummah-card-anim { animation: ummahCardIn 0.35s ease forwards; opacity: 0; }
+
+/* Skeleton loading */
+.ummah-skeleton { min-height: 72px; }
+@keyframes shimmer { 0% { background-position: -200px 0; } 100% { background-position: 200px 0; } }
+.skel-circle { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(90deg, rgba(212,168,67,0.06) 0%, rgba(212,168,67,0.12) 50%, rgba(212,168,67,0.06) 100%); background-size: 400px; animation: shimmer 1.5s infinite; flex-shrink: 0; }
+.skel-lines { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.skel-line { height: 12px; border-radius: 6px; background: linear-gradient(90deg, rgba(212,168,67,0.06) 0%, rgba(212,168,67,0.12) 50%, rgba(212,168,67,0.06) 100%); background-size: 400px; animation: shimmer 1.5s infinite; }
+.skel-line.w70 { width: 70%; } .skel-line.w40 { width: 40%; }
+.skel-badge { width: 48px; height: 24px; border-radius: 12px; background: linear-gradient(90deg, rgba(212,168,67,0.06) 0%, rgba(212,168,67,0.12) 50%, rgba(212,168,67,0.06) 100%); background-size: 400px; animation: shimmer 1.5s infinite; flex-shrink: 0; }
+
+/* Search bar */
+.ummah-search-wrap { position: relative; margin-bottom: 10px; }
+.ummah-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; pointer-events: none; }
+.ummah-search-input {
+  width: 100%; padding: 10px 12px 10px 36px; border-radius: 12px;
+  border: 1px solid rgba(212,168,67,0.2); background: rgba(17,29,51,0.7);
+  color: var(--text-primary); font-size: 13px; outline: none;
+  transition: border-color 0.2s; box-sizing: border-box;
+}
+.ummah-search-input:focus { border-color: var(--gold-light); }
+.ummah-search-input::placeholder { color: var(--text-muted); }
+
+/* Radius selector */
+.ummah-radius-bar { display: flex; gap: 6px; margin-bottom: 12px; }
+.ummah-radius-btn {
+  flex: 1; padding: 6px 0; border-radius: 8px; font-size: 11px; font-weight: 700;
+  border: 1px solid rgba(212,168,67,0.2); background: transparent;
+  color: var(--text-sec); cursor: pointer; transition: all 0.2s; touch-action: manipulation;
+}
+.ummah-radius-btn.active { border-color: var(--gold-light); background: rgba(212,168,67,0.12); color: var(--gold-light); }
+
+/* Tags / Badges */
+.ummah-badges { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 0 54px; }
+.ummah-tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 8px; font-weight: 600; white-space: nowrap; }
+.fav-tag { background: rgba(231,76,60,0.1); color: #e74c3c; }
+.access-tag { background: rgba(52,152,219,0.1); color: #3498db; }
+.denom-tag { background: rgba(155,89,182,0.1); color: #9b59b6; }
+.type-tag { background: rgba(212,168,67,0.08); color: var(--text-sec); }
+.eid-tag { background: rgba(46,204,113,0.1); color: #2ecc71; }
+.sunnah-tag { background: rgba(241,196,15,0.1); color: #f1c40f; }
+.major-tag { background: rgba(212,168,67,0.1); color: var(--gold-light); }
+.sacred-tag { background: rgba(212,168,67,0.12); color: var(--gold-light); }
+
+/* Open/Closed badge */
+.ummah-open-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 6px; margin-left: 6px; vertical-align: middle; }
+.ummah-open-badge.open { background: rgba(46,204,113,0.15); color: #2ecc71; }
+.ummah-open-badge.closed { background: rgba(231,76,60,0.1); color: #e74c3c; }
+
+/* Hours / Fav / Direction */
+.ummah-card-hours { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.ummah-fav-btn { transition: transform 0.2s, background 0.2s; }
+.ummah-fav-btn:active { transform: scale(1.1); }
+.ummah-dir-link { background: rgba(212,168,67,0.08); font-weight: 700; }
+
+/* Load more */
+.ummah-load-more {
+  display: block; width: 100%; padding: 14px; margin: 12px 0; border-radius: 12px;
+  border: 2px solid rgba(212,168,67,0.2); background: rgba(212,168,67,0.05);
+  color: var(--gold-light); font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; text-align: center; touch-action: manipulation;
+}
+.ummah-load-more:active { background: rgba(212,168,67,0.15); transform: scale(0.98); }
+
+/* Error & Retry */
+.ummah-error { text-align: center; padding: 40px 20px; color: var(--text-primary); }
+.ummah-retry-btn {
+  padding: 10px 28px; border-radius: 20px; font-weight: 700; font-size: 14px;
+  border: 2px solid var(--gold-light); background: rgba(212,168,67,0.1);
+  color: var(--gold-light); cursor: pointer; transition: all 0.2s;
+}
+.ummah-retry-btn:active { background: rgba(212,168,67,0.2); transform: scale(0.96); }
+
+/* Cuisine filter chips */
+.ummah-cuisine-filters {
+  display: flex; gap: 6px; overflow-x: auto; white-space: nowrap;
+  margin-bottom: 10px; padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.ummah-cuisine-filters::-webkit-scrollbar { display: none; }
+.ummah-cuisine-chip {
+  flex-shrink: 0; padding: 5px 12px; border-radius: 14px; font-size: 11px;
+  font-weight: 600; border: 1px solid rgba(46,204,113,0.2); background: transparent;
+  color: var(--text-sec); cursor: pointer; transition: all 0.2s;
+}
+.ummah-cuisine-chip.active { border-color: rgba(46,204,113,0.6); background: rgba(46,204,113,0.1); color: #2ecc71; }
+
+/* Hijri crescent */
+.ummah-hijri-crescent, .ummah-dates-crescent { font-size: 28px; margin-bottom: 8px; opacity: 0.7; }
+
+/* Current / Sacred badges */
+.ummah-current-badge {
+  display: inline-block; font-size: 9px; padding: 1px 6px; border-radius: 6px;
+  background: var(--gold-light); color: var(--dark); font-weight: 700; vertical-align: middle; margin-left: 4px;
+}
+.ummah-sacred-badge {
+  display: inline-block; font-size: 9px; padding: 1px 6px; border-radius: 6px;
+  background: rgba(212,168,67,0.12); color: var(--gold-light); font-weight: 700; vertical-align: middle; margin-left: 4px;
+}
+.ummah-month-num.sacred { background: rgba(212,168,67,0.2); }
+
+/* Dua card */
+.ummah-dua-card {
+  padding: 20px; border-radius: 16px;
+  background: linear-gradient(135deg, rgba(212,168,67,0.08), rgba(13,124,102,0.06));
+  border: 1px solid rgba(212,168,67,0.12);
+}
+.ummah-fast-grid { display: flex; flex-direction: column; gap: 6px; }
+
+/* Inspire upgrades */
+.ummah-inspire-icon { font-size: 36px; margin-bottom: 8px; }
+.ummah-stat-card.fire { border-color: rgba(231,76,60,0.2); }
+.ummah-stat-card.pray { border-color: rgba(52,152,219,0.2); }
+.ummah-stat-card.tasbih { border-color: rgba(46,204,113,0.2); }
+.ummah-stat-card.level { border-color: rgba(241,196,15,0.2); }
+
 /* Name of Allah card */
 .ummah-name-card {
-  text-align: center; padding: 24px; margin-top: 16px;
-  background: linear-gradient(135deg, rgba(212,168,67,0.08), rgba(13,124,102,0.06));
-  border: 2px solid rgba(212,168,67,0.15); border-radius: 20px;
+  text-align: center; padding: 28px 20px; margin-top: 8px; position: relative; overflow: hidden;
+  background: linear-gradient(135deg, rgba(212,168,67,0.1), rgba(13,124,102,0.06));
+  border: 2px solid rgba(212,168,67,0.2); border-radius: 20px;
 }
+.ummah-name-number {
+  position: absolute; top: 10px; right: 14px;
+  font-size: 11px; font-weight: 700; color: var(--gold);
+  background: rgba(212,168,67,0.1); padding: 2px 8px; border-radius: 8px;
+}
+
+/* Mini 99 names grid */
+.ummah-names-grid {
+  display: flex; gap: 6px; overflow-x: auto; padding: 12px 0 4px;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none; justify-content: center;
+}
+.ummah-names-grid::-webkit-scrollbar { display: none; }
+.ummah-names-mini {
+  flex-shrink: 0; text-align: center; padding: 8px 10px; border-radius: 10px;
+  background: rgba(17,29,51,0.5); border: 1px solid rgba(212,168,67,0.06); min-width: 60px;
+}
+.ummah-names-mini.current { background: rgba(212,168,67,0.1); border-color: rgba(212,168,67,0.25); }

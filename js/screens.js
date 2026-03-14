@@ -1718,7 +1718,10 @@ const Screens = {
   communityTab: 'mosques',
   _communityMosques: null,
   _communityHalal: null,
-  _communityLoading: false,
+  _communityRadius: 32, // km (~20 mi)
+  _communityShowAll: false,
+  _communitySearch: '',
+  _communityFilter: 'all',
 
   async renderCommunity() {
     var self = this;
@@ -1726,11 +1729,11 @@ const Screens = {
     if (!el) return;
 
     var tabs = [
-      { id: 'mosques', label: '\uD83D\uDD4C Mosques', icon: '\uD83D\uDD4C' },
-      { id: 'halal', label: '\uD83C\uDF5B Halal Food', icon: '\uD83C\uDF5B' },
-      { id: 'events', label: '\uD83D\uDCC5 Events', icon: '\uD83D\uDCC5' },
-      { id: 'dates', label: '\u2B50 Islamic Dates', icon: '\u2B50' },
-      { id: 'inspire', label: '\uD83D\uDCA1 Inspire', icon: '\uD83D\uDCA1' }
+      { id: 'mosques', label: '\uD83D\uDD4C Mosques' },
+      { id: 'halal', label: '\uD83C\uDF5B Halal Food' },
+      { id: 'events', label: '\uD83D\uDCC5 Events' },
+      { id: 'dates', label: '\u2B50 Islamic Dates' },
+      { id: 'inspire', label: '\uD83D\uDCA1 Inspire' }
     ];
 
     // Build tab bar
@@ -1741,11 +1744,10 @@ const Screens = {
       tabsHTML += '<button class="ummah-tab' + (isActive ? ' active' : '') + '" data-tab="' + t.id + '">' + t.label + '</button>';
     }
 
-    // Header + tabs
     el.innerHTML =
       self._screenHeader('\uD83C\uDF0D', 'Muslim Community', '\u0627\u0644\u0623\u0645\u0629 \u0627\u0644\u0625\u0633\u0644\u0627\u0645\u064A\u0629', 'Mosques, Halal Food & Islamic Life near you') +
       '<div class="ummah-tabs">' + tabsHTML + '</div>' +
-      '<div id="ummah-content"><div class="loading-spinner"></div></div>';
+      '<div id="ummah-content"></div>';
 
     // Attach tab listeners
     var tabBtns = el.querySelectorAll('.ummah-tab');
@@ -1753,28 +1755,143 @@ const Screens = {
       (function(btn) {
         btn.addEventListener('click', function() {
           self.communityTab = btn.getAttribute('data-tab');
+          self._communityShowAll = false;
+          self._communitySearch = '';
+          self._communityFilter = 'all';
           self.renderCommunity();
         });
         btn.addEventListener('touchend', function(e) {
           e.preventDefault();
           self.communityTab = btn.getAttribute('data-tab');
+          self._communityShowAll = false;
+          self._communitySearch = '';
+          self._communityFilter = 'all';
           self.renderCommunity();
         });
       })(tabBtns[i]);
     }
 
     // Render active tab content
-    if (self.communityTab === 'mosques') {
-      self._renderCommunityMosques();
-    } else if (self.communityTab === 'halal') {
-      self._renderCommunityHalal();
-    } else if (self.communityTab === 'events') {
-      self._renderCommunityEvents();
-    } else if (self.communityTab === 'dates') {
-      self._renderCommunityDates();
-    } else if (self.communityTab === 'inspire') {
-      self._renderCommunityInspire();
+    var tab = self.communityTab;
+    if (tab === 'mosques') self._renderCommunityMosques();
+    else if (tab === 'halal') self._renderCommunityHalal();
+    else if (tab === 'events') self._renderCommunityEvents();
+    else if (tab === 'dates') self._renderCommunityDates();
+    else if (tab === 'inspire') self._renderCommunityInspire();
+  },
+
+  // ---- SKELETON LOADER ----
+  _skeletonCards: function(count) {
+    var html = '';
+    for (var i = 0; i < count; i++) {
+      html += '<div class="ummah-card ummah-skeleton"><div class="ummah-card-header">' +
+        '<div class="skel-circle"></div>' +
+        '<div class="skel-lines"><div class="skel-line w70"></div><div class="skel-line w40"></div></div>' +
+        '<div class="skel-badge"></div>' +
+      '</div></div>';
     }
+    return html;
+  },
+
+  // ---- RADIUS SELECTOR ----
+  _radiusBar: function(type) {
+    var self = this;
+    var radii = [
+      { km: 8, label: '5 mi' },
+      { km: 16, label: '10 mi' },
+      { km: 32, label: '20 mi' },
+      { km: 80, label: '50 mi' }
+    ];
+    var html = '<div class="ummah-radius-bar">';
+    for (var i = 0; i < radii.length; i++) {
+      var r = radii[i];
+      html += '<button class="ummah-radius-btn' + (self._communityRadius === r.km ? ' active' : '') + '" data-km="' + r.km + '">' + r.label + '</button>';
+    }
+    html += '</div>';
+    return html;
+  },
+
+  _attachRadiusListeners: function(type) {
+    var self = this;
+    var btns = document.querySelectorAll('.ummah-radius-btn');
+    for (var i = 0; i < btns.length; i++) {
+      (function(btn) {
+        btn.addEventListener('click', function() {
+          var km = parseInt(btn.getAttribute('data-km'));
+          if (km !== self._communityRadius) {
+            self._communityRadius = km;
+            if (type === 'mosques') { self._communityMosques = null; self._renderCommunityMosques(); }
+            else { self._communityHalal = null; self._renderCommunityHalal(); }
+          }
+        });
+      })(btns[i]);
+    }
+  },
+
+  // ---- SEARCH BAR ----
+  _searchBar: function(placeholder) {
+    return '<div class="ummah-search-wrap">' +
+      '<span class="ummah-search-icon">\uD83D\uDD0D</span>' +
+      '<input class="ummah-search-input" id="ummah-search" type="text" placeholder="' + placeholder + '" value="' + this._escapeHTML(this._communitySearch) + '">' +
+    '</div>';
+  },
+
+  // ---- FAVORITES ----
+  _isFav: function(id) {
+    var favs = Store.get('ummahFavs', []);
+    for (var i = 0; i < favs.length; i++) { if (favs[i] === id) return true; }
+    return false;
+  },
+  _toggleFav: function(id) {
+    var favs = Store.get('ummahFavs', []);
+    var idx = -1;
+    for (var i = 0; i < favs.length; i++) { if (favs[i] === id) { idx = i; break; } }
+    if (idx >= 0) { favs.splice(idx, 1); App.toast('Removed from favorites'); }
+    else { favs.push(id); App.toast('Saved to favorites!'); }
+    Store.set('ummahFavs', favs);
+    // Re-render current tab
+    if (this.communityTab === 'mosques') this._renderCommunityMosques();
+    else if (this.communityTab === 'halal') this._renderCommunityHalal();
+  },
+
+  // ---- OPEN NOW CHECKER ----
+  _isOpenNow: function(hoursStr) {
+    if (!hoursStr) return null; // unknown
+    try {
+      var now = new Date();
+      var dayNames = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+      var today = dayNames[now.getDay()];
+      var nowMin = now.getHours() * 60 + now.getMinutes();
+      // Simple parser for common formats like "Mo-Fr 09:00-22:00; Sa-Su 10:00-20:00"
+      var parts = hoursStr.split(';');
+      for (var i = 0; i < parts.length; i++) {
+        var part = parts[i].trim();
+        if (part === '24/7') return true;
+        var match = part.match(/^([A-Za-z, -]+)\s+(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$/);
+        if (!match) continue;
+        var dayRange = match[1];
+        var openMin = parseInt(match[2]) * 60 + parseInt(match[3]);
+        var closeMin = parseInt(match[4]) * 60 + parseInt(match[5]);
+        // Check if today falls in the day range
+        var dayIncluded = false;
+        var ranges = dayRange.split(',');
+        for (var j = 0; j < ranges.length; j++) {
+          var r = ranges[j].trim();
+          if (r.indexOf('-') >= 0) {
+            var ds = r.split('-');
+            var startIdx = dayNames.indexOf(ds[0].trim());
+            var endIdx = dayNames.indexOf(ds[1].trim());
+            var todayIdx = dayNames.indexOf(today);
+            if (startIdx >= 0 && endIdx >= 0 && todayIdx >= 0) {
+              if (startIdx <= endIdx) { if (todayIdx >= startIdx && todayIdx <= endIdx) dayIncluded = true; }
+              else { if (todayIdx >= startIdx || todayIdx <= endIdx) dayIncluded = true; }
+            }
+          } else if (r === today) dayIncluded = true;
+        }
+        if (dayIncluded && nowMin >= openMin && nowMin < closeMin) return true;
+      }
+      return false;
+    } catch(e) { return null; }
   },
 
   // ---- MOSQUES TAB ----
@@ -1782,34 +1899,83 @@ const Screens = {
     var self = this;
     var content = document.getElementById('ummah-content');
     if (!content) return;
-    content.innerHTML = '<div class="loading-spinner"></div><div style="text-align:center;color:var(--text-sec);font-size:12px;margin-top:8px">Searching nearby mosques via OpenStreetMap...</div>';
 
-    if (!self.location) self.location = await API.getLocation();
-    if (!self._communityMosques) {
-      self._communityMosques = await API.getNearbyMosques(self.location.lat, self.location.lng);
-    }
-    var mosques = self._communityMosques;
+    // Show skeleton loading
+    content.innerHTML = self._searchBar('Search mosques...') + self._radiusBar('mosques') + self._skeletonCards(4);
 
-    if (!mosques || mosques.length === 0) {
-      content.innerHTML = '<div class="ummah-empty"><div style="font-size:48px;margin-bottom:12px">\uD83D\uDD4C</div><div style="font-weight:600;margin-bottom:4px">No mosques found nearby</div><div style="font-size:12px;color:var(--text-sec)">Try enabling GPS or expanding your search area</div></div>';
+    try {
+      if (!self.location) self.location = await API.getLocation();
+      if (!self._communityMosques) {
+        self._communityMosques = await API.getNearbyMosques(self.location.lat, self.location.lng, self._communityRadius);
+      }
+    } catch(e) {
+      content.innerHTML = '<div class="ummah-error"><div style="font-size:36px;margin-bottom:8px">\u26A0\uFE0F</div>' +
+        '<div style="font-weight:600;margin-bottom:4px">Could not load mosques</div>' +
+        '<div style="font-size:12px;color:var(--text-sec);margin-bottom:12px">' + (e.message || 'Network error. Check your connection.') + '</div>' +
+        '<button class="ummah-retry-btn" onclick="Screens._communityMosques=null;Screens._renderCommunityMosques()">Retry</button></div>';
       return;
     }
 
-    var html = '<div class="ummah-count">' + mosques.length + ' mosques within 20 miles</div>';
-    var limit = Math.min(mosques.length, 30);
+    var mosques = self._communityMosques || [];
+    var radiusMi = Math.round(self._communityRadius * 0.621);
+
+    // Filter by search
+    var filtered = mosques;
+    if (self._communitySearch) {
+      var q = self._communitySearch.toLowerCase();
+      filtered = [];
+      for (var i = 0; i < mosques.length; i++) {
+        if (mosques[i].name.toLowerCase().indexOf(q) >= 0 || (mosques[i].address && mosques[i].address.toLowerCase().indexOf(q) >= 0)) {
+          filtered.push(mosques[i]);
+        }
+      }
+    }
+
+    // Sort favorites first
+    var favs = Store.get('ummahFavs', []);
+    filtered.sort(function(a, b) {
+      var aFav = favs.indexOf('m_' + a.id) >= 0 ? 0 : 1;
+      var bFav = favs.indexOf('m_' + b.id) >= 0 ? 0 : 1;
+      if (aFav !== bFav) return aFav - bFav;
+      return a.dist - b.dist;
+    });
+
+    if (filtered.length === 0) {
+      content.innerHTML = self._searchBar('Search mosques...') + self._radiusBar('mosques') +
+        '<div class="ummah-empty"><div style="font-size:48px;margin-bottom:12px">\uD83D\uDD4C</div>' +
+        '<div style="font-weight:600;margin-bottom:4px">' + (self._communitySearch ? 'No matching mosques' : 'No mosques found within ' + radiusMi + ' miles') + '</div>' +
+        '<div style="font-size:12px;color:var(--text-sec)">' + (self._communitySearch ? 'Try a different search term' : 'Try expanding your search radius or enable GPS') + '</div></div>';
+      self._attachRadiusListeners('mosques');
+      self._attachSearchListener('mosques');
+      return;
+    }
+
+    var limit = self._communityShowAll ? filtered.length : Math.min(filtered.length, 20);
+    var html = self._searchBar('Search mosques...') + self._radiusBar('mosques');
+    html += '<div class="ummah-count">' + filtered.length + ' mosque' + (filtered.length !== 1 ? 's' : '') + ' within ' + radiusMi + ' miles</div>';
+
     for (var i = 0; i < limit; i++) {
-      var m = mosques[i];
+      var m = filtered[i];
       var distLabel = m.dist < 0.1 ? 'Nearby' : m.dist.toFixed(1) + ' mi';
+      var isFav = self._isFav('m_' + m.id);
       var detailParts = [];
       if (m.address) detailParts.push(m.address);
       if (m.denomination) detailParts.push(m.denomination.charAt(0).toUpperCase() + m.denomination.slice(1));
       var detailStr = detailParts.join(' \u00B7 ');
-      var actionBtns = '';
-      if (m.phone) actionBtns += '<a href="tel:' + m.phone + '" class="ummah-action-link">\uD83D\uDCDE Call</a>';
-      if (m.website) actionBtns += '<a href="' + m.website + '" target="_blank" class="ummah-action-link">\uD83C\uDF10 Website</a>';
-      actionBtns += '<a href="https://www.google.com/maps/dir/?api=1&destination=' + m.lat + ',' + m.lng + '" target="_blank" class="ummah-action-link">\uD83D\uDDFA\uFE0F Directions</a>';
 
-      html += '<div class="ummah-card mosque-card">' +
+      // Badges
+      var badges = '';
+      if (isFav) badges += '<span class="ummah-tag fav-tag">\u2764\uFE0F Favorite</span>';
+      if (m.wheelchair === 'yes') badges += '<span class="ummah-tag access-tag">\u267F Accessible</span>';
+      if (m.denomination) badges += '<span class="ummah-tag denom-tag">' + self._escapeHTML(m.denomination) + '</span>';
+
+      // Action buttons
+      var actionBtns = '<button class="ummah-action-link ummah-fav-btn" data-fav="m_' + m.id + '">' + (isFav ? '\u2764\uFE0F Saved' : '\uD83E\uDD0D Save') + '</button>';
+      if (m.phone) actionBtns += '<a href="tel:' + m.phone + '" class="ummah-action-link">\uD83D\uDCDE Call</a>';
+      if (m.website) actionBtns += '<a href="' + self._escapeHTML(m.website) + '" target="_blank" rel="noopener" class="ummah-action-link">\uD83C\uDF10 Website</a>';
+      actionBtns += '<a href="https://www.google.com/maps/dir/?api=1&destination=' + m.lat + ',' + m.lng + '" target="_blank" rel="noopener" class="ummah-action-link ummah-dir-link">\uD83D\uDDFA\uFE0F Directions</a>';
+
+      html += '<div class="ummah-card mosque-card ummah-card-anim" style="animation-delay:' + (i * 0.04) + 's">' +
         '<div class="ummah-card-header">' +
           '<div class="ummah-card-icon mosque-icon">\uD83D\uDD4C</div>' +
           '<div class="ummah-card-info">' +
@@ -1818,15 +1984,19 @@ const Screens = {
           '</div>' +
           '<div class="ummah-card-dist">' + distLabel + '</div>' +
         '</div>' +
-        (m.wheelchair === 'yes' ? '<div class="ummah-badge">\u267F Wheelchair accessible</div>' : '') +
+        (badges ? '<div class="ummah-badges">' + badges + '</div>' : '') +
         '<div class="ummah-card-actions">' + actionBtns + '</div>' +
       '</div>';
     }
-    if (mosques.length > 30) {
-      html += '<div style="text-align:center;padding:12px;color:var(--text-sec);font-size:12px">Showing 30 of ' + mosques.length + ' mosques</div>';
+
+    if (!self._communityShowAll && filtered.length > 20) {
+      html += '<button class="ummah-load-more" onclick="Screens._communityShowAll=true;Screens._renderCommunityMosques()">Show all ' + filtered.length + ' mosques</button>';
     }
     html += '<div class="ummah-source">Data from OpenStreetMap \u00B7 <a href="https://www.openstreetmap.org/" target="_blank" style="color:var(--gold-light)">Contribute</a></div>';
     content.innerHTML = html;
+    self._attachRadiusListeners('mosques');
+    self._attachSearchListener('mosques');
+    self._attachFavListeners();
   },
 
   // ---- HALAL FOOD TAB ----
@@ -1834,55 +2004,185 @@ const Screens = {
     var self = this;
     var content = document.getElementById('ummah-content');
     if (!content) return;
-    content.innerHTML = '<div class="loading-spinner"></div><div style="text-align:center;color:var(--text-sec);font-size:12px;margin-top:8px">Finding halal restaurants nearby...</div>';
 
-    if (!self.location) self.location = await API.getLocation();
-    if (!self._communityHalal) {
-      self._communityHalal = await API.getNearbyHalal(self.location.lat, self.location.lng);
-    }
-    var places = self._communityHalal;
+    content.innerHTML = self._searchBar('Search halal food...') + self._radiusBar('halal') + self._skeletonCards(4);
 
-    if (!places || places.length === 0) {
-      content.innerHTML = '<div class="ummah-empty"><div style="font-size:48px;margin-bottom:12px">\uD83C\uDF5B</div><div style="font-weight:600;margin-bottom:4px">No halal restaurants found nearby</div><div style="font-size:12px;color:var(--text-sec)">OpenStreetMap data may be limited in your area.<br>Help improve data at openstreetmap.org!</div></div>';
+    try {
+      if (!self.location) self.location = await API.getLocation();
+      if (!self._communityHalal) {
+        self._communityHalal = await API.getNearbyHalal(self.location.lat, self.location.lng, self._communityRadius);
+      }
+    } catch(e) {
+      content.innerHTML = '<div class="ummah-error"><div style="font-size:36px;margin-bottom:8px">\u26A0\uFE0F</div>' +
+        '<div style="font-weight:600;margin-bottom:4px">Could not load restaurants</div>' +
+        '<div style="font-size:12px;color:var(--text-sec);margin-bottom:12px">' + (e.message || 'Network error') + '</div>' +
+        '<button class="ummah-retry-btn" onclick="Screens._communityHalal=null;Screens._renderCommunityHalal()">Retry</button></div>';
       return;
     }
 
+    var places = self._communityHalal || [];
+    var radiusMi = Math.round(self._communityRadius * 0.621);
     var amenityIcons = { restaurant: '\uD83C\uDF7D\uFE0F', fast_food: '\uD83C\uDF54', cafe: '\u2615' };
-    var html = '<div class="ummah-count">' + places.length + ' halal restaurants within 20 miles</div>';
-    var limit = Math.min(places.length, 30);
+
+    // Filter by search & cuisine filter
+    var filtered = places;
+    if (self._communitySearch) {
+      var q = self._communitySearch.toLowerCase();
+      filtered = [];
+      for (var i = 0; i < places.length; i++) {
+        var p = places[i];
+        if (p.name.toLowerCase().indexOf(q) >= 0 || (p.cuisine && p.cuisine.toLowerCase().indexOf(q) >= 0) || (p.address && p.address.toLowerCase().indexOf(q) >= 0)) {
+          filtered.push(p);
+        }
+      }
+    }
+
+    // Get unique cuisines for filter
+    var cuisineSet = {};
+    for (var i = 0; i < places.length; i++) {
+      if (places[i].cuisine) {
+        var cs = places[i].cuisine.split(/[;,]/);
+        for (var j = 0; j < cs.length; j++) {
+          var c = cs[j].trim().toLowerCase();
+          if (c && c !== 'halal') cuisineSet[c] = (cuisineSet[c] || 0) + 1;
+        }
+      }
+    }
+    var topCuisines = Object.keys(cuisineSet).sort(function(a,b){ return cuisineSet[b]-cuisineSet[a]; }).slice(0, 6);
+
+    // Sort favs first
+    var favs = Store.get('ummahFavs', []);
+    filtered.sort(function(a, b) {
+      var aFav = favs.indexOf('h_' + a.id) >= 0 ? 0 : 1;
+      var bFav = favs.indexOf('h_' + b.id) >= 0 ? 0 : 1;
+      if (aFav !== bFav) return aFav - bFav;
+      return a.dist - b.dist;
+    });
+
+    if (filtered.length === 0) {
+      content.innerHTML = self._searchBar('Search halal food...') + self._radiusBar('halal') +
+        '<div class="ummah-empty"><div style="font-size:48px;margin-bottom:12px">\uD83C\uDF5B</div>' +
+        '<div style="font-weight:600;margin-bottom:4px">' + (self._communitySearch ? 'No matching restaurants' : 'No halal restaurants within ' + radiusMi + ' miles') + '</div>' +
+        '<div style="font-size:12px;color:var(--text-sec)">OpenStreetMap data may be limited in your area.<br><a href="https://www.openstreetmap.org/" target="_blank" style="color:var(--gold-light)">Help add halal places</a></div></div>';
+      self._attachRadiusListeners('halal');
+      self._attachSearchListener('halal');
+      return;
+    }
+
+    var limit = self._communityShowAll ? filtered.length : Math.min(filtered.length, 20);
+    var html = self._searchBar('Search halal food...') + self._radiusBar('halal');
+
+    // Cuisine filter chips
+    if (topCuisines.length > 0) {
+      html += '<div class="ummah-cuisine-filters">';
+      html += '<button class="ummah-cuisine-chip' + (self._communityFilter === 'all' ? ' active' : '') + '" data-cuisine="all">All</button>';
+      for (var i = 0; i < topCuisines.length; i++) {
+        var c = topCuisines[i];
+        html += '<button class="ummah-cuisine-chip' + (self._communityFilter === c ? ' active' : '') + '" data-cuisine="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + ' (' + cuisineSet[c] + ')</button>';
+      }
+      html += '</div>';
+    }
+
+    html += '<div class="ummah-count">' + filtered.length + ' halal place' + (filtered.length !== 1 ? 's' : '') + ' within ' + radiusMi + ' miles</div>';
+
     for (var i = 0; i < limit; i++) {
-      var p = places[i];
+      var p = filtered[i];
       var distLabel = p.dist < 0.1 ? 'Nearby' : p.dist.toFixed(1) + ' mi';
       var icon = amenityIcons[p.amenity] || '\uD83C\uDF7D\uFE0F';
       var cuisineLabel = p.cuisine ? p.cuisine.replace(/;/g, ', ') : 'Halal';
       if (cuisineLabel.length > 40) cuisineLabel = cuisineLabel.substring(0, 40) + '...';
+      var isFav = self._isFav('h_' + p.id);
+      var openStatus = self._isOpenNow(p.openingHours);
+      var openBadge = '';
+      if (openStatus === true) openBadge = '<span class="ummah-open-badge open">\u25CF Open Now</span>';
+      else if (openStatus === false) openBadge = '<span class="ummah-open-badge closed">\u25CF Closed</span>';
+
       var detailParts = [];
       if (p.address) detailParts.push(p.address);
-      if (p.openingHours) detailParts.push('\u23F0 ' + p.openingHours);
       var detailStr = detailParts.join(' \u00B7 ');
-      var actionBtns = '';
-      if (p.phone) actionBtns += '<a href="tel:' + p.phone + '" class="ummah-action-link">\uD83D\uDCDE Call</a>';
-      if (p.website) actionBtns += '<a href="' + p.website + '" target="_blank" class="ummah-action-link">\uD83C\uDF10 Website</a>';
-      actionBtns += '<a href="https://www.google.com/maps/dir/?api=1&destination=' + p.lat + ',' + p.lng + '" target="_blank" class="ummah-action-link">\uD83D\uDDFA\uFE0F Directions</a>';
 
-      html += '<div class="ummah-card halal-card">' +
+      var badges = '';
+      if (isFav) badges += '<span class="ummah-tag fav-tag">\u2764\uFE0F Favorite</span>';
+      var typeLabel = p.amenity === 'fast_food' ? 'Fast Food' : p.amenity === 'cafe' ? 'Caf\u00E9' : 'Restaurant';
+      badges += '<span class="ummah-tag type-tag">' + typeLabel + '</span>';
+
+      var actionBtns = '<button class="ummah-action-link ummah-fav-btn" data-fav="h_' + p.id + '">' + (isFav ? '\u2764\uFE0F Saved' : '\uD83E\uDD0D Save') + '</button>';
+      if (p.phone) actionBtns += '<a href="tel:' + p.phone + '" class="ummah-action-link">\uD83D\uDCDE Call</a>';
+      if (p.website) actionBtns += '<a href="' + self._escapeHTML(p.website) + '" target="_blank" rel="noopener" class="ummah-action-link">\uD83C\uDF10 Website</a>';
+      actionBtns += '<a href="https://www.google.com/maps/dir/?api=1&destination=' + p.lat + ',' + p.lng + '" target="_blank" rel="noopener" class="ummah-action-link ummah-dir-link">\uD83D\uDDFA\uFE0F Directions</a>';
+
+      html += '<div class="ummah-card halal-card ummah-card-anim" style="animation-delay:' + (i * 0.04) + 's">' +
         '<div class="ummah-card-header">' +
           '<div class="ummah-card-icon halal-icon">' + icon + '</div>' +
           '<div class="ummah-card-info">' +
-            '<div class="ummah-card-name">' + self._escapeHTML(p.name) + '</div>' +
+            '<div class="ummah-card-name">' + self._escapeHTML(p.name) + openBadge + '</div>' +
             '<div class="ummah-cuisine-tag">' + self._escapeHTML(cuisineLabel) + '</div>' +
             (detailStr ? '<div class="ummah-card-detail">' + self._escapeHTML(detailStr) + '</div>' : '') +
+            (p.openingHours ? '<div class="ummah-card-hours">\u23F0 ' + self._escapeHTML(p.openingHours) + '</div>' : '') +
           '</div>' +
           '<div class="ummah-card-dist">' + distLabel + '</div>' +
         '</div>' +
+        (badges ? '<div class="ummah-badges">' + badges + '</div>' : '') +
         '<div class="ummah-card-actions">' + actionBtns + '</div>' +
       '</div>';
     }
-    if (places.length > 30) {
-      html += '<div style="text-align:center;padding:12px;color:var(--text-sec);font-size:12px">Showing 30 of ' + places.length + ' halal restaurants</div>';
+
+    if (!self._communityShowAll && filtered.length > 20) {
+      html += '<button class="ummah-load-more" onclick="Screens._communityShowAll=true;Screens._renderCommunityHalal()">Show all ' + filtered.length + ' restaurants</button>';
     }
     html += '<div class="ummah-source">Data from OpenStreetMap \u00B7 <a href="https://www.openstreetmap.org/" target="_blank" style="color:var(--gold-light)">Contribute</a></div>';
     content.innerHTML = html;
+    self._attachRadiusListeners('halal');
+    self._attachSearchListener('halal');
+    self._attachFavListeners();
+    self._attachCuisineFilterListeners();
+  },
+
+  _attachSearchListener: function(type) {
+    var self = this;
+    var input = document.getElementById('ummah-search');
+    if (!input) return;
+    var timer = null;
+    input.addEventListener('input', function() {
+      clearTimeout(timer);
+      timer = setTimeout(function() {
+        self._communitySearch = input.value.trim();
+        if (type === 'mosques') self._renderCommunityMosques();
+        else self._renderCommunityHalal();
+      }, 300);
+    });
+  },
+
+  _attachFavListeners: function() {
+    var self = this;
+    var btns = document.querySelectorAll('.ummah-fav-btn');
+    for (var i = 0; i < btns.length; i++) {
+      (function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          self._toggleFav(btn.getAttribute('data-fav'));
+        });
+      })(btns[i]);
+    }
+  },
+
+  _attachCuisineFilterListeners: function() {
+    var self = this;
+    var chips = document.querySelectorAll('.ummah-cuisine-chip');
+    for (var i = 0; i < chips.length; i++) {
+      (function(chip) {
+        chip.addEventListener('click', function() {
+          self._communityFilter = chip.getAttribute('data-cuisine');
+          // Filter halal results
+          if (self._communityFilter !== 'all' && self._communityHalal) {
+            self._communitySearch = self._communityFilter;
+          } else {
+            self._communitySearch = '';
+          }
+          self._renderCommunityHalal();
+        });
+      })(chips[i]);
+    }
   },
 
   // ---- EVENTS TAB ----
@@ -1894,25 +2194,31 @@ const Screens = {
     var fastDays = API.getSunnahFastingDays();
     var hijri = API.getHijriDate();
 
-    // Header with Hijri date
     var html = '<div class="ummah-hijri-banner">' +
+      '<div class="ummah-hijri-crescent">\u262A</div>' +
       '<div class="ummah-hijri-date">' + hijri.day + ' ' + hijri.monthName + ' ' + hijri.year + ' AH</div>' +
-      '<div class="ummah-hijri-sub">Current Hijri Date</div>' +
+      '<div class="ummah-hijri-sub">' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '</div>' +
     '</div>';
 
-    // Upcoming Islamic events
+    // Upcoming events
     html += '<div class="ummah-section-title">\u2728 Upcoming Islamic Events</div>';
+    var shownEvents = 0;
     for (var i = 0; i < events.length; i++) {
       var ev = events[i];
-      if (ev.daysUntil < -7) continue; // skip past events
+      if (ev.daysUntil < -7) continue;
+      shownEvents++;
       var dateStr = ev.gregorianDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
       var urgencyClass = ev.daysUntil <= 0 ? 'ummah-event-today' : ev.daysUntil <= 7 ? 'ummah-event-soon' : '';
-      var timeLabel = ev.daysUntil <= 0 ? 'Today / Ongoing' : ev.daysUntil === 1 ? 'Tomorrow' : ev.daysUntil + ' days away';
+      var timeLabel = ev.daysUntil <= 0 ? 'Today!' : ev.daysUntil === 1 ? 'Tomorrow' : ev.daysUntil + ' days';
+      var catBadge = '';
+      if (ev.category === 'eid') catBadge = '<span class="ummah-tag eid-tag">\uD83C\uDF89 Eid</span>';
+      else if (ev.category === 'sunnah') catBadge = '<span class="ummah-tag sunnah-tag">\u2606 Sunnah</span>';
+      else catBadge = '<span class="ummah-tag major-tag">\u2605 Major</span>';
 
-      html += '<div class="ummah-event-card ' + urgencyClass + '" style="border-left-color:' + ev.color + '">' +
+      html += '<div class="ummah-event-card ummah-card-anim ' + urgencyClass + '" style="border-left-color:' + ev.color + ';animation-delay:' + (shownEvents * 0.05) + 's">' +
         '<div class="ummah-event-icon">' + ev.icon + '</div>' +
         '<div class="ummah-event-info">' +
-          '<div class="ummah-event-name">' + ev.name + '</div>' +
+          '<div class="ummah-event-name">' + ev.name + ' ' + catBadge + '</div>' +
           '<div class="ummah-event-desc">' + ev.desc + '</div>' +
           '<div class="ummah-event-meta">' + ev.hijriLabel + ' \u00B7 ~' + dateStr + '</div>' +
         '</div>' +
@@ -1920,20 +2226,36 @@ const Screens = {
       '</div>';
     }
 
-    // Sunnah fasting days
-    html += '<div class="ummah-section-title" style="margin-top:20px">\uD83C\uDF19 Upcoming Sunnah Fasting</div>';
+    // Sunnah fasting
+    html += '<div class="ummah-section-title" style="margin-top:20px">\uD83C\uDF19 Sunnah Fasting Schedule</div>';
+    html += '<div class="ummah-fast-grid">';
     for (var i = 0; i < fastDays.length; i++) {
       var fd = fastDays[i];
       var fDate = new Date();
       fDate.setDate(fDate.getDate() + fd.daysUntil);
       var fLabel = fd.daysUntil === 0 ? 'Today' : fd.daysUntil === 1 ? 'Tomorrow' : fDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
       var fIcon = fd.type === 'white' ? '\uD83C\uDF15' : '\uD83C\uDF19';
-      html += '<div class="ummah-fast-card">' +
+      html += '<div class="ummah-fast-card ummah-card-anim" style="animation-delay:' + (i * 0.06) + 's">' +
         '<span class="ummah-fast-icon">' + fIcon + '</span>' +
         '<span class="ummah-fast-name">' + fd.name + '</span>' +
         '<span class="ummah-fast-date">' + fLabel + '</span>' +
       '</div>';
     }
+    html += '</div>';
+
+    // Quick dua of the day
+    html += '<div class="ummah-section-title" style="margin-top:20px">\uD83E\uDD32 Dua of the Day</div>';
+    var duas = [
+      { ar: '\u0631\u0628\u0651\u064E\u0646\u0627 \u0622\u062A\u0650\u0646\u0627 \u0641\u064A \u0627\u0644\u062F\u0651\u064F\u0646\u0652\u064A\u0627 \u062D\u064E\u0633\u064E\u0646\u064E\u0629\u064B \u0648\u064E\u0641\u064A \u0627\u0644\u0622\u062E\u0650\u0631\u064E\u0629\u0650 \u062D\u064E\u0633\u064E\u0646\u064E\u0629\u064B \u0648\u064E\u0642\u0650\u0646\u0627 \u0639\u064E\u0630\u0627\u0628\u064E \u0627\u0644\u0646\u0651\u064E\u0627\u0631\u0650', en: 'Our Lord, give us in this world good and in the Hereafter good, and protect us from the punishment of the Fire.', ref: 'Quran 2:201' },
+      { ar: '\u0631\u064E\u0628\u0651\u0650 \u0632\u0650\u062F\u0652\u0646\u0650\u064A \u0639\u0650\u0644\u0652\u0645\u064B\u0627', en: 'My Lord, increase me in knowledge.', ref: 'Quran 20:114' },
+      { ar: '\u0631\u064E\u0628\u0651\u064E\u0646\u064E\u0627 \u0644\u0627 \u062A\u064F\u0632\u0650\u063A\u0652 \u0642\u064F\u0644\u064F\u0648\u0628\u064E\u0646\u064E\u0627 \u0628\u064E\u0639\u0652\u062F\u064E \u0625\u0650\u0630\u0652 \u0647\u064E\u062F\u064E\u064A\u0652\u062A\u064E\u0646\u064E\u0627', en: 'Our Lord, let not our hearts deviate after You have guided us.', ref: 'Quran 3:8' }
+    ];
+    var todayDua = duas[new Date().getDate() % duas.length];
+    html += '<div class="ummah-dua-card">' +
+      '<div style="font-family:\'Amiri\',serif;font-size:20px;color:var(--gold-light);line-height:1.8;text-align:center;margin-bottom:10px">' + todayDua.ar + '</div>' +
+      '<div style="font-size:13px;color:var(--text-primary);line-height:1.6;text-align:center;font-style:italic">"' + todayDua.en + '"</div>' +
+      '<div style="font-size:11px;color:var(--gold);text-align:center;margin-top:8px">\u2014 ' + todayDua.ref + '</div>' +
+    '</div>';
 
     content.innerHTML = html;
   },
@@ -1945,10 +2267,11 @@ const Screens = {
 
     var hijri = API.getHijriDate();
     var months = ['Muharram','Safar','Rabi al-Awwal','Rabi al-Thani','Jumada al-Ula','Jumada al-Thani','Rajab','Sha\'ban','Ramadan','Shawwal','Dhul Qi\'dah','Dhul Hijjah'];
+    var monthIcons = ['\uD83C\uDF1F','\uD83C\uDF3F','\uD83D\uDC9A','\uD83C\uDF31','\u2744\uFE0F','\uD83C\uDF3A','\u2B50','\uD83C\uDF19','\uD83C\uDF19','\uD83C\uDF89','\uD83D\uDD4B','\uD83D\uDD4B'];
     var monthDescriptions = [
       'Sacred month. Fasting encouraged. Contains Ashura (10th).',
       'No special events. Good time for voluntary worship.',
-      'Birth month of Prophet Muhammad (PBUH) — 12th Rabi al-Awwal.',
+      'Birth month of Prophet Muhammad (PBUH) \u2014 12th Rabi al-Awwal.',
       'Continue good deeds and voluntary fasting.',
       'Named after the dry cold weather. Focus on dhikr.',
       'Prepare spiritually for the sacred months ahead.',
@@ -1959,35 +2282,46 @@ const Screens = {
       'Month of preparation for Hajj. Increase good deeds.',
       'Month of Hajj, Arafah (9th), and Eid al-Adha (10th). First 10 days are blessed.'
     ];
+    var sacredMonths = [1, 7, 11, 12];
 
     var html = '<div class="ummah-dates-hero">' +
-      '<div style="font-size:48px;font-weight:700;color:var(--gold-light)">' + hijri.day + '</div>' +
-      '<div style="font-size:20px;font-weight:600;color:var(--text-primary)">' + hijri.monthName + '</div>' +
-      '<div style="font-size:14px;color:var(--text-sec)">' + hijri.year + ' AH</div>' +
+      '<div class="ummah-dates-crescent">\u262A</div>' +
+      '<div style="font-size:56px;font-weight:700;color:var(--gold-light);font-family:\'Amiri\',serif">' + hijri.day + '</div>' +
+      '<div style="font-size:22px;font-weight:600;color:var(--text-primary)">' + hijri.monthName + '</div>' +
+      '<div style="font-size:15px;color:var(--text-sec)">' + hijri.year + ' AH</div>' +
       '<div style="font-size:11px;color:var(--gold);margin-top:8px">' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) + '</div>' +
     '</div>';
 
-    // Current month info
-    html += '<div class="ummah-section-title">\uD83D\uDCC6 Month of ' + hijri.monthName + '</div>';
-    html += '<div class="ummah-month-info">' + (monthDescriptions[hijri.month - 1] || '') + '</div>';
+    // Current month spotlight
+    html += '<div class="ummah-section-title">' + monthIcons[hijri.month - 1] + ' Month of ' + hijri.monthName + '</div>';
+    var isSacred = sacredMonths.indexOf(hijri.month) >= 0;
+    html += '<div class="ummah-month-info">' +
+      (isSacred ? '<span class="ummah-tag sacred-tag">\u2728 Sacred Month</span> ' : '') +
+      (monthDescriptions[hijri.month - 1] || '') +
+    '</div>';
 
-    // All 12 months overview
-    html += '<div class="ummah-section-title" style="margin-top:20px">\uD83D\uDD4B Islamic Calendar (' + hijri.year + ' AH)</div>';
+    // All 12 months
+    html += '<div class="ummah-section-title" style="margin-top:20px">\uD83D\uDD4B Hijri Calendar ' + hijri.year + ' AH</div>';
     for (var i = 0; i < 12; i++) {
       var isCurrent = (i + 1) === hijri.month;
-      html += '<div class="ummah-month-card' + (isCurrent ? ' current' : '') + '">' +
-        '<div class="ummah-month-num">' + (i + 1) + '</div>' +
+      var isS = sacredMonths.indexOf(i + 1) >= 0;
+      html += '<div class="ummah-month-card ummah-card-anim' + (isCurrent ? ' current' : '') + '" style="animation-delay:' + (i * 0.04) + 's">' +
+        '<div class="ummah-month-num' + (isS ? ' sacred' : '') + '">' + monthIcons[i] + '</div>' +
         '<div class="ummah-month-details">' +
-          '<div class="ummah-month-name">' + months[i] + (isCurrent ? ' \u25C0 Current' : '') + '</div>' +
+          '<div class="ummah-month-name">' + months[i] +
+            (isCurrent ? ' <span class="ummah-current-badge">Current</span>' : '') +
+            (isS ? ' <span class="ummah-sacred-badge">Sacred</span>' : '') +
+          '</div>' +
           '<div class="ummah-month-desc">' + monthDescriptions[i] + '</div>' +
         '</div>' +
       '</div>';
     }
 
-    // Sacred months highlight
+    // Sacred months info
     html += '<div class="ummah-sacred-box">' +
-      '<div style="font-weight:700;color:var(--gold-light);margin-bottom:6px">\u2728 The Four Sacred Months</div>' +
-      '<div style="font-size:13px;color:var(--text-sec);line-height:1.6">Muharram, Rajab, Dhul Qi\'dah, and Dhul Hijjah are the four sacred months in Islam where fighting was traditionally prohibited and worship is especially rewarded.</div>' +
+      '<div style="font-weight:700;color:var(--gold-light);margin-bottom:8px;font-size:15px">\u2728 The Four Sacred Months</div>' +
+      '<div style="font-size:13px;color:var(--text-sec);line-height:1.7">Muharram, Rajab, Dhul Qi\'dah, and Dhul Hijjah are the four sacred months in Islam. Good deeds in these months are multiplied, and wrongdoing is more severe. The Prophet (PBUH) encouraged extra fasting and worship during these months.</div>' +
+      '<div style="font-size:11px;color:var(--gold);margin-top:8px">\u2014 Based on Quran 9:36</div>' +
     '</div>';
 
     content.innerHTML = html;
@@ -1995,6 +2329,7 @@ const Screens = {
 
   // ---- INSPIRE TAB ----
   _renderCommunityInspire() {
+    var self = this;
     var content = document.getElementById('ummah-content');
     if (!content) return;
 
@@ -2004,55 +2339,120 @@ const Screens = {
 
     var html = '';
 
-    // Daily inspiration card
+    // Daily inspiration hero
     var isQuran = inspiration.type === 'quran';
     html += '<div class="ummah-inspire-hero">' +
-      '<div class="ummah-inspire-label">' + (isQuran ? '\uD83D\uDCD6 Verse of the Day' : '\uD83D\uDCDC Hadith of the Day') + '</div>' +
-      '<div class="ummah-inspire-text">"' + inspiration.text + '"</div>' +
+      '<div class="ummah-inspire-icon">' + (isQuran ? '\uD83D\uDCD6' : '\uD83D\uDCDC') + '</div>' +
+      '<div class="ummah-inspire-label">' + (isQuran ? 'Verse of the Day' : 'Hadith of the Day') + '</div>' +
+      '<div class="ummah-inspire-text">\u201C' + inspiration.text + '\u201D</div>' +
       '<div class="ummah-inspire-source">\u2014 ' + inspiration.source + '</div>' +
     '</div>';
 
-    // Today's Muslim dashboard
+    // Dashboard
     html += '<div class="ummah-section-title">\uD83D\uDCCA Your Muslim Dashboard</div>';
     html += '<div class="ummah-dashboard-grid">' +
-      '<div class="ummah-stat-card"><div class="ummah-stat-num">' + (stats.streak || 0) + '</div><div class="ummah-stat-label">\uD83D\uDD25 Day Streak</div></div>' +
-      '<div class="ummah-stat-card"><div class="ummah-stat-num">' + (stats.totalPrayers || 0) + '</div><div class="ummah-stat-label">\uD83D\uDE4F Prayers Logged</div></div>' +
-      '<div class="ummah-stat-card"><div class="ummah-stat-num">' + (stats.tasbihTotal || 0).toLocaleString() + '</div><div class="ummah-stat-label">\uD83D\uDCFF Tasbih Count</div></div>' +
-      '<div class="ummah-stat-card"><div class="ummah-stat-num">Lv ' + (stats.level || 1) + '</div><div class="ummah-stat-label">\u2B50 ' + (stats.xp || 0) + ' XP</div></div>' +
+      '<div class="ummah-stat-card fire"><div class="ummah-stat-num">' + (stats.streak || 0) + '</div><div class="ummah-stat-label">\uD83D\uDD25 Day Streak</div></div>' +
+      '<div class="ummah-stat-card pray"><div class="ummah-stat-num">' + (stats.totalPrayers || 0) + '</div><div class="ummah-stat-label">\uD83D\uDE4F Prayers</div></div>' +
+      '<div class="ummah-stat-card tasbih"><div class="ummah-stat-num">' + (stats.tasbihTotal || 0).toLocaleString() + '</div><div class="ummah-stat-label">\uD83D\uDCFF Tasbih</div></div>' +
+      '<div class="ummah-stat-card level"><div class="ummah-stat-num">Lv ' + (stats.level || 1) + '</div><div class="ummah-stat-label">\u2B50 ' + (stats.xp || 0) + ' XP</div></div>' +
     '</div>';
 
-    // Quick access to community features
+    // Quick actions
     html += '<div class="ummah-section-title" style="margin-top:20px">\uD83D\uDE80 Quick Actions</div>';
     var actions = [
       { icon: '\uD83D\uDCFF', label: 'Tasbih', screen: 'tasbih' },
-      { icon: '\uD83E\uDDED', label: 'Qibla Finder', screen: 'qibla' },
-      { icon: '\uD83E\uDD32', label: 'Daily Duas', screen: 'duas' },
-      { icon: '\uD83D\uDD4C', label: 'Azan Player', screen: 'azan' },
-      { icon: '\uD83D\uDCB0', label: 'Zakat Calculator', screen: 'zakat' },
-      { icon: '\uD83D\uDCC5', label: 'Hijri Calendar', screen: 'calendar' }
+      { icon: '\uD83E\uDDED', label: 'Qibla', screen: 'qibla' },
+      { icon: '\uD83E\uDD32', label: 'Duas', screen: 'duas' },
+      { icon: '\uD83D\uDD4C', label: 'Azan', screen: 'azan' },
+      { icon: '\uD83D\uDCB0', label: 'Zakat', screen: 'zakat' },
+      { icon: '\uD83D\uDCC5', label: 'Calendar', screen: 'calendar' }
     ];
     html += '<div class="ummah-actions-grid">';
     for (var i = 0; i < actions.length; i++) {
       var a = actions[i];
-      html += '<div class="ummah-action-card" onclick="App.navigate(\'' + a.screen + '\')">' +
+      html += '<div class="ummah-action-card ummah-card-anim" style="animation-delay:' + (i * 0.06) + 's" onclick="App.navigate(\'' + a.screen + '\')">' +
         '<div class="ummah-action-icon">' + a.icon + '</div>' +
         '<div class="ummah-action-label">' + a.label + '</div>' +
       '</div>';
     }
     html += '</div>';
 
-    // 99 Names of Allah (daily rotation)
+    // 99 Names of Allah — FULL SET
     var dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
     var names99 = [
-      ['Ar-Rahman','\u0627\u0644\u0631\u064E\u0651\u062D\u0645\u064E\u0646','The Most Gracious'],['Ar-Rahim','\u0627\u0644\u0631\u064E\u0651\u062D\u064A\u0645','The Most Merciful'],['Al-Malik','\u0627\u0644\u0645\u064E\u0644\u0650\u0643','The King'],['Al-Quddus','\u0627\u0644\u0642\u064F\u062F\u064F\u0651\u0648\u0633','The Most Holy'],['As-Salam','\u0627\u0644\u0633\u064E\u0651\u0644\u0627\u0645','The Source of Peace'],['Al-Mu\'min','\u0627\u0644\u0645\u064F\u0624\u0645\u0650\u0646','The Guardian of Faith'],['Al-Muhaymin','\u0627\u0644\u0645\u064F\u0647\u064E\u064A\u0645\u0650\u0646','The Protector'],['Al-Aziz','\u0627\u0644\u0639\u064E\u0632\u064A\u0632','The Almighty'],['Al-Jabbar','\u0627\u0644\u062C\u064E\u0628\u064E\u0651\u0627\u0631','The Compeller'],['Al-Mutakabbir','\u0627\u0644\u0645\u064F\u062A\u064E\u0643\u064E\u0628\u0650\u0651\u0631','The Greatest']
+      ['Ar-Rahman','\u0627\u0644\u0631\u064E\u0651\u062D\u0645\u064E\u0646','The Most Gracious'],['Ar-Rahim','\u0627\u0644\u0631\u064E\u0651\u062D\u064A\u0645','The Most Merciful'],
+      ['Al-Malik','\u0627\u0644\u0645\u064E\u0644\u0650\u0643','The King'],['Al-Quddus','\u0627\u0644\u0642\u064F\u062F\u064F\u0651\u0648\u0633','The Most Holy'],
+      ['As-Salam','\u0627\u0644\u0633\u064E\u0651\u0644\u0627\u0645','The Source of Peace'],['Al-Mu\'min','\u0627\u0644\u0645\u064F\u0624\u0645\u0650\u0646','The Guardian of Faith'],
+      ['Al-Muhaymin','\u0627\u0644\u0645\u064F\u0647\u064E\u064A\u0645\u0650\u0646','The Protector'],['Al-Aziz','\u0627\u0644\u0639\u064E\u0632\u064A\u0632','The Almighty'],
+      ['Al-Jabbar','\u0627\u0644\u062C\u064E\u0628\u064E\u0651\u0627\u0631','The Compeller'],['Al-Mutakabbir','\u0627\u0644\u0645\u064F\u062A\u064E\u0643\u064E\u0628\u0650\u0651\u0631','The Greatest'],
+      ['Al-Khaliq','\u0627\u0644\u062E\u064E\u0627\u0644\u0650\u0642','The Creator'],['Al-Bari','\u0627\u0644\u0628\u064E\u0627\u0631\u0650\u0626','The Evolver'],
+      ['Al-Musawwir','\u0627\u0644\u0645\u064F\u0635\u064E\u0648\u0650\u0651\u0631','The Fashioner'],['Al-Ghaffar','\u0627\u0644\u063A\u064E\u0641\u0651\u064E\u0627\u0631','The Forgiver'],
+      ['Al-Qahhar','\u0627\u0644\u0642\u064E\u0647\u0651\u064E\u0627\u0631','The Subduer'],['Al-Wahhab','\u0627\u0644\u0648\u064E\u0647\u0651\u064E\u0627\u0628','The Bestower'],
+      ['Ar-Razzaq','\u0627\u0644\u0631\u064E\u0651\u0632\u064E\u0627\u0642','The Provider'],['Al-Fattah','\u0627\u0644\u0641\u064E\u062A\u0651\u064E\u0627\u062D','The Opener'],
+      ['Al-Alim','\u0627\u0644\u0639\u064E\u0644\u0650\u064A\u0645','The All-Knowing'],['Al-Qabid','\u0627\u0644\u0642\u064E\u0627\u0628\u0650\u0636','The Constrictor'],
+      ['Al-Basit','\u0627\u0644\u0628\u064E\u0627\u0633\u0650\u0637','The Expander'],['Al-Khafid','\u0627\u0644\u062E\u064E\u0627\u0641\u0650\u0636','The Abaser'],
+      ['Ar-Rafi','\u0627\u0644\u0631\u064E\u0651\u0627\u0641\u0650\u0639','The Exalter'],['Al-Mu\'izz','\u0627\u0644\u0645\u064F\u0639\u0650\u0632\u0651','The Bestower of Honor'],
+      ['Al-Mudhill','\u0627\u0644\u0645\u064F\u0630\u0650\u0644\u0651','The Humiliator'],['As-Sami','\u0627\u0644\u0633\u064E\u0645\u0650\u064A\u0639','The All-Hearing'],
+      ['Al-Basir','\u0627\u0644\u0628\u064E\u0635\u0650\u064A\u0631','The All-Seeing'],['Al-Hakam','\u0627\u0644\u062D\u064E\u0643\u064E\u0645','The Judge'],
+      ['Al-Adl','\u0627\u0644\u0639\u064E\u062F\u0652\u0644','The Just'],['Al-Latif','\u0627\u0644\u0644\u064E\u0637\u0650\u064A\u0641','The Subtle One'],
+      ['Al-Khabir','\u0627\u0644\u062E\u064E\u0628\u0650\u064A\u0631','The All-Aware'],['Al-Halim','\u0627\u0644\u062D\u064E\u0644\u0650\u064A\u0645','The Forbearing'],
+      ['Al-Azim','\u0627\u0644\u0639\u064E\u0638\u0650\u064A\u0645','The Magnificent'],['Al-Ghafur','\u0627\u0644\u063A\u064E\u0641\u064F\u0648\u0631','The All-Forgiving'],
+      ['Ash-Shakur','\u0627\u0644\u0634\u064E\u0643\u064F\u0648\u0631','The Most Appreciative'],['Al-Aliyy','\u0627\u0644\u0639\u064E\u0644\u0650\u064A\u0651','The Most High'],
+      ['Al-Kabir','\u0627\u0644\u0643\u064E\u0628\u0650\u064A\u0631','The Most Great'],['Al-Hafiz','\u0627\u0644\u062D\u064E\u0641\u0650\u064A\u0638','The Preserver'],
+      ['Al-Muqit','\u0627\u0644\u0645\u064F\u0642\u0650\u064A\u062A','The Nourisher'],['Al-Hasib','\u0627\u0644\u062D\u064E\u0633\u0650\u064A\u0628','The Reckoner'],
+      ['Al-Jalil','\u0627\u0644\u062C\u064E\u0644\u0650\u064A\u0644','The Majestic'],['Al-Karim','\u0627\u0644\u0643\u064E\u0631\u0650\u064A\u0645','The Most Generous'],
+      ['Ar-Raqib','\u0627\u0644\u0631\u064E\u0642\u0650\u064A\u0628','The Watchful'],['Al-Mujib','\u0627\u0644\u0645\u064F\u062C\u0650\u064A\u0628','The Responsive'],
+      ['Al-Wasi','\u0627\u0644\u0648\u064E\u0627\u0633\u0650\u0639','The All-Encompassing'],['Al-Hakim','\u0627\u0644\u062D\u064E\u0643\u0650\u064A\u0645','The Most Wise'],
+      ['Al-Wadud','\u0627\u0644\u0648\u064E\u062F\u064F\u0648\u062F','The Most Loving'],['Al-Majid','\u0627\u0644\u0645\u064E\u062C\u0650\u064A\u062F','The Most Glorious'],
+      ['Al-Ba\'ith','\u0627\u0644\u0628\u064E\u0627\u0639\u0650\u062B','The Resurrector'],['Ash-Shahid','\u0627\u0644\u0634\u064E\u0647\u0650\u064A\u062F','The Witness'],
+      ['Al-Haqq','\u0627\u0644\u062D\u064E\u0642\u0651','The Truth'],['Al-Wakil','\u0627\u0644\u0648\u064E\u0643\u0650\u064A\u0644','The Trustee'],
+      ['Al-Qawiyy','\u0627\u0644\u0642\u064E\u0648\u0650\u064A\u0651','The Most Strong'],['Al-Matin','\u0627\u0644\u0645\u064E\u062A\u0650\u064A\u0646','The Firm One'],
+      ['Al-Waliyy','\u0627\u0644\u0648\u064E\u0644\u0650\u064A\u0651','The Protecting Friend'],['Al-Hamid','\u0627\u0644\u062D\u064E\u0645\u0650\u064A\u062F','The Praiseworthy'],
+      ['Al-Muhsi','\u0627\u0644\u0645\u064F\u062D\u0652\u0635\u0650\u064A','The Counter'],['Al-Mubdi','\u0627\u0644\u0645\u064F\u0628\u0652\u062F\u0650\u0626','The Originator'],
+      ['Al-Mu\'id','\u0627\u0644\u0645\u064F\u0639\u0650\u064A\u062F','The Restorer'],['Al-Muhyi','\u0627\u0644\u0645\u064F\u062D\u0652\u064A\u0650\u064A','The Giver of Life'],
+      ['Al-Mumit','\u0627\u0644\u0645\u064F\u0645\u0650\u064A\u062A','The Bringer of Death'],['Al-Hayy','\u0627\u0644\u062D\u064E\u064A\u0651','The Ever-Living'],
+      ['Al-Qayyum','\u0627\u0644\u0642\u064E\u064A\u0651\u064F\u0648\u0645','The Self-Subsisting'],['Al-Wajid','\u0627\u0644\u0648\u064E\u0627\u062C\u0650\u062F','The Finder'],
+      ['Al-Majid','\u0627\u0644\u0645\u064E\u0627\u062C\u0650\u062F','The Noble'],['Al-Wahid','\u0627\u0644\u0648\u064E\u0627\u062D\u0650\u062F','The One'],
+      ['As-Samad','\u0627\u0644\u0635\u064E\u0645\u064E\u062F','The Eternal'],['Al-Qadir','\u0627\u0644\u0642\u064E\u0627\u062F\u0650\u0631','The Able'],
+      ['Al-Muqtadir','\u0627\u0644\u0645\u064F\u0642\u0652\u062A\u064E\u062F\u0650\u0631','The Powerful'],['Al-Muqaddim','\u0627\u0644\u0645\u064F\u0642\u064E\u062F\u0651\u0650\u0645','The Expediter'],
+      ['Al-Mu\'akhkhir','\u0627\u0644\u0645\u064F\u0624\u064E\u062E\u0651\u0650\u0631','The Delayer'],['Al-Awwal','\u0627\u0644\u0623\u064E\u0648\u064E\u0651\u0644','The First'],
+      ['Al-Akhir','\u0627\u0644\u0622\u062E\u0650\u0631','The Last'],['Az-Zahir','\u0627\u0644\u0638\u064E\u0651\u0627\u0647\u0650\u0631','The Manifest'],
+      ['Al-Batin','\u0627\u0644\u0628\u064E\u0627\u0637\u0650\u0646','The Hidden'],['Al-Wali','\u0627\u0644\u0648\u064E\u0627\u0644\u0650\u064A','The Governor'],
+      ['Al-Muta\'ali','\u0627\u0644\u0645\u064F\u062A\u064E\u0639\u064E\u0627\u0644\u0650\u064A','The Most Exalted'],['Al-Barr','\u0627\u0644\u0628\u064E\u0631\u0651','The Source of Goodness'],
+      ['At-Tawwab','\u0627\u0644\u062A\u064E\u0648\u0651\u064E\u0627\u0628','The Acceptor of Repentance'],['Al-Muntaqim','\u0627\u0644\u0645\u064F\u0646\u0652\u062A\u064E\u0642\u0650\u0645','The Avenger'],
+      ['Al-Afuww','\u0627\u0644\u0639\u064E\u0641\u064F\u0648\u0651','The Pardoner'],['Ar-Ra\'uf','\u0627\u0644\u0631\u064E\u0651\u0624\u064F\u0648\u0641','The Most Kind'],
+      ['Malik al-Mulk','\u0645\u064E\u0627\u0644\u0650\u0643 \u0627\u0644\u0645\u064F\u0644\u0652\u0643','Owner of Sovereignty'],['Dhul-Jalali wal-Ikram','\u0630\u064F\u0648 \u0627\u0644\u062C\u064E\u0644\u0627\u0644\u0650 \u0648\u0627\u0644\u0625\u0643\u0652\u0631\u0627\u0645','Lord of Majesty and Generosity'],
+      ['Al-Muqsit','\u0627\u0644\u0645\u064F\u0642\u0652\u0633\u0650\u0637','The Equitable'],['Al-Jami','\u0627\u0644\u062C\u064E\u0627\u0645\u0650\u0639','The Gatherer'],
+      ['Al-Ghani','\u0627\u0644\u063A\u064E\u0646\u0650\u064A\u0651','The Self-Sufficient'],['Al-Mughni','\u0627\u0644\u0645\u064F\u063A\u0652\u0646\u0650\u064A','The Enricher'],
+      ['Al-Mani','\u0627\u0644\u0645\u064E\u0627\u0646\u0650\u0639','The Preventer'],['Ad-Darr','\u0627\u0644\u0636\u064E\u0627\u0631\u0651','The Distresser'],
+      ['An-Nafi','\u0627\u0644\u0646\u064E\u0651\u0627\u0641\u0650\u0639','The Benefactor'],['An-Nur','\u0627\u0644\u0646\u064F\u0651\u0648\u0631','The Light'],
+      ['Al-Hadi','\u0627\u0644\u0647\u064E\u0627\u062F\u0650\u064A','The Guide'],['Al-Badi','\u0627\u0644\u0628\u064E\u062F\u0650\u064A\u0639','The Originator'],
+      ['Al-Baqi','\u0627\u0644\u0628\u064E\u0627\u0642\u0650\u064A','The Everlasting'],['Al-Warith','\u0627\u0644\u0648\u064E\u0627\u0631\u0650\u062B','The Inheritor'],
+      ['Ar-Rashid','\u0627\u0644\u0631\u064E\u0651\u0634\u0650\u064A\u062F','The Guide to the Right Path'],['As-Sabur','\u0627\u0644\u0635\u064E\u0628\u064F\u0648\u0631','The Most Patient']
     ];
-    var todayName = names99[dayOfYear % names99.length];
+    var todayIdx = dayOfYear % 99;
+    var todayName = names99[todayIdx];
+
+    html += '<div class="ummah-section-title" style="margin-top:20px">\u2728 99 Names of Allah (' + (todayIdx + 1) + '/99)</div>';
     html += '<div class="ummah-name-card">' +
-      '<div style="font-size:10px;color:var(--gold);text-transform:uppercase;font-weight:600;letter-spacing:1px">Name of Allah Today</div>' +
-      '<div style="font-family:\'Amiri\',serif;font-size:36px;color:var(--gold-light);margin:8px 0">' + todayName[1] + '</div>' +
-      '<div style="font-size:18px;font-weight:700">' + todayName[0] + '</div>' +
-      '<div style="font-size:13px;color:var(--text-sec);margin-top:4px">' + todayName[2] + '</div>' +
+      '<div class="ummah-name-number">' + (todayIdx + 1) + '</div>' +
+      '<div style="font-family:\'Amiri\',serif;font-size:40px;color:var(--gold-light);margin:10px 0;text-shadow:0 0 20px rgba(212,168,67,0.3)">' + todayName[1] + '</div>' +
+      '<div style="font-size:20px;font-weight:700;color:var(--text-primary)">' + todayName[0] + '</div>' +
+      '<div style="font-size:14px;color:var(--text-sec);margin-top:4px">' + todayName[2] + '</div>' +
     '</div>';
+
+    // Mini grid of surrounding names
+    html += '<div class="ummah-names-grid">';
+    for (var i = -3; i <= 3; i++) {
+      var idx = ((todayIdx + i) % 99 + 99) % 99;
+      var n = names99[idx];
+      var isCurrent = i === 0;
+      html += '<div class="ummah-names-mini' + (isCurrent ? ' current' : '') + '">' +
+        '<div style="font-family:\'Amiri\',serif;font-size:' + (isCurrent ? '18' : '14') + 'px;color:' + (isCurrent ? 'var(--gold-light)' : 'var(--text-sec)') + '">' + n[1] + '</div>' +
+        '<div style="font-size:9px;color:var(--text-muted)">' + n[0] + '</div>' +
+      '</div>';
+    }
+    html += '</div>';
 
     content.innerHTML = html;
   },
