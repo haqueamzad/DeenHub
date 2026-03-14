@@ -4221,3 +4221,214 @@ input:focus-visible,
     padding-bottom: max(var(--safe-bottom), 8px);
   }
 }
+
+/* ============================================================
+   PREMIUM SURAH LIST — App Store Top Seller Quality
+   ============================================================ */
+
+.surah-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.surah-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: linear-gradient(150deg, rgba(16, 28, 50, 0.92), rgba(10, 20, 40, 0.82));
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  -webkit-transition: all 0.2s ease;
+  transition: all 0.2s ease;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.surah-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--gold-light), var(--primary-light));
+  border-radius: 0 3px 3px 0;
+  opacity: 0;
+  -webkit-transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease;
+}
+
+.surah-card:active {
+  -webkit-transform: scale(0.98);
+  transform: scale(0.98);
+  background: rgba(16, 28, 50, 1);
+}
+
+.surah-card:active::before {
+  opacity: 1;
+}
+
+.surah-num-badge {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(13, 124, 102, 0.3), rgba(13, 124, 102, 0.12));
+  border: 1px solid rgba(13, 124, 102, 0.2);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary-light);
+  flex-shrink: 0;
+}
+
+.surah-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.surah-name-en {
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.surah-meta {
+  font-size: 13px;
+  color: #8EA4C0;
+  margin-top: 3px;
+  letter-spacing: 0.1px;
+}
+
+.surah-right {
+  text-align: right;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.surah-name-ar {
+  font-family: 'Amiri', 'Scheherazade New', serif;
+  font-size: 20px;
+  color: #F0D48A;
+  text-shadow: 0 0 16px rgba(212, 168, 67, 0.3);
+  line-height: 1.4;
+}
+
+.surah-bookmark {
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0.7;
+  -webkit-transition: opacity 0.2s;
+  transition: opacity 0.2s;
+}
+
+.surah-bookmark:active {
+  opacity: 1;
+  -webkit-transform: scale(1.2);
+  transform: scale(1.2);
+}
+
+/* ============================================================
+   QURAN READER ENHANCEMENTS — Stunning Ayah Cards
+   ============================================================ */
+
+.quran-translation {
+  font-size: 15px;
+  color: #C8D6E5;
+  line-height: 1.7;
+  margin-bottom: 10px;
+}
+
+.quran-translit {
+  font-size: 14px;
+  font-style: italic;
+  color: #8BB8A8;
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+
+.quran-ayah-card.ayah-playing {
+  border-left: 3px solid var(--gold-bright);
+  border-color: rgba(255, 215, 0, 0.2);
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.1), 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 0 30px rgba(255, 215, 0, 0.03);
+}
+
+/* Quran toolbar controls — premium pill style */
+.quran-select {
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(12, 20, 40, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #C8D6E5;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  outline: none;
+}
+
+.quran-toggle {
+  background: rgba(12, 20, 40, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #8EA4C0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  -webkit-transition: all 0.2s ease;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.quran-toggle.active {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  border-color: var(--primary-light);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(13, 124, 102, 0.3);
+}
+
+.quran-toggle:active {
+  -webkit-transform: scale(0.95);
+  transform: scale(0.95);
+}
+
+.quran-font-btn {
+  background: rgba(12, 20, 40, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #C8D6E5;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ============================================================
+   HADITH COLLECTION CARD UPGRADES
+   ============================================================ */
+
+.chip {
+  background: rgba(12, 20, 40, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #C8D6E5;
+}
+
+.chip.active {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 16px rgba(13, 124, 102, 0.3);
+}

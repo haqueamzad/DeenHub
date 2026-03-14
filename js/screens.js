@@ -302,21 +302,17 @@ const Screens = {
           </div>
           <div style="font-size:11px;color:var(--text-sec);margin-top:6px">Daily goal: ${progress.dailyGoal} ayahs · Today: ${progress.todayRead}</div>
         </div>
-        <div>
+        <div class="surah-list">
           ${filtered.map(s => `
-            <div class="list-item card-hover" onclick="Screens.openSurah(${s.number})" style="border-left:3px solid var(--gold-light);border-radius:8px;padding:12px">
-              <div class="list-body" style="flex:1">
-                <div style="display:flex;align-items:center;gap:8px">
-                  <div class="list-num" style="background:rgba(212,168,67,0.15);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:600;color:var(--gold-light)">${s.number}</div>
-                  <div>
-                    <div class="list-title">${s.name}</div>
-                    <div class="list-sub">${s.translation} · ${s.ayahs} ayahs</div>
-                  </div>
-                </div>
+            <div class="surah-card" onclick="Screens.openSurah(${s.number})">
+              <div class="surah-num-badge">${s.number}</div>
+              <div class="surah-info">
+                <div class="surah-name-en">${s.name}</div>
+                <div class="surah-meta">${s.translation} · ${s.ayahs} ayahs</div>
               </div>
-              <div class="list-right" style="text-align:right">
-                <div style="font-family:'Amiri',serif;font-size:18px;color:var(--gold-light);margin-bottom:4px">${s.arabic}</div>
-                <div style="font-size:16px;cursor:pointer" onclick="event.stopPropagation();Screens.toggleBookmark(${s.number})">${bookmarks.includes(s.number) ? '❤️' : '🧡'}</div>
+              <div class="surah-right">
+                <div class="surah-name-ar">${s.arabic}</div>
+                <div class="surah-bookmark" onclick="event.stopPropagation();Screens.toggleBookmark(${s.number})">${bookmarks.includes(s.number) ? '❤️' : '🤍'}</div>
               </div>
             </div>
           `).join('')}
