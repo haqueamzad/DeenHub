@@ -212,6 +212,7 @@ const Screens = {
   quranFontSize: 24,
   quranAudioSpeed: 1.0,
   quranRepeatAyah: false,
+  quranContinuousPlay: true, // auto-advance to next ayah
 
   // Tajweed color coding rules
   tajweedRules: [
@@ -426,7 +427,8 @@ const Screens = {
           <button class="quran-font-btn" onclick="Screens.quranFontSize=Math.min(40,Screens.quranFontSize+2);Screens.renderQuran()">A+</button>
         </div>
         <button class="quran-toggle" onclick="Screens.cycleAudioSpeed()">Speed: ${this.quranAudioSpeed}x</button>
-        <button class="quran-toggle ${this.quranRepeatAyah ? 'active' : ''}" onclick="Screens.quranRepeatAyah=!Screens.quranRepeatAyah;Screens.renderQuran()">Repeat</button>
+        <button class="quran-toggle ${this.quranRepeatAyah ? 'active' : ''}" onclick="Screens.quranRepeatAyah=!Screens.quranRepeatAyah;if(Screens.quranRepeatAyah)Screens.quranContinuousPlay=false;Screens.renderQuran()">Repeat</button>
+        <button class="quran-toggle ${this.quranContinuousPlay ? 'active' : ''}" onclick="Screens.quranContinuousPlay=!Screens.quranContinuousPlay;if(Screens.quranContinuousPlay)Screens.quranRepeatAyah=false;Screens.renderQuran()">Auto ▶</button>
       </div>
 
       ${this.quranTajweed ? `
@@ -471,29 +473,78 @@ const Screens = {
   },
 
   playAyah(ayahNum) {
-    if (this.quranPlayingAyah === ayahNum) {
+    var self = this;
+    if (self.quranPlayingAyah === ayahNum) {
       if (API.isPlaying()) {
         API.pauseAyah();
-        this.renderQuranReader(document.getElementById('screen-quran'));
+        self.renderQuranReader(document.getElementById('screen-quran'));
       } else {
         API.resumeAyah();
-        this.renderQuranReader(document.getElementById('screen-quran'));
+        self.renderQuranReader(document.getElementById('screen-quran'));
       }
     } else {
-      this.quranPlayingAyah = ayahNum;
-      const ayah = this.quranAyahs.find(a => a.number === ayahNum);
-      if (ayah) {
-        API.playAudio(ayah.audio, this.quranAudioSpeed, () => {
-          this.quranPlayingAyah = null;
-          if (this.quranRepeatAyah) {
-            this.playAyah(ayahNum);
+      self.quranPlayingAyah = ayahNum;
+      var ayah = null;
+      if (self.quranAyahs) {
+        for (var i = 0; i < self.quranAyahs.length; i++) {
+          if (self.quranAyahs[i].number === ayahNum) { ayah = self.quranAyahs[i]; break; }
+        }
+      }
+      if (ayah && ayah.audio) {
+        API.playAudio(ayah.audio, self.quranAudioSpeed, function() {
+          if (self.quranRepeatAyah) {
+            // Repeat same ayah
+            self.quranPlayingAyah = null;
+            self.playAyah(ayahNum);
+          } else if (self.quranContinuousPlay) {
+            // Auto-advance to next ayah
+            var nextAyah = null;
+            if (self.quranAyahs) {
+              for (var j = 0; j < self.quranAyahs.length; j++) {
+                if (self.quranAyahs[j].number === ayahNum && j + 1 < self.quranAyahs.length) {
+                  nextAyah = self.quranAyahs[j + 1];
+                  break;
+                }
+              }
+            }
+            if (nextAyah && nextAyah.audio) {
+              self.quranPlayingAyah = null;
+              self.playAyah(nextAyah.number);
+              // Scroll the next ayah into view
+              setTimeout(function() {
+                var nextCard = document.querySelector('[data-ayah="' + nextAyah.number + '"]');
+                if (nextCard) nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }, 200);
+            } else {
+              // Reached end of surah
+              self.quranPlayingAyah = null;
+              self.renderQuranReader(document.getElementById('screen-quran'));
+              App.toast('Surah complete. MashaAllah!');
+            }
           } else {
-            this.renderQuranReader(document.getElementById('screen-quran'));
+            // Stop after this ayah
+            self.quranPlayingAyah = null;
+            self.renderQuranReader(document.getElementById('screen-quran'));
           }
         });
-        this.renderQuranReader(document.getElementById('screen-quran'));
+        self.renderQuranReader(document.getElementById('screen-quran'));
       }
     }
+  },
+
+  // Play entire surah from first ayah
+  playAllAyahs() {
+    if (this.quranAyahs && this.quranAyahs.length > 0) {
+      this.quranContinuousPlay = true;
+      this.playAyah(this.quranAyahs[0].number);
+    }
+  },
+
+  // Stop all playback
+  stopPlayback() {
+    API.pauseAyah();
+    this.quranPlayingAyah = null;
+    this.renderQuranReader(document.getElementById('screen-quran'));
   },
 
   pauseAyah() {
