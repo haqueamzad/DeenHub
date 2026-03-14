@@ -1,0 +1,8 @@
+{
+  "name": "deenhub-pwa",
+  "version": "1.0.0",
+  "description": "DeenHub - Your Islamic Companion PWA",
+  "scripts": {
+    "test": "node --test tests/test-storage.js tests/test-api.js tests/test-app.js tests/test-screens.js"
+  }
+}
