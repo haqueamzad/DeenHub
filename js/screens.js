@@ -488,6 +488,8 @@ const Screens = {
       }
     } else {
       self.quranPlayingAyah = ayahNum;
+      self._quranWordCount = 0;   // Reset so onAudioTimeUpdate recalculates
+      self._quranLastWordIdx = -1;
       var ayah = null;
       if (self.quranAyahs) {
         for (var i = 0; i < self.quranAyahs.length; i++) {
@@ -548,11 +550,65 @@ const Screens = {
   stopPlayback() {
     API.pauseAyah();
     this.quranPlayingAyah = null;
+    this._quranWordCount = 0;
+    this._quranLastWordIdx = -1;
     this.renderQuranReader(document.getElementById('screen-quran'));
   },
 
   pauseAyah() {
     API.pauseAyah();
+  },
+
+  // ---- Word-by-word highlighting during audio playback ----
+  _quranWordCount: 0,
+  _quranLastWordIdx: -1,
+
+  onAudioTimeUpdate() {
+    if (!this.quranPlayingAyah) return;
+    var player = API.audioPlayer;
+    if (!player || !player.duration || player.paused) return;
+
+    var progress = player.currentTime / player.duration;
+
+    // Update progress bar
+    var bar = document.getElementById('ayahProgressBar');
+    if (bar) bar.style.width = (progress * 100) + '%';
+
+    // Find the playing ayah's word count
+    var ayahNum = this.quranPlayingAyah;
+    if (!this._quranWordCount) {
+      var ayah = null;
+      if (this.quranAyahs) {
+        for (var i = 0; i < this.quranAyahs.length; i++) {
+          if (this.quranAyahs[i].number === ayahNum) { ayah = this.quranAyahs[i]; break; }
+        }
+      }
+      this._quranWordCount = ayah ? ayah.words.length : 0;
+    }
+    if (this._quranWordCount === 0) return;
+
+    // Calculate which word should be active based on audio progress
+    var wordIdx = Math.floor(progress * this._quranWordCount);
+    if (wordIdx >= this._quranWordCount) wordIdx = this._quranWordCount - 1;
+
+    // Only update DOM if word changed
+    if (wordIdx === this._quranLastWordIdx) return;
+    this._quranLastWordIdx = wordIdx;
+
+    // Apply highlighting to word spans
+    var words = document.querySelectorAll('.quran-word[data-ayah-num="' + ayahNum + '"]');
+    for (var w = 0; w < words.length; w++) {
+      var el = words[w];
+      var idx = parseInt(el.getAttribute('data-word-idx'), 10);
+      el.classList.remove('quran-word-active', 'quran-word-read', 'quran-word-upcoming');
+      if (idx < wordIdx) {
+        el.classList.add('quran-word-read');
+      } else if (idx === wordIdx) {
+        el.classList.add('quran-word-active');
+      } else {
+        el.classList.add('quran-word-upcoming');
+      }
+    }
   },
 
   cycleAudioSpeed() {
