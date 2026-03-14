@@ -24,16 +24,16 @@ const Screens = {
 
   // ==== SHARED ISLAMIC HELPERS ====
   _screenHeader(icon, title, arabicTitle, subtitle) {
-    const archSVG = `<svg style="width:100%;height:12px;margin-top:-6px" viewBox="0 0 200 20" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-      <path d="M0 10 Q50 0 100 0 Q150 0 200 10" stroke="rgba(212,168,67,0.4)" stroke-width="2" fill="none"/>
-      <circle cx="100" cy="10" r="3" fill="rgba(212,168,67,0.6)"/>
+    const archSVG = `<svg style="width:100%;height:12px;margin-top:-4px" viewBox="0 0 200 20" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <path d="M0 12 Q50 2 100 2 Q150 2 200 12" stroke="rgba(212,168,67,0.35)" stroke-width="1.5" fill="none"/>
+      <circle cx="100" cy="12" r="2.5" fill="rgba(212,168,67,0.5)"/>
     </svg>`;
     return `
-      <div style="text-align:center;margin-bottom:20px">
-        <div style="font-size:28px;margin-bottom:8px">${icon}</div>
-        <div style="font-family:'Amiri',serif;font-size:24px;color:var(--gold-light);margin-bottom:2px;letter-spacing:0.5px">${arabicTitle}</div>
-        <div style="font-size:18px;font-weight:600">${title}</div>
-        ${subtitle ? `<div style="font-size:12px;color:var(--text-sec);margin-top:4px">${subtitle}</div>` : ''}
+      <div style="text-align:center;margin-bottom:20px;padding:8px 0">
+        <div style="font-size:28px;margin-bottom:6px;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.3))">${icon}</div>
+        <div style="font-family:'Amiri',serif;font-size:22px;color:var(--gold-light);margin-bottom:3px;letter-spacing:0.5px;text-shadow:0 0 20px rgba(212,168,67,0.2)">${arabicTitle}</div>
+        <div style="font-size:17px;font-weight:700;color:#fff;letter-spacing:0.3px">${title}</div>
+        ${subtitle ? `<div style="font-size:13px;color:var(--text-sec);margin-top:6px;line-height:1.4">${subtitle}</div>` : ''}
         ${archSVG}
       </div>
     `;

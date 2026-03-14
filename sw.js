@@ -1,4 +1,4 @@
-const CACHE_NAME = 'deenhub-v2.2';
+const CACHE_NAME = 'deenhub-v3.0';
 const STATIC_ASSETS = [
   './',
   './index.html',
