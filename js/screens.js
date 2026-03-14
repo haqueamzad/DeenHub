@@ -172,9 +172,9 @@ const Screens = {
         <div class="row" style="justify-content:space-between">
           <div>
             <div class="xp-level-text">✦ ${t('level')} ${level}</div>
-            <div style="font-size:11px;color:var(--text-sec)">${xp} ${t('xpEarned')}</div>
+            <div style="font-size:12px;color:var(--text-sec);font-weight:500">${xp} ${t('xpEarned')}</div>
           </div>
-          <div style="font-size:11px;color:var(--text-sec)">${500 - (xp % 500)} ${t('xpToNext')}</div>
+          <div style="font-size:12px;color:var(--text-sec);font-weight:500">${500 - (xp % 500)} ${t('xpToNext')}</div>
         </div>
         <div class="xp-bar-wrap" style="max-width:100%;margin-top:8px">
           <div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${(xp % 500) / 5}%"></div></div>
@@ -300,7 +300,7 @@ const Screens = {
           <div class="quran-progress-bar">
             <div class="quran-progress-fill" style="width:${(progress.surahsStarted.size/114)*100}%"></div>
           </div>
-          <div style="font-size:11px;color:var(--text-sec);margin-top:6px">Daily goal: ${progress.dailyGoal} ayahs · Today: ${progress.todayRead}</div>
+          <div style="font-size:12px;color:var(--text-sec);margin-top:6px;font-weight:500">Daily goal: ${progress.dailyGoal} ayahs · Today: ${progress.todayRead}</div>
         </div>
         <div class="surah-list">
           ${filtered.map(s => `
@@ -329,7 +329,7 @@ const Screens = {
                 <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--gold-light),rgba(212,168,67,0.4));display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark)">${juz}</div>
                 <div class="flex-1">
                   <div class="juz-name" style="font-weight:600">${juzInfo.name}</div>
-                  <div class="juz-range" style="font-size:12px;color:var(--text-sec)">Surah ${juzInfo.surah}:${juzInfo.ayah}</div>
+                  <div class="juz-range" style="font-size:13px;color:var(--text-sec);font-weight:500">Surah ${juzInfo.surah}:${juzInfo.ayah}</div>
                 </div>
                 <div style="color:var(--gold-light)">→</div>
               </div>
@@ -722,7 +722,7 @@ const Screens = {
     for (var i = 0; i < self.aiMessages.length; i++) {
       var m = self.aiMessages[i];
       if (m.role === 'user') {
-        messagesHTML += '<div style="display:flex;justify-content:flex-end;margin:8px 0"><div style="background:rgba(52,152,219,0.2);border-radius:16px 4px 16px 16px;padding:10px 14px;max-width:80%;font-size:14px;line-height:1.5">' + self._escapeHTML(m.text) + '</div></div>';
+        messagesHTML += '<div style="display:flex;justify-content:flex-end;margin:10px 0"><div style="background:linear-gradient(135deg,rgba(52,152,219,0.35),rgba(76,161,255,0.25));border:1px solid rgba(76,161,255,0.3);border-radius:16px 4px 16px 16px;padding:12px 16px;max-width:80%;font-size:15px;line-height:1.6;color:#FFFFFF;font-weight:500;box-shadow:0 3px 12px rgba(52,152,219,0.15)">' + self._escapeHTML(m.text) + '</div></div>';
       } else {
         messagesHTML += self._aiScholarBubble(m);
       }
@@ -791,7 +791,7 @@ const Screens = {
   _aiScholarBubble: function(msg) {
     var entry = (msg && msg.data) || {};
     var rawText = entry.text || (msg && msg.text) || '';
-    var text = rawText.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--gold-light)">$1</strong>').replace(/\n/g, '<br>');
+    var text = rawText.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#F5D98A;font-weight:700">$1</strong>').replace(/\n/g, '<br>');
     var sources = entry.sources || [];
     var related = entry.related || [];
     var category = entry.category || '';
@@ -800,7 +800,7 @@ const Screens = {
     if (category && typeof Scholar !== 'undefined') {
       for (var i = 0; i < Scholar.categories.length; i++) {
         if (Scholar.categories[i].id === category) {
-          catLabel = ' <span style="font-size:10px;background:rgba(212,168,67,0.1);padding:2px 8px;border-radius:10px;color:var(--text-secondary)">' + Scholar.categories[i].icon + ' ' + Scholar.categories[i].name + '</span>';
+          catLabel = ' <span style="font-size:11px;background:rgba(212,168,67,0.2);padding:3px 10px;border-radius:10px;color:#E8D5A8;font-weight:700;border:1px solid rgba(212,168,67,0.15)">' + Scholar.categories[i].icon + ' ' + Scholar.categories[i].name + '</span>';
           break;
         }
       }
@@ -810,11 +810,11 @@ const Screens = {
     if (sources.length > 0) {
       var srcTags = '';
       for (var i = 0; i < sources.length; i++) {
-        srcTags += '<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(212,168,67,0.08);color:var(--text-secondary);border:1px solid rgba(212,168,67,0.12)">' + sources[i] + '</span>';
+        srcTags += '<span style="font-size:12px;padding:3px 10px;border-radius:10px;background:rgba(212,168,67,0.15);color:#D4C4A0;font-weight:600;border:1px solid rgba(212,168,67,0.2)">' + sources[i] + '</span>';
       }
-      sourcesHTML = '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(212,168,67,0.1)">' +
-        '<div style="font-size:10px;color:var(--gold-light);font-weight:600;text-transform:uppercase;margin-bottom:4px">Sources</div>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:4px">' + srcTags + '</div></div>';
+      sourcesHTML = '<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(212,168,67,0.2)">' +
+        '<div style="font-size:11px;color:#F0D48A;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Sources</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:6px">' + srcTags + '</div></div>';
     }
 
     var relatedHTML = '';
@@ -826,14 +826,14 @@ const Screens = {
         label = label.charAt(0).toUpperCase() + label.slice(1);
         relTags += '<button class="ai-related-btn" data-q="' + r.replace(/_/g, ' ') + '">' + label + '</button>';
       }
-      relatedHTML = '<div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(212,168,67,0.08)">' +
-        '<div style="font-size:10px;color:var(--text-secondary);margin-bottom:4px">Related:</div>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:4px">' + relTags + '</div></div>';
+      relatedHTML = '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(212,168,67,0.15)">' +
+        '<div style="font-size:11px;color:#B0C0D4;font-weight:600;margin-bottom:6px">Related topics:</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:6px">' + relTags + '</div></div>';
     }
 
-    return '<div style="margin:8px 0"><div style="background:linear-gradient(135deg,rgba(212,168,67,0.1),rgba(212,168,67,0.03));border-left:3px solid var(--gold-light);border-radius:12px;padding:12px 14px">' +
-      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="font-size:11px;color:var(--gold-light);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Scholar</span>' + catLabel + '</div>' +
-      '<div style="font-size:14px;line-height:1.7;color:var(--text-primary)">' + text + '</div>' +
+    return '<div style="margin:10px 0"><div style="background:linear-gradient(135deg,rgba(20,35,60,0.95),rgba(15,28,50,0.85));border-left:3px solid var(--gold-light);border-radius:14px;padding:14px 16px;box-shadow:0 4px 20px rgba(0,0,0,0.3)">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:12px;color:#F0D48A;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;text-shadow:0 0 8px rgba(240,212,138,0.3)">Scholar</span>' + catLabel + '</div>' +
+      '<div style="font-size:15px;line-height:1.75;color:#EDF2F8;font-weight:500">' + text + '</div>' +
       sourcesHTML + relatedHTML +
     '</div></div>';
   },
@@ -927,7 +927,7 @@ const Screens = {
           ${rosarySVG}
         </div>
         <div class="tasbih-count" style="font-size:48px;font-weight:700;color:var(--gold-light);margin:16px 0">${this.tasbihCount}</div>
-        <div class="tasbih-target" style="font-size:16px;color:var(--text-sec)">of ${this.tasbihTarget}</div>
+        <div class="tasbih-target" style="font-size:16px;color:var(--text-sec);font-weight:600">of ${this.tasbihTarget}</div>
         <div class="tasbih-ring" style="width:140px;height:140px;margin:20px auto;border:4px solid var(--gold-light);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;background:radial-gradient(circle,rgba(212,168,67,0.05),transparent);font-size:32px;font-weight:700;color:var(--gold-light);transition:all 0.2s" onclick="Screens.incrementTasbih()">TAP</div>
         <div class="row" style="justify-content:center;gap:12px;margin:24px 0">
           <button class="btn btn-outline" onclick="Screens.resetTasbih()">Reset</button>
@@ -936,7 +936,7 @@ const Screens = {
         <div class="card" style="border:2px solid var(--gold-light);border-radius:12px">
           <div style="font-size:12px;color:var(--gold-light);text-transform:uppercase;font-weight:600;margin-bottom:8px">Lifetime Total</div>
           <div style="font-weight:700;font-size:24px;color:var(--gold-light)">${total.toLocaleString()}</div>
-          <div style="font-size:11px;color:var(--text-sec);margin-top:6px">Keep glorifying Allah</div>
+          <div style="font-size:12px;color:var(--text-sec);margin-top:6px;font-weight:500">Keep glorifying Allah</div>
         </div>
       </div>
     `;
@@ -1023,7 +1023,7 @@ const Screens = {
           '</div>' +
 
           // You-are-here indicator at bottom of compass
-          '<div class="qibla-you-indicator">\u25B2<br><span style="font-size:9px;letter-spacing:1px">YOU</span></div>' +
+          '<div class="qibla-you-indicator">\u25B2<br><span style="font-size:11px;letter-spacing:1px;font-weight:700">YOU</span></div>' +
         '</div>' +
 
         // Instruction
@@ -1237,12 +1237,12 @@ const Screens = {
               ${words.map((w, idx) => '<span class="dua-word" data-word-idx="' + idx + '" data-dua-id="' + d.id + '">' + w + '</span>').join(' ')}
             </div>
 
-            ${this.duaShowTranslit && d.translit ? '<div class="dua-translit-line" style="font-size:12px;color:var(--text-sec);margin-bottom:8px;font-style:italic">' + d.translit + '</div>' : ''}
+            ${this.duaShowTranslit && d.translit ? '<div class="dua-translit-line" style="font-size:13px;color:var(--text-sec);margin-bottom:8px;font-style:italic;font-weight:500">' + d.translit + '</div>' : ''}
 
             <div class="dua-trans-line" style="font-size:13px;line-height:1.6;margin-bottom:12px;color:var(--text-primary)">${d.trans}</div>
 
             <div class="dua-card-footer" style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid rgba(212,168,67,0.15)">
-              <div class="dua-ref-line" style="font-size:11px;color:var(--text-sec)">📖 ${d.ref}</div>
+              <div class="dua-ref-line" style="font-size:12px;color:var(--text-sec);font-weight:500">📖 ${d.ref}</div>
               <button class="dua-play-btn ${isPlaying ? 'playing' : ''}" style="background:none;border:none;cursor:pointer;font-size:18px" onclick="Screens.playDua('${d.id}')">
                 ${isPlaying ? '⏸️' : '▶️'}
               </button>
@@ -1760,9 +1760,9 @@ const Screens = {
     Store.unlockAchievement('zakat_calc');
     document.getElementById('zakat-result').innerHTML = `
       <div class="zakat-result mt-16" style="background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.05));border:2px solid var(--gold-light);border-radius:12px;padding:16px;text-align:center">
-        <div style="font-size:12px;opacity:.8;color:var(--text-sec);text-transform:uppercase;font-weight:600">${result.eligible ? 'Your Zakat Due' : 'Below Nisab Threshold'}</div>
+        <div style="font-size:13px;color:var(--text-sec);text-transform:uppercase;font-weight:700">${result.eligible ? 'Your Zakat Due' : 'Below Nisab Threshold'}</div>
         <div class="zakat-amount" style="font-size:36px;font-weight:700;color:var(--gold-light);margin:12px 0">$${result.amount.toFixed(2)}</div>
-        <div class="zakat-label-sm" style="font-size:12px;color:var(--text-sec)">Net assets: $${result.net.toLocaleString()} | Nisab: $${result.nisab.toLocaleString()}</div>
+        <div class="zakat-label-sm" style="font-size:13px;color:var(--text-sec);font-weight:500">Net assets: $${result.net.toLocaleString()} | Nisab: $${result.nisab.toLocaleString()}</div>
       </div>
     `;
   },
@@ -2041,7 +2041,7 @@ const Screens = {
     } catch(e) {
       content.innerHTML = '<div class="ummah-error"><div style="font-size:36px;margin-bottom:8px">\u26A0\uFE0F</div>' +
         '<div style="font-weight:600;margin-bottom:4px">Could not load mosques</div>' +
-        '<div style="font-size:12px;color:var(--text-sec);margin-bottom:12px">' + (e.message || 'Network error. Check your connection.') + '</div>' +
+        '<div style="font-size:13px;color:var(--text-sec);margin-bottom:12px;font-weight:500">' + (e.message || 'Network error. Check your connection.') + '</div>' +
         '<button class="ummah-retry-btn" onclick="Screens._communityMosques=null;Screens._renderCommunityMosques()">Retry</button></div>';
       return;
     }
@@ -2074,7 +2074,7 @@ const Screens = {
       content.innerHTML = self._searchBar('Search mosques...') + self._radiusBar('mosques') +
         '<div class="ummah-empty"><div style="font-size:48px;margin-bottom:12px">\uD83D\uDD4C</div>' +
         '<div style="font-weight:600;margin-bottom:4px">' + (self._communitySearch ? 'No matching mosques' : 'No mosques found within ' + radiusMi + ' miles') + '</div>' +
-        '<div style="font-size:12px;color:var(--text-sec)">' + (self._communitySearch ? 'Try a different search term' : 'Try expanding your search radius or enable GPS') + '</div></div>';
+        '<div style="font-size:13px;color:var(--text-sec);font-weight:500">' + (self._communitySearch ? 'Try a different search term' : 'Try expanding your search radius or enable GPS') + '</div></div>';
       self._attachRadiusListeners('mosques');
       self._attachSearchListener('mosques');
       return;
@@ -2145,7 +2145,7 @@ const Screens = {
     } catch(e) {
       content.innerHTML = '<div class="ummah-error"><div style="font-size:36px;margin-bottom:8px">\u26A0\uFE0F</div>' +
         '<div style="font-weight:600;margin-bottom:4px">Could not load restaurants</div>' +
-        '<div style="font-size:12px;color:var(--text-sec);margin-bottom:12px">' + (e.message || 'Network error') + '</div>' +
+        '<div style="font-size:13px;color:var(--text-sec);margin-bottom:12px;font-weight:500">' + (e.message || 'Network error') + '</div>' +
         '<button class="ummah-retry-btn" onclick="Screens._communityHalal=null;Screens._renderCommunityHalal()">Retry</button></div>';
       return;
     }
@@ -2193,7 +2193,7 @@ const Screens = {
       content.innerHTML = self._searchBar('Search halal food...') + self._radiusBar('halal') +
         '<div class="ummah-empty"><div style="font-size:48px;margin-bottom:12px">\uD83C\uDF5B</div>' +
         '<div style="font-weight:600;margin-bottom:4px">' + (self._communitySearch ? 'No matching restaurants' : 'No halal restaurants within ' + radiusMi + ' miles') + '</div>' +
-        '<div style="font-size:12px;color:var(--text-sec)">OpenStreetMap data may be limited in your area.<br><a href="https://www.openstreetmap.org/" target="_blank" style="color:var(--gold-light)">Help add halal places</a></div></div>';
+        '<div style="font-size:13px;color:var(--text-sec);font-weight:500">OpenStreetMap data may be limited in your area.<br><a href="https://www.openstreetmap.org/" target="_blank" style="color:var(--gold-light)">Help add halal places</a></div></div>';
       self._attachRadiusListeners('halal');
       self._attachSearchListener('halal');
       return;
@@ -2638,7 +2638,7 @@ const Screens = {
         <!-- Now Playing Info -->
         <div style="font-size:16px;font-weight:700;margin-bottom:4px">${currentAzan.name}</div>
         <div style="font-size:12px;color:var(--text-sec);margin-bottom:4px">${currentAzan.muezzin}</div>
-        <div style="font-size:11px;color:var(--gold);margin-bottom:16px">${currentAzan.origin} · ${currentAzan.style}</div>
+        <div style="font-size:12px;color:var(--gold);margin-bottom:16px;font-weight:500">${currentAzan.origin} · ${currentAzan.style}</div>
 
         <!-- Wave Visualizer -->
         <div style="display:flex;align-items:center;justify-content:center;gap:4px;height:32px;margin-bottom:16px">
@@ -2651,7 +2651,7 @@ const Screens = {
             ${isPlaying ? '⏹️' : '▶️'}
           </button>
         </div>
-        <div style="font-size:11px;color:var(--text-muted)">${isPlaying ? 'Now playing — tap to stop' : 'Tap to play Azan'}</div>
+        <div style="font-size:12px;color:var(--text-sec);font-weight:500">${isPlaying ? 'Now playing — tap to stop' : 'Tap to play Azan'}</div>
       </div>
 
       <!-- Volume Control -->
@@ -2674,11 +2674,11 @@ const Screens = {
               <span style="font-size:22px">${muezzinIcon(a.id)}</span>
               <div style="flex:1">
                 <div style="font-weight:700;font-size:13px;color:${currentVoice === a.id ? 'var(--gold-light)' : 'var(--text)'}">${a.name}</div>
-                <div style="font-size:11px;color:var(--text-sec)">${a.muezzin}</div>
+                <div style="font-size:12px;color:var(--text-sec);font-weight:500">${a.muezzin}</div>
               </div>
               ${currentVoice === a.id ? '<div style="color:var(--gold-light);font-weight:700">✓</div>' : ''}
             </div>
-            <div style="font-size:10px;color:var(--text-muted)">${a.origin} · ${a.style}</div>
+            <div style="font-size:12px;color:var(--text-sec);font-weight:500">${a.origin} · ${a.style}</div>
           </div>
         `).join('')}
       </div>
@@ -2692,7 +2692,7 @@ const Screens = {
             <div class="toggle-knob"></div>
           </div>
         </div>
-        <div style="font-size:11px;color:var(--text-sec)">When enabled, Azan will play automatically at each prayer time</div>
+        <div style="font-size:12px;color:var(--text-sec);font-weight:500">When enabled, Azan will play automatically at each prayer time</div>
       </div>
 
       ${settings.enabled ? `
@@ -2738,7 +2738,7 @@ const Screens = {
         🕌 Test Full Azan Experience
       </button>
 
-      <div style="text-align:center;padding:8px;font-size:11px;color:var(--text-muted)">
+      <div style="text-align:center;padding:8px;font-size:12px;color:var(--text-sec);font-weight:500">
         Audio sourced from Internet Archive · Free for personal use
       </div>
     `;
@@ -2808,7 +2808,7 @@ const Screens = {
               <div class="azan-voice-card ${s.voice === a.id ? 'selected' : ''}" style="border:2px solid ${s.voice === a.id ? 'var(--gold-light)' : 'rgba(212,168,67,0.2)'};border-radius:12px;padding:12px;cursor:pointer;text-align:center;background:${s.voice === a.id ? 'rgba(212,168,67,0.1)' : 'transparent'}" onclick="Store.setAzanSetting('voice','${a.id}');Screens.renderProfile()">
                 <div class="azan-voice-icon" style="font-size:24px;margin-bottom:6px">${a.id === 'makkah' ? '🕋' : a.id === 'madinah' || a.id === 'madinah1952' ? '🌟' : a.id === 'mishary' || a.id === 'alafasy' || a.id === 'fajr' ? '🎤' : a.id === 'egyptian' || a.id === 'abdulbaset' ? '🇪🇬' : a.id === 'qatami' || a.id === 'tareq' ? '🇸🇦' : a.id === 'halab' ? '🇸🇾' : a.id === 'kurtish' ? '🏔️' : '🕌'}</div>
                 <div class="azan-voice-name" style="font-weight:600;font-size:12px">${a.name}</div>
-                <div class="azan-voice-origin" style="font-size:10px;color:var(--text-sec)">${a.origin}</div>
+                <div class="azan-voice-origin" style="font-size:12px;color:var(--text-sec);font-weight:500">${a.origin}</div>
                 ${s.voice === a.id ? '<div class="azan-voice-check" style="margin-top:6px;color:var(--gold-light)">✓</div>' : ''}
               </div>
             `).join('')}
@@ -2957,22 +2957,22 @@ const Screens = {
         <div class="profile-level" style="font-size:14px;color:var(--gold-light);font-weight:600">${t('level')} ${stats.level} · ${stats.xp} XP</div>
         <div class="xp-bar-wrap" style="margin-top:12px">
           <div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${(stats.xp % 500) / 5}%;background:linear-gradient(90deg,var(--gold-light),rgba(212,168,67,0.7))"></div></div>
-          <div class="xp-text" style="font-size:10px;color:var(--text-sec);margin-top:4px">${500 - (stats.xp % 500)} ${t('xpToNext')}</div>
+          <div class="xp-text" style="font-size:12px;color:var(--text-sec);margin-top:4px;font-weight:600">${500 - (stats.xp % 500)} ${t('xpToNext')}</div>
         </div>
       </div>
 
       <div class="stats-grid">
         <div class="card stat-card" style="background:linear-gradient(135deg,rgba(212,168,67,0.1),transparent);border:1px solid rgba(212,168,67,0.3);border-radius:12px;text-align:center;padding:16px">
           <div class="stat-num" style="font-size:24px;font-weight:700;color:var(--gold-light)">${stats.streak}</div>
-          <div class="stat-label" style="font-size:12px;color:var(--text-sec);margin-top:4px">${t('dayStreak')}</div>
+          <div class="stat-label" style="font-size:13px;color:var(--text-sec);margin-top:4px;font-weight:600">${t('dayStreak')}</div>
         </div>
         <div class="card stat-card" style="background:linear-gradient(135deg,rgba(52,152,219,0.1),transparent);border:1px solid rgba(52,152,219,0.3);border-radius:12px;text-align:center;padding:16px">
           <div class="stat-num" style="font-size:24px;font-weight:700;color:var(--blue)">${stats.totalPrayers}</div>
-          <div class="stat-label" style="font-size:12px;color:var(--text-sec);margin-top:4px">${t('prayersLogged')}</div>
+          <div class="stat-label" style="font-size:13px;color:var(--text-sec);margin-top:4px;font-weight:600">${t('prayersLogged')}</div>
         </div>
         <div class="card stat-card" style="background:linear-gradient(135deg,rgba(46,204,113,0.1),transparent);border:1px solid rgba(46,204,113,0.3);border-radius:12px;text-align:center;padding:16px">
           <div class="stat-num" style="font-size:24px;font-weight:700;color:var(--green)">${stats.tasbihTotal}</div>
-          <div class="stat-label" style="font-size:12px;color:var(--text-sec);margin-top:4px">${t('tasbih')}</div>
+          <div class="stat-label" style="font-size:13px;color:var(--text-sec);margin-top:4px;font-weight:600">${t('tasbih')}</div>
         </div>
       </div>
 
@@ -2981,8 +2981,8 @@ const Screens = {
         <div class="achievement-item" style="display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:8px;background:${achievements[a.id] ? 'rgba(212,168,67,0.1)' : 'rgba(255,255,255,0.02)'};border-radius:12px;border:1px solid ${achievements[a.id] ? 'rgba(212,168,67,0.3)' : 'rgba(212,168,67,0.1)'}">
           <div class="achievement-icon" style="width:40px;height:40px;border-radius:50%;background:${achievements[a.id] ? 'rgba(212,168,67,0.3)' : 'rgba(255,255,255,0.05)'};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;border:2px solid ${achievements[a.id] ? 'var(--gold-light)' : 'rgba(212,168,67,0.2)'}">${a.icon}</div>
           <div class="achievement-info" style="flex:1">
-            <div class="achievement-name" style="font-weight:600;${!achievements[a.id] ? 'opacity:.5' : 'color:var(--gold-light)'}">${a.name}</div>
-            <div class="achievement-desc" style="font-size:11px;color:var(--text-sec)">${achievements[a.id] ? t('unlocked') : a.desc}</div>
+            <div class="achievement-name" style="font-weight:600;${!achievements[a.id] ? 'opacity:.75;color:var(--text-sec)' : 'color:var(--gold-light)'}">${a.name}</div>
+            <div class="achievement-desc" style="font-size:12px;color:var(--text-sec);font-weight:500">${achievements[a.id] ? t('unlocked') : a.desc}</div>
           </div>
         </div>
       `).join('')}
@@ -2993,7 +2993,7 @@ const Screens = {
           <span style="font-size:24px">${curLang.flag}</span>
           <div>
             <div style="font-weight:700;color:var(--gold-light)">${curLang.native}</div>
-            <div style="font-size:11px;color:var(--text-sec)">${curLang.name} · ${I18n.supportedLanguages.length} languages available</div>
+            <div style="font-size:12px;color:var(--text-sec);font-weight:500">${curLang.name} · ${I18n.supportedLanguages.length} languages available</div>
           </div>
         </div>
         ${langSelectorHTML}

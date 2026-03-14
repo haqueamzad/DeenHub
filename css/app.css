@@ -24,8 +24,9 @@
   --surface: #0F1C32;
   --text: #F0F4FA;
   --text-primary: #F0F4FA;
-  --text-sec: #B0C7E0;
-  --text-muted: #8A9FBA;
+  --text-sec: #CBD8EA;
+  --text-secondary: #CBD8EA;
+  --text-muted: #A0B4CC;
   --green: #00D68F;
   --red: #FF6B6B;
   --blue: #4CA1FF;
@@ -231,6 +232,7 @@ body::after {
 .header-subtitle {
   font-size: 12px;
   color: var(--text-sec);
+  font-weight: 500;
   position: relative;
   z-index: 1;
 }
@@ -3342,26 +3344,196 @@ body::after {
 }
 
 /* ============================================================
-   AI SCHOLAR SCREEN ENHANCEMENTS
+   AI SCHOLAR SCREEN — WORLD-CLASS CHAT EXPERIENCE
+   Premium readability, bold typography, crisp contrast
    ============================================================ */
 
-.chat-bubble.ai {
-  border-left: 3px solid var(--gold);
-  background: linear-gradient(135deg, rgba(17, 29, 51, 0.8), rgba(22, 32, 51, 0.6));
+/* AI Scholar chat area — extra spacing for premium feel */
+#screen-ai .chat-area {
+  gap: 16px;
+  padding: 8px 0;
 }
 
-.chat-bubble.user {
-  border-left: 3px solid var(--primary-light);
+/* AI Scholar bubble — rich glass panel with golden accent */
+.chat-bubble.ai,
+#screen-ai [style*="border-left:3px solid var(--gold-light)"] {
+  border-left: 3px solid var(--gold-light) !important;
+  background: linear-gradient(135deg, rgba(20, 35, 60, 0.95), rgba(15, 28, 50, 0.85)) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(212, 168, 67, 0.08);
 }
 
+/* User message bubble — visible blue with strong contrast */
+.chat-bubble.user,
+#screen-ai [style*="background:rgba(52,152,219,0.2)"] {
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.35), rgba(76, 161, 255, 0.25)) !important;
+  border: 1px solid rgba(76, 161, 255, 0.3) !important;
+  color: #FFFFFF !important;
+  font-weight: 500 !important;
+  font-size: 15px !important;
+  box-shadow: 0 3px 12px rgba(52, 152, 219, 0.15);
+}
+
+/* Scholar label — bold gold with glow */
+#screen-ai [style*="text-transform:uppercase"][style*="color:var(--gold-light)"] {
+  color: var(--gold-light) !important;
+  font-weight: 800 !important;
+  font-size: 12px !important;
+  letter-spacing: 1.2px !important;
+  text-shadow: 0 0 8px rgba(240, 212, 138, 0.3);
+}
+
+/* Category badge — readable with solid background */
+#screen-ai [style*="background:rgba(212,168,67,0.1)"][style*="border-radius:10px"] {
+  background: rgba(212, 168, 67, 0.2) !important;
+  color: #E8D5A8 !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  padding: 3px 10px !important;
+  border: 1px solid rgba(212, 168, 67, 0.15);
+}
+
+/* Main response text — bright, bold, readable */
+#screen-ai [style*="font-size:14px"][style*="line-height:1.7"] {
+  color: #EDF2F8 !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  line-height: 1.75 !important;
+  letter-spacing: 0.01em;
+}
+
+/* Bold keywords in responses — golden highlight */
+#screen-ai strong[style*="color:var(--gold-light)"] {
+  color: #F5D98A !important;
+  font-weight: 700 !important;
+}
+
+/* Source section header */
+#screen-ai [style*="color:var(--gold-light)"][style*="font-weight:600"][style*="text-transform:uppercase"] {
+  color: var(--gold-light) !important;
+  font-weight: 800 !important;
+  font-size: 11px !important;
+  letter-spacing: 1px;
+}
+
+/* Source tags — readable with proper contrast */
+#screen-ai [style*="background:rgba(212,168,67,0.08)"][style*="border-radius:10px"] {
+  background: rgba(212, 168, 67, 0.15) !important;
+  color: #D4C4A0 !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  padding: 3px 10px !important;
+  border: 1px solid rgba(212, 168, 67, 0.2) !important;
+}
+
+/* Related topics label */
+#screen-ai [style*="color:var(--text-secondary)"][style*="font-size:10px"] {
+  color: #B0C0D4 !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+}
+
+/* AI pill buttons — prominent, touchable, readable */
+.ai-pill {
+  padding: 8px 16px !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(212, 168, 67, 0.35) !important;
+  background: rgba(212, 168, 67, 0.12) !important;
+  color: #E8D5A8 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.15s ease;
+}
+
+.ai-pill:active {
+  background: rgba(212, 168, 67, 0.25) !important;
+  transform: scale(0.96);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Related topic buttons — blue accent, readable */
+.ai-related-btn {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 8px 14px !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(76, 161, 255, 0.35) !important;
+  background: rgba(76, 161, 255, 0.12) !important;
+  color: #A8D0F5 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.ai-related-btn:active {
+  background: rgba(76, 161, 255, 0.25) !important;
+  transform: scale(0.96);
+}
+
+/* Chat input — larger, brighter text */
+#screen-ai .chat-input,
+#screen-ai .chat-input-wrap .chat-input {
+  background: rgba(15, 28, 50, 0.9) !important;
+  border: 1px solid rgba(212, 168, 67, 0.3) !important;
+  color: #FFFFFF !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  padding: 12px 18px !important;
+  border-radius: 24px;
+}
+
+#screen-ai .chat-input::placeholder {
+  color: #8A9FBA !important;
+  font-weight: 500 !important;
+}
+
+#screen-ai .chat-input:focus {
+  border-color: var(--gold-light) !important;
+  box-shadow: 0 0 16px rgba(212, 168, 67, 0.15) !important;
+}
+
+/* Send button — golden accent for scholar theme */
+#screen-ai .chat-send {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light)) !important;
+  color: #0A1628 !important;
+  font-weight: 700 !important;
+  width: 44px !important;
+  height: 44px !important;
+  box-shadow: 0 4px 14px rgba(212, 168, 67, 0.35) !important;
+}
+
+#screen-ai .chat-send:active {
+  transform: scale(0.9);
+  box-shadow: 0 2px 8px rgba(212, 168, 67, 0.25) !important;
+}
+
+/* Source divider lines — more visible */
+#screen-ai [style*="border-top:1px solid rgba(212,168,67"] {
+  border-top-color: rgba(212, 168, 67, 0.2) !important;
+}
+
+/* Screen header subtitle "Ask about Islam..." */
+#screen-ai .screen-header-subtitle {
+  color: #C8D8EC !important;
+  font-weight: 600 !important;
+}
+
+/* Arabic title in header */
+#screen-ai [style*="font-family:Scheherazade"],
+#screen-ai [style*="font-family:'Scheherazade"] {
+  color: var(--gold-light) !important;
+  font-weight: 700 !important;
+  text-shadow: 0 0 12px rgba(240, 212, 138, 0.2);
+}
+
+/* Legacy input wrapper */
 .chat-input-islamic {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  background: rgba(22, 32, 51, 0.8);
+  background: rgba(15, 28, 50, 0.9);
   border-radius: 14px;
-  border: 1px solid rgba(212, 168, 67, 0.15);
+  border: 1px solid rgba(212, 168, 67, 0.25);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   margin-top: 12px;
@@ -3371,29 +3543,33 @@ body::after {
   background: none;
   border: none;
   -webkit-appearance: none;
-  color: var(--text);
+  color: #FFFFFF;
   font-size: 16px;
+  font-weight: 500;
   flex: 1;
   outline: none;
 }
 
 .chat-input-islamic input::placeholder {
-  color: var(--text-muted);
+  color: #8A9FBA;
+  font-weight: 500;
 }
 
 .chat-input-islamic button {
-  background: var(--primary);
-  color: white;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: #0A1628;
   border: none;
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   font-size: 16px;
+  font-weight: 700;
   transition: all var(--transition-fast);
+  box-shadow: 0 3px 10px rgba(212, 168, 67, 0.3);
 }
 
 .chat-input-islamic button:active {
@@ -4510,44 +4686,221 @@ input:focus-visible,
   font-weight: 600;
 }
 
-/* Minimum contrast for any inline [style*="color:var(--text-sec)"] */
+/* ============================================================
+   GLOBAL READABILITY SYSTEM — WORLD-CLASS CONTRAST
+   Every text element must be bold, bright, and effortless to read.
+   This section overrides any faint inline styles across ALL screens.
+   ============================================================ */
+
+/* --- SECONDARY TEXT: Boost color AND weight --- */
 [style*="color:var(--text-sec)"] {
-  font-weight: 500 !important;
+  color: #CBD8EA !important;
+  font-weight: 600 !important;
 }
 
 [style*="color:var(--text-muted)"] {
-  font-weight: 500 !important;
+  color: #A0B4CC !important;
+  font-weight: 600 !important;
 }
 
 [style*="color:var(--text-secondary)"] {
-  font-weight: 500 !important;
+  color: #CBD8EA !important;
+  font-weight: 600 !important;
 }
 
-/* Ensure all small text (10-12px) is medium weight minimum */
-[style*="font-size:10px"],
-[style*="font-size:11px"],
+/* --- SMALL TEXT: Must be semi-bold minimum --- */
+[style*="font-size:9px"] {
+  font-weight: 600 !important;
+  font-size: 10px !important;
+}
+
+[style*="font-size:10px"] {
+  font-weight: 600 !important;
+}
+
+[style*="font-size:11px"] {
+  font-weight: 600 !important;
+}
+
 [style*="font-size:12px"] {
+  font-weight: 600 !important;
+}
+
+[style*="font-size:13px"] {
   font-weight: 500 !important;
 }
 
-/* Screen header subtitles */
-.screen-header-subtitle {
-  font-weight: 500;
-  color: #B0C7E0;
+/* --- OPACITY: Remove faint opacity from text --- */
+[style*="opacity:.8"],
+[style*="opacity:0.8"] {
+  opacity: 1 !important;
 }
 
-/* Calendar day numbers */
+[style*="opacity:.7"],
+[style*="opacity:0.7"] {
+  opacity: 0.9 !important;
+}
+
+/* --- HADITH SCREEN: Bold readable cards --- */
+.hadith-card-text,
+[class*="hadith"] [style*="line-height"] {
+  font-weight: 500 !important;
+  color: #E8EDF4 !important;
+}
+
+.hadith-card-source,
+[class*="hadith"] [style*="font-size:12px"],
+[class*="hadith"] [style*="font-size:11px"] {
+  font-weight: 600 !important;
+  color: #B8C8DC !important;
+}
+
+/* --- QURAN SCREEN: Crisp translations and metadata --- */
+.quran-translation {
+  font-weight: 500 !important;
+  color: #DCE6F2 !important;
+  font-size: 15px !important;
+}
+
+.quran-translit {
+  font-weight: 500 !important;
+  color: #A8D8C8 !important;
+}
+
+.juz-range,
+[class*="juz"] [style*="color:var(--text-sec)"] {
+  color: #B8C8DC !important;
+  font-weight: 600 !important;
+}
+
+/* --- TASBIH SCREEN: Clear count and target --- */
+.tasbih-target {
+  color: #B8C8DC !important;
+  font-weight: 600 !important;
+}
+
+/* --- QIBLA SCREEN: Cardinal directions and labels --- */
+.qibla-cardinal,
+[class*="qibla"] [style*="color:var(--text-secondary)"] {
+  color: #C0D0E0 !important;
+  font-weight: 700 !important;
+}
+
+#qibla-instruction {
+  color: #B8C8DC !important;
+  font-weight: 500 !important;
+}
+
+/* --- DUAS SCREEN: Transliteration and references --- */
+.dua-translit-line {
+  color: #B8D0C4 !important;
+  font-weight: 500 !important;
+}
+
+.dua-ref-line {
+  color: #B8C8DC !important;
+  font-weight: 600 !important;
+}
+
+/* --- ZAKAT SCREEN: Results and labels --- */
+.zakat-label-sm,
+[class*="zakat"] [style*="color:var(--text-sec)"] {
+  color: #C0D0E4 !important;
+  font-weight: 600 !important;
+}
+
+/* --- AZAN SCREEN: Muezzin info, volume, descriptions --- */
+.azan-voice-origin,
+[class*="azan"] [style*="color:var(--text-sec)"],
+[class*="azan"] [style*="color:var(--text-muted)"] {
+  color: #B8C8DC !important;
+  font-weight: 600 !important;
+}
+
+#azan-vol-label {
+  color: #C0D0E4 !important;
+  font-weight: 600 !important;
+}
+
+/* --- PROFILE SCREEN: Stats, achievements, XP --- */
+.stat-label {
+  color: #B8C8DC !important;
+  font-weight: 600 !important;
+}
+
+.xp-text {
+  color: #B8C8DC !important;
+  font-weight: 600 !important;
+}
+
+.achievement-desc {
+  color: #B0C4D8 !important;
+  font-weight: 600 !important;
+}
+
+/* --- CALENDAR SCREEN: Day names --- */
 .cal-day-num {
-  font-weight: 600;
+  font-weight: 700 !important;
 }
 
-/* Quick action labels */
+/* --- COMMUNITY/UMMAH SCREEN: Error messages, info --- */
+#screen-community [style*="color:var(--text-sec)"] {
+  color: #C0D0E4 !important;
+  font-weight: 500 !important;
+}
+
+/* --- SCREEN HEADERS: Subtitles bright and legible --- */
+.screen-header-subtitle,
+.header-subtitle {
+  font-weight: 600 !important;
+  color: #C0D0E4 !important;
+}
+
+/* --- QUICK ACTION LABELS: Bold and bright --- */
 .quick-label {
-  font-weight: 700;
-  color: #E8EDF4;
+  font-weight: 700 !important;
+  color: #E8EDF4 !important;
 }
 
-/* Qibla compass labels */
+/* --- COMPASS DIRECTIONS: Must stand out --- */
 .compass-direction {
-  font-weight: 700;
+  font-weight: 700 !important;
+  color: #D0DCE8 !important;
+}
+
+/* --- CARD CONTENT: Ensure all text in cards is readable --- */
+.card [style*="color:var(--text-sec)"],
+.card [style*="color:var(--text-muted)"],
+.card [style*="color:var(--text-secondary)"] {
+  color: #C0D0E4 !important;
+  font-weight: 600 !important;
+}
+
+/* --- INLINE BORDER SEPARATORS: Make visible --- */
+[style*="border-top:1px solid rgba"] {
+  border-top-width: 1px !important;
+}
+
+/* --- SURAH BOOKMARK: More visible --- */
+.surah-bookmark {
+  opacity: 0.85 !important;
+}
+
+/* --- FORM/INPUT LABELS: Always bold --- */
+.form-label, label {
+  font-weight: 600 !important;
+}
+
+/* --- LINKS IN SCREENS: Bright and clickable --- */
+.screen a[style*="color:var(--gold-light)"] {
+  font-weight: 600 !important;
+}
+
+/* --- TAB BAR TEXT: Ensure bottom nav is crisp --- */
+.tab-item {
+  font-weight: 600 !important;
+}
+
+.tab-item.active {
+  font-weight: 700 !important;
 }
