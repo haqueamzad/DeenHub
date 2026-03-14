@@ -11,7 +11,9 @@ const API = {
         pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
         err => {
           console.warn('Geolocation denied, using default (Dallas, TX)');
-          resolve({ lat: 32.7767, lng: -96.7970 });
+          // Notify user that location failed — toast after DOM ready
+          setTimeout(function() { if (typeof App !== 'undefined') App.toast('Location unavailable — using default. Enable GPS for accurate times.'); }, 1000);
+          resolve({ lat: 32.7767, lng: -96.7970, fallback: true });
         },
         { timeout: 8000, enableHighAccuracy: false }
       );

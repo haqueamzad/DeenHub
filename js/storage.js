@@ -34,14 +34,18 @@ const Store = {
   getLevel() { return this.get('level', 1); },
 
   // ---- Streak ----
+  _dateKey(d) {
+    // Use YYYY-MM-DD for reliable cross-locale date comparison
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  },
   updateStreak() {
-    const today = new Date().toDateString();
+    const today = this._dateKey(new Date());
     const lastDate = this.get('lastPrayerDate', '');
     let streak = this.get('streak', 0);
     if (lastDate !== today) {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      if (lastDate === yesterday.toDateString()) {
+      if (lastDate === this._dateKey(yesterday)) {
         streak += 1;
       } else if (lastDate !== '') {
         streak = 1; // reset

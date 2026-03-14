@@ -87,9 +87,10 @@ const App = {
       const [h, m] = prayer.time.split(':').map(Number);
       const prayerMinutes = h * 60 + m;
 
-      // Check pre-alert (minutes before prayer)
+      // Check pre-alert (minutes before prayer), handle midnight wraparound
       if (settings.preAlert > 0) {
-        const preAlertMinutes = prayerMinutes - settings.preAlert;
+        var preAlertMinutes = prayerMinutes - settings.preAlert;
+        if (preAlertMinutes < 0) preAlertMinutes += 1440; // wrap to previous day
         const preKey = prayer.key + '_pre';
         if (!this._azanTriggeredToday[preKey] && currentMinutes >= preAlertMinutes && currentMinutes < preAlertMinutes + 1) {
           this._azanTriggeredToday[preKey] = true;
@@ -213,7 +214,7 @@ const App = {
   async sendNotification(title, body) {
     if (!('Notification' in window)) return;
     if (Notification.permission === 'default') {
-      await Notification.requestPermission();
+      try { await Notification.requestPermission(); } catch(e) { console.warn('Notification permission error:', e); }
     }
     if (Notification.permission === 'granted') {
       try {
@@ -239,6 +240,9 @@ const App = {
   },
 
   navigate(screen) {
+    // Cleanup previous screen resources (compass listeners, intervals, etc.)
+    Screens.cleanup();
+
     // Sub-screens that overlay
     const subScreens = ['tasbih', 'qibla', 'duas', 'zakat', 'calendar', 'azan'];
     const mainTabs = ['home', 'quran', 'hadith', 'ai', 'community', 'profile'];

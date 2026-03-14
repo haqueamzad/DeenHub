@@ -7,6 +7,17 @@ const Screens = {
   prayerTimes: null,
   location: null,
 
+  // ==== CLEANUP (call when leaving a screen) ====
+  cleanup() {
+    // Stop Qibla compass listeners
+    if (this._qiblaWatchId) {
+      window.removeEventListener('deviceorientationabsolute', this._qiblaOrientHandler);
+      window.removeEventListener('deviceorientation', this._qiblaOrientHandler);
+      this._qiblaWatchId = null;
+      this._qiblaCompassActive = false;
+    }
+  },
+
   // ==== SHARED ISLAMIC HELPERS ====
   _screenHeader(icon, title, arabicTitle, subtitle) {
     const archSVG = `<svg style="width:100%;height:12px;margin-top:-6px" viewBox="0 0 200 20" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
@@ -500,13 +511,10 @@ const Screens = {
   },
 
   toggleBookmark(surahNum) {
-    const bookmarks = Store.getBookmarks();
-    const idx = bookmarks.indexOf(surahNum);
-    if (idx >= 0) bookmarks.splice(idx, 1);
-    else bookmarks.push(surahNum);
-    Store.setBookmarks(bookmarks);
+    var wasSaved = Store.getBookmarks().indexOf(surahNum) >= 0;
+    Store.toggleBookmark(surahNum);
     this.renderQuranList(document.getElementById('screen-quran'));
-    App.toast(idx >= 0 ? 'Removed from bookmarks' : 'Added to bookmarks');
+    App.toast(wasSaved ? 'Removed from bookmarks' : 'Added to bookmarks');
   },
 
   copyAyah(surahNum, ayahNum) {
@@ -592,6 +600,11 @@ const Screens = {
     { role: 'ai', text: "As-salamu alaykum! I'm your AI Islamic Scholar. Ask me anything about Islam — prayer, Quran, Hadith, fiqh, history, and more. All answers include authentic sources.", data: null }
   ],
 
+  _escapeHTML: function(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  },
+
   renderAI() {
     var self = this;
     var el = document.getElementById('screen-ai');
@@ -602,7 +615,7 @@ const Screens = {
     for (var i = 0; i < self.aiMessages.length; i++) {
       var m = self.aiMessages[i];
       if (m.role === 'user') {
-        messagesHTML += '<div style="display:flex;justify-content:flex-end;margin:8px 0"><div style="background:rgba(52,152,219,0.2);border-radius:16px 4px 16px 16px;padding:10px 14px;max-width:80%;font-size:14px;line-height:1.5">' + m.text + '</div></div>';
+        messagesHTML += '<div style="display:flex;justify-content:flex-end;margin:8px 0"><div style="background:rgba(52,152,219,0.2);border-radius:16px 4px 16px 16px;padding:10px 14px;max-width:80%;font-size:14px;line-height:1.5">' + self._escapeHTML(m.text) + '</div></div>';
       } else {
         messagesHTML += self._aiScholarBubble(m);
       }
@@ -1601,11 +1614,11 @@ const Screens = {
         <div class="text-xs text-sec">2.5% of qualifying wealth held for one lunar year</div>
       </div>
       <div class="section-title">Calculate Your Zakat</div>
-      <div class="form-group"><label class="form-label" style="color:var(--gold-light);font-weight:600">Gold & Jewelry Value ($)</label><input class="form-input" type="number" id="z-gold" placeholder="0.00" style="border:1px solid rgba(212,168,67,0.3)"></div>
-      <div class="form-group"><label class="form-label" style="color:var(--gold-light);font-weight:600">Silver Value ($)</label><input class="form-input" type="number" id="z-silver" placeholder="0.00" style="border:1px solid rgba(212,168,67,0.3)"></div>
-      <div class="form-group"><label class="form-label" style="color:var(--gold-light);font-weight:600">Cash & Bank Balances ($)</label><input class="form-input" type="number" id="z-cash" placeholder="0.00" style="border:1px solid rgba(212,168,67,0.3)"></div>
-      <div class="form-group"><label class="form-label" style="color:var(--gold-light);font-weight:600">Stocks & Investments ($)</label><input class="form-input" type="number" id="z-stocks" placeholder="0.00" style="border:1px solid rgba(212,168,67,0.3)"></div>
-      <div class="form-group"><label class="form-label" style="color:var(--gold-light);font-weight:600">Business / Rental Property ($)</label><input class="form-input" type="number" id="z-property" placeholder="0.00" style="border:1px solid rgba(212,168,67,0.3)"></div>
+      <div class="form-group"><label class="form-label" style="color:var(--gold-light);font-weight:600">Gold & Jewelry Value ($)</label><input class="form-input" type="number" id="z-gold" placeholder="0.00" min="0" style="border:1px solid rgba(212,168,67,0.3)"></div>
+      <div class="form-group"><label class="form-label" style="color:var(--gold-light);font-weight:600">Silver Value ($)</label><input class="form-input" type="number" id="z-silver" placeholder="0.00" min="0" style="border:1px solid rgba(212,168,67,0.3)"></div>
+      <div class="form-group"><label class="form-label" style="color:var(--gold-light);font-weight:600">Cash & Bank Balances ($)</label><input class="form-input" type="number" id="z-cash" placeholder="0.00" min="0" style="border:1px solid rgba(212,168,67,0.3)"></div>
+      <div class="form-group"><label class="form-label" style="color:var(--gold-light);font-weight:600">Stocks & Investments ($)</label><input class="form-input" type="number" id="z-stocks" placeholder="0.00" min="0" style="border:1px solid rgba(212,168,67,0.3)"></div>
+      <div class="form-group"><label class="form-label" style="color:var(--gold-light);font-weight:600">Business / Rental Property ($)</label><input class="form-input" type="number" id="z-property" placeholder="0.00" min="0" style="border:1px solid rgba(212,168,67,0.3)"></div>
       <div class="form-group"><label class="form-label" style="color:var(--gold-light);font-weight:600">Debts & Liabilities ($)</label><input class="form-input" type="number" id="z-debts" placeholder="0.00" style="border:1px solid rgba(212,168,67,0.3)"></div>
       <button class="btn btn-primary w-full mt-8" style="border-radius:8px;font-weight:600" onclick="Screens.calcZakat()">Calculate Zakat</button>
       <div id="zakat-result"></div>
@@ -1613,7 +1626,7 @@ const Screens = {
   },
 
   calcZakat() {
-    const v = id => parseFloat(document.getElementById(id)?.value) || 0;
+    var v = function(id) { var el = document.getElementById(id); return el ? (parseFloat(el.value) || 0) : 0; };
     const result = API.calculateZakat(v('z-gold'), v('z-silver'), v('z-cash'), v('z-stocks'), v('z-property'), v('z-debts'));
     Store.unlockAchievement('zakat_calc');
     document.getElementById('zakat-result').innerHTML = `
