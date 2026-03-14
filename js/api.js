@@ -670,32 +670,37 @@ const API = {
       // 2. building=mosque (without amenity tag)
       // 3. amenity=community_centre + religion=muslim (dual-purpose)
       // 4. Name-based: "mosque", "masjid", "islamic", "musalla" in name
-      var query = '[out:json][timeout:30];(' +
-        // Standard: place of worship + muslim
+      // Split into 2 parallel queries to avoid Overpass timeout
+      // Query 1: Tag-based (fast — searches indexed tags only)
+      var query1 = '[out:json][timeout:25];(' +
         'node["amenity"="place_of_worship"]["religion"="muslim"](' + area + ');' +
         'way["amenity"="place_of_worship"]["religion"="muslim"](' + area + ');' +
         'relation["amenity"="place_of_worship"]["religion"="muslim"](' + area + ');' +
-        // Building tagged as mosque (may lack amenity tag)
         'node["building"="mosque"](' + area + ');' +
         'way["building"="mosque"](' + area + ');' +
         'relation["building"="mosque"](' + area + ');' +
-        // Community centres with religion=muslim
         'node["amenity"="community_centre"]["religion"="muslim"](' + area + ');' +
         'way["amenity"="community_centre"]["religion"="muslim"](' + area + ');' +
-        // Name-based catch-all (finds mosques with incomplete tags)
-        'node["name"~"[Mm]osque|[Mm]asjid|[Ii]slamic|[Mm]usalla|[Mm]uslim"](' + area + ');' +
-        'way["name"~"[Mm]osque|[Mm]asjid|[Ii]slamic|[Mm]usalla|[Mm]uslim"](' + area + ');' +
-        'relation["name"~"[Mm]osque|[Mm]asjid|[Ii]slamic|[Mm]usalla|[Mm]uslim"](' + area + ');' +
+        ');out center body;';
+      // Query 2: Name-based (heavier — searches name strings)
+      // Narrowed to amenity/building tagged entities to avoid scanning ALL nodes
+      var query2 = '[out:json][timeout:25];(' +
+        'node["amenity"]["name"~"[Mm]osque|[Mm]asjid|[Ii]slamic [Cc]ent|[Ii]slamic [Aa]ss|[Mm]usalla"](' + area + ');' +
+        'way["amenity"]["name"~"[Mm]osque|[Mm]asjid|[Ii]slamic [Cc]ent|[Ii]slamic [Aa]ss|[Mm]usalla"](' + area + ');' +
+        'node["building"]["name"~"[Mm]osque|[Mm]asjid|[Ii]slamic [Cc]ent|[Ii]slamic [Aa]ss|[Mm]usalla"](' + area + ');' +
+        'way["building"]["name"~"[Mm]osque|[Mm]asjid|[Ii]slamic [Cc]ent|[Ii]slamic [Aa]ss|[Mm]usalla"](' + area + ');' +
         ');out center body;';
 
-      var res = await fetch('https://overpass-api.de/api/interpreter', {
-        method: 'POST', body: 'data=' + encodeURIComponent(query),
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-      });
-      var data = await res.json();
+      // Run both Overpass queries in parallel for speed
+      var fetchOpts = { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' } };
+      var pArr = await Promise.all([
+        fetch('https://overpass-api.de/api/interpreter', Object.assign({}, fetchOpts, { body: 'data=' + encodeURIComponent(query1) })).then(function(r) { return r.json(); }).catch(function() { return { elements: [] }; }),
+        fetch('https://overpass-api.de/api/interpreter', Object.assign({}, fetchOpts, { body: 'data=' + encodeURIComponent(query2) })).then(function(r) { return r.json(); }).catch(function() { return { elements: [] }; })
+      ]);
+      var allElements = (pArr[0].elements || []).concat(pArr[1].elements || []);
       var seen = {};
-      for (var i = 0; i < data.elements.length; i++) {
-        var el = data.elements[i];
+      for (var i = 0; i < allElements.length; i++) {
+        var el = allElements[i];
         if (seen[el.type + '_' + el.id]) continue;
         seen[el.type + '_' + el.id] = true;
         var elLat = el.lat || (el.center && el.center.lat);
@@ -775,36 +780,12 @@ const API = {
     return allMosques;
   },
 
-  // ---- Nearby Halal Restaurants (Multi-source: Overpass + Nominatim) ----
-  async getNearbyHalal(lat, lng, radiusKm) {
-    radiusKm = radiusKm || 32;
-    var cacheKey = 'halal_' + Math.round(lat*10) + '_' + Math.round(lng*10) + '_' + radiusKm;
-    if (this._nearbyCache[cacheKey]) return this._nearbyCache[cacheKey];
-
-    var allPlaces = [];
+  // ---- Nearby Halal Restaurants (Parallel Overpass + Nominatim) ----
+  // Helper: run a single Overpass query and parse food results
+  async _overpassFoodQuery(query, lat, lng) {
     var self = this;
-    var radius = radiusKm * 1000;
-    var area = 'around:' + radius + ',' + lat + ',' + lng;
-
-    // --- Source 1: Comprehensive Overpass query ---
+    var results = [];
     try {
-      var query = '[out:json][timeout:30];(' +
-        // Standard: diet:halal or halal in cuisine for restaurants/fast_food/cafe
-        'node["amenity"~"restaurant|fast_food|cafe"]["diet:halal"="yes"](' + area + ');' +
-        'node["amenity"~"restaurant|fast_food|cafe"]["cuisine"~"halal"](' + area + ');' +
-        'way["amenity"~"restaurant|fast_food|cafe"]["diet:halal"="yes"](' + area + ');' +
-        'way["amenity"~"restaurant|fast_food|cafe"]["cuisine"~"halal"](' + area + ');' +
-        // Butchers and shops tagged halal
-        'node["shop"~"butcher|supermarket|convenience"]["diet:halal"="yes"](' + area + ');' +
-        'node["shop"~"butcher|supermarket|convenience"]["name"~"[Hh]alal"](' + area + ');' +
-        'way["shop"~"butcher|supermarket|convenience"]["diet:halal"="yes"](' + area + ');' +
-        // Name-based: "halal" in the name (catches untagged places)
-        'node["amenity"~"restaurant|fast_food|cafe"]["name"~"[Hh]alal"](' + area + ');' +
-        'way["amenity"~"restaurant|fast_food|cafe"]["name"~"[Hh]alal"](' + area + ');' +
-        // Broader cuisine match: middle eastern, arab, pakistani, turkish, etc
-        'node["amenity"~"restaurant|fast_food|cafe"]["cuisine"~"arab|middle_eastern|pakistani|afghan|turkish|persian|moroccan|lebanese|indian|bangladeshi|somali|yemeni|egyptian|syrian"](' + area + ');' +
-        'way["amenity"~"restaurant|fast_food|cafe"]["cuisine"~"arab|middle_eastern|pakistani|afghan|turkish|persian|moroccan|lebanese|indian|bangladeshi|somali|yemeni|egyptian|syrian"](' + area + ');' +
-        ');out center body;';
       var res = await fetch('https://overpass-api.de/api/interpreter', {
         method: 'POST', body: 'data=' + encodeURIComponent(query),
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
@@ -825,7 +806,7 @@ const API = {
         cuisine = cuisine.replace(/halal[;,]?\s*/i, '').replace(/[;,]\s*halal/i, '');
         var isHalal = tags['diet:halal'] === 'yes' || (tags.cuisine && tags.cuisine.toLowerCase().indexOf('halal') >= 0) ||
           (tags.name && tags.name.toLowerCase().indexOf('halal') >= 0);
-        allPlaces.push({
+        results.push({
           id: el.id, name: name, lat: elLat, lng: elLng, dist: dist,
           cuisine: cuisine || (tags.shop ? 'Halal ' + (tags.shop === 'butcher' ? 'Butcher' : 'Market') : 'Halal'),
           address: (tags['addr:street'] ? (tags['addr:housenumber'] ? tags['addr:housenumber'] + ' ' : '') + tags['addr:street'] : '') || tags['addr:full'] || '',
@@ -838,45 +819,99 @@ const API = {
         });
       }
     } catch(e) {
-      console.error('Overpass halal error:', e);
+      console.warn('Overpass food query error:', e);
     }
+    return results;
+  },
 
-    // --- Source 2: Nominatim text search ---
-    var halalTerms = ['halal+restaurant', 'halal+food', 'halal+market'];
+  async getNearbyHalal(lat, lng, radiusKm) {
+    radiusKm = radiusKm || 32;
+    var cacheKey = 'halal_' + Math.round(lat*10) + '_' + Math.round(lng*10) + '_' + radiusKm;
+    if (this._nearbyCache[cacheKey]) return this._nearbyCache[cacheKey];
+
+    var self = this;
+    var radius = radiusKm * 1000;
+    var area = 'around:' + radius + ',' + lat + ',' + lng;
+
+    // --- Run 2 SMALL Overpass queries in PARALLEL (avoids timeout) ---
+    // Query A: Explicit halal tags (diet:halal, cuisine~halal)
+    var queryA = '[out:json][timeout:25];(' +
+      'node["amenity"~"restaurant|fast_food|cafe"]["diet:halal"="yes"](' + area + ');' +
+      'node["amenity"~"restaurant|fast_food|cafe"]["cuisine"~"halal"](' + area + ');' +
+      'way["amenity"~"restaurant|fast_food|cafe"]["diet:halal"="yes"](' + area + ');' +
+      'way["amenity"~"restaurant|fast_food|cafe"]["cuisine"~"halal"](' + area + ');' +
+      'node["amenity"~"restaurant|fast_food|cafe"]["name"~"[Hh]alal"](' + area + ');' +
+      'way["amenity"~"restaurant|fast_food|cafe"]["name"~"[Hh]alal"](' + area + ');' +
+      ');out center body;';
+
+    // Query B: Halal shops/butchers + name-based broad search (lighter)
+    var queryB = '[out:json][timeout:25];(' +
+      'node["shop"~"butcher|supermarket|convenience"]["diet:halal"="yes"](' + area + ');' +
+      'node["shop"~"butcher|supermarket|convenience"]["name"~"[Hh]alal"](' + area + ');' +
+      'way["shop"~"butcher|supermarket|convenience"]["diet:halal"="yes"](' + area + ');' +
+      'node["name"~"[Hh]alal"]["amenity"](' + area + ');' +
+      'way["name"~"[Hh]alal"]["amenity"](' + area + ');' +
+      ');out center body;';
+
+    // Run both Overpass queries + Nominatim in parallel
     var nominatimBbox = (lng - radiusKm/85) + ',' + (lat - radiusKm/111) + ',' + (lng + radiusKm/85) + ',' + (lat + radiusKm/111);
-    for (var s = 0; s < halalTerms.length; s++) {
-      try {
-        var nUrl = 'https://nominatim.openstreetmap.org/search?q=' + halalTerms[s] +
-          '&viewbox=' + nominatimBbox + '&bounded=1&format=json&limit=50&addressdetails=1' +
-          '&accept-language=en';
-        var nRes = await fetch(nUrl, {
-          headers: { 'User-Agent': 'DeenHub-PWA/1.0 (Islamic community app)' }
-        });
-        var nData = await nRes.json();
-        for (var n = 0; n < nData.length; n++) {
-          var item = nData[n];
-          var nLat = parseFloat(item.lat);
-          var nLng = parseFloat(item.lon);
-          if (isNaN(nLat) || isNaN(nLng)) continue;
-          var nDist = self._haversine(lat, lng, nLat, nLng);
-          if (nDist > radiusKm) continue;
-          var nName = item.display_name ? item.display_name.split(',')[0] : 'Halal Restaurant';
-          var nAddr = '';
-          if (item.address) {
-            var a = item.address;
-            nAddr = (a.house_number ? a.house_number + ' ' : '') + (a.road || a.street || '');
-            if (a.city || a.town || a.suburb) nAddr += (nAddr ? ', ' : '') + (a.city || a.town || a.suburb);
-          }
-          allPlaces.push({
-            id: 'nom_' + item.osm_id, name: nName, lat: nLat, lng: nLng, dist: nDist,
-            cuisine: 'Halal', address: nAddr, phone: '', website: '',
-            amenity: 'restaurant', openingHours: '', halal_verified: false,
-            source: 'nominatim'
+
+    var nominatimPromise = (async function() {
+      var nomResults = [];
+      var halalTerms = ['halal+restaurant', 'halal+food', 'halal+market'];
+      for (var s = 0; s < halalTerms.length; s++) {
+        try {
+          var nUrl = 'https://nominatim.openstreetmap.org/search?q=' + halalTerms[s] +
+            '&viewbox=' + nominatimBbox + '&bounded=1&format=json&limit=50&addressdetails=1' +
+            '&accept-language=en';
+          var nRes = await fetch(nUrl, {
+            headers: { 'User-Agent': 'DeenHub-PWA/1.0 (Islamic community app)' }
           });
+          var nData = await nRes.json();
+          for (var n = 0; n < nData.length; n++) {
+            var item = nData[n];
+            var nLat = parseFloat(item.lat);
+            var nLng = parseFloat(item.lon);
+            if (isNaN(nLat) || isNaN(nLng)) continue;
+            var nDist = self._haversine(lat, lng, nLat, nLng);
+            if (nDist > radiusKm) continue;
+            var nName = item.display_name ? item.display_name.split(',')[0] : 'Halal Restaurant';
+            var nAddr = '';
+            if (item.address) {
+              var a = item.address;
+              nAddr = (a.house_number ? a.house_number + ' ' : '') + (a.road || a.street || '');
+              if (a.city || a.town || a.suburb) nAddr += (nAddr ? ', ' : '') + (a.city || a.town || a.suburb);
+            }
+            nomResults.push({
+              id: 'nom_' + item.osm_id, name: nName, lat: nLat, lng: nLng, dist: nDist,
+              cuisine: 'Halal', address: nAddr, phone: '', website: '',
+              amenity: 'restaurant', openingHours: '', halal_verified: false,
+              source: 'nominatim'
+            });
+          }
+        } catch(e) {
+          console.warn('Nominatim halal search error:', e);
         }
-      } catch(e) {
-        console.warn('Nominatim halal search error:', e);
       }
+      return nomResults;
+    })();
+
+    // Wait for all 3 sources in parallel
+    var results = await Promise.all([
+      self._overpassFoodQuery(queryA, lat, lng),
+      self._overpassFoodQuery(queryB, lat, lng),
+      nominatimPromise
+    ]);
+
+    var allPlaces = results[0].concat(results[1]).concat(results[2]);
+
+    // If Overpass returned 0 but we know it should have results, retry once
+    if (results[0].length === 0 && results[1].length === 0) {
+      console.warn('Overpass returned 0 halal results — retrying query A...');
+      try {
+        var retry = await self._overpassFoodQuery(queryA, lat, lng);
+        allPlaces = allPlaces.concat(retry);
+      } catch(e) { /* ignore retry failure */ }
     }
 
     // --- Deduplicate, sort, cache ---
