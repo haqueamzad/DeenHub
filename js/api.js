@@ -624,6 +624,213 @@ const API = {
     return { day, month, year, monthName: months[month - 1] || 'Unknown' };
   },
 
+  // ---- Nearby Mosques (OpenStreetMap Overpass API — free, no key) ----
+  _nearbyCache: {},
+
+  async getNearbyMosques(lat, lng, radiusKm) {
+    radiusKm = radiusKm || 32; // ~20 miles
+    var cacheKey = 'mosques_' + Math.round(lat*10) + '_' + Math.round(lng*10);
+    if (this._nearbyCache[cacheKey]) return this._nearbyCache[cacheKey];
+    try {
+      var query = '[out:json][timeout:15];(' +
+        'node["amenity"="place_of_worship"]["religion"="muslim"](around:' + (radiusKm*1000) + ',' + lat + ',' + lng + ');' +
+        'way["amenity"="place_of_worship"]["religion"="muslim"](around:' + (radiusKm*1000) + ',' + lat + ',' + lng + ');' +
+        ');out center body;';
+      var res = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST', body: 'data=' + encodeURIComponent(query),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+      var data = await res.json();
+      var mosques = [];
+      for (var i = 0; i < data.elements.length; i++) {
+        var el = data.elements[i];
+        var elLat = el.lat || (el.center && el.center.lat);
+        var elLng = el.lon || (el.center && el.center.lon);
+        if (!elLat || !elLng) continue;
+        var tags = el.tags || {};
+        var name = tags.name || tags['name:en'] || tags['name:ar'] || 'Mosque';
+        var dist = this._haversine(lat, lng, elLat, elLng);
+        mosques.push({
+          id: el.id, name: name, lat: elLat, lng: elLng, dist: dist,
+          address: (tags['addr:street'] ? tags['addr:housenumber'] ? tags['addr:housenumber'] + ' ' + tags['addr:street'] : tags['addr:street'] : '') || tags['addr:full'] || '',
+          phone: tags.phone || tags['contact:phone'] || '',
+          website: tags.website || tags['contact:website'] || '',
+          wheelchair: tags.wheelchair || '',
+          denomination: tags.denomination || ''
+        });
+      }
+      mosques.sort(function(a, b) { return a.dist - b.dist; });
+      this._nearbyCache[cacheKey] = mosques;
+      return mosques;
+    } catch(e) {
+      console.error('Overpass mosque error:', e);
+      return [];
+    }
+  },
+
+  // ---- Nearby Halal Restaurants (OpenStreetMap Overpass API) ----
+  async getNearbyHalal(lat, lng, radiusKm) {
+    radiusKm = radiusKm || 32;
+    var cacheKey = 'halal_' + Math.round(lat*10) + '_' + Math.round(lng*10);
+    if (this._nearbyCache[cacheKey]) return this._nearbyCache[cacheKey];
+    try {
+      var query = '[out:json][timeout:15];(' +
+        'node["amenity"~"restaurant|fast_food|cafe"]["diet:halal"="yes"](around:' + (radiusKm*1000) + ',' + lat + ',' + lng + ');' +
+        'node["amenity"~"restaurant|fast_food|cafe"]["cuisine"~"halal"](around:' + (radiusKm*1000) + ',' + lat + ',' + lng + ');' +
+        'way["amenity"~"restaurant|fast_food|cafe"]["diet:halal"="yes"](around:' + (radiusKm*1000) + ',' + lat + ',' + lng + ');' +
+        'way["amenity"~"restaurant|fast_food|cafe"]["cuisine"~"halal"](around:' + (radiusKm*1000) + ',' + lat + ',' + lng + ');' +
+        ');out center body;';
+      var res = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST', body: 'data=' + encodeURIComponent(query),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+      var data = await res.json();
+      var places = [];
+      var seen = {};
+      for (var i = 0; i < data.elements.length; i++) {
+        var el = data.elements[i];
+        if (seen[el.id]) continue;
+        seen[el.id] = true;
+        var elLat = el.lat || (el.center && el.center.lat);
+        var elLng = el.lon || (el.center && el.center.lon);
+        if (!elLat || !elLng) continue;
+        var tags = el.tags || {};
+        var name = tags.name || tags['name:en'] || 'Halal Restaurant';
+        var dist = this._haversine(lat, lng, elLat, elLng);
+        var cuisine = tags.cuisine || '';
+        cuisine = cuisine.replace(/halal[;,]?\s*/i, '').replace(/[;,]\s*halal/i, '');
+        places.push({
+          id: el.id, name: name, lat: elLat, lng: elLng, dist: dist,
+          cuisine: cuisine || 'Halal',
+          address: (tags['addr:street'] ? (tags['addr:housenumber'] ? tags['addr:housenumber'] + ' ' : '') + tags['addr:street'] : '') || tags['addr:full'] || '',
+          phone: tags.phone || tags['contact:phone'] || '',
+          website: tags.website || tags['contact:website'] || '',
+          amenity: tags.amenity || 'restaurant',
+          openingHours: tags.opening_hours || ''
+        });
+      }
+      places.sort(function(a, b) { return a.dist - b.dist; });
+      this._nearbyCache[cacheKey] = places;
+      return places;
+    } catch(e) {
+      console.error('Overpass halal error:', e);
+      return [];
+    }
+  },
+
+  _haversine: function(lat1, lng1, lat2, lng2) {
+    var R = 3958.8; // miles
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLng = (lng2 - lng1) * Math.PI / 180;
+    var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  },
+
+  // ---- Islamic Events & Important Dates Engine ----
+  getIslamicEvents: function(year) {
+    // Major Islamic events with approximate Gregorian dates
+    // These shift ~10-11 days each year based on the lunar calendar
+    // Using Aladhan API data for accuracy when available
+    var hijri = this.getHijriDate();
+    var events = [
+      { name: 'Ramadan Begins', hijriMonth: 9, hijriDay: 1, icon: '\uD83C\uDF19', color: 'var(--gold)', desc: 'The holy month of fasting begins', category: 'major' },
+      { name: 'Laylat al-Qadr', hijriMonth: 9, hijriDay: 27, icon: '\u2728', color: 'var(--gold-light)', desc: 'The Night of Power — better than 1000 months', category: 'major' },
+      { name: 'Eid al-Fitr', hijriMonth: 10, hijriDay: 1, icon: '\uD83C\uDF89', color: '#2ecc71', desc: 'Festival of Breaking the Fast', category: 'eid' },
+      { name: 'Hajj Begins', hijriMonth: 12, hijriDay: 8, icon: '\uD83D\uDD4B', color: '#3498db', desc: 'Annual pilgrimage to Makkah begins', category: 'major' },
+      { name: 'Day of Arafah', hijriMonth: 12, hijriDay: 9, icon: '\u26F0\uFE0F', color: '#9b59b6', desc: 'The best day for dua and fasting', category: 'major' },
+      { name: 'Eid al-Adha', hijriMonth: 12, hijriDay: 10, icon: '\uD83D\uDC11', color: '#2ecc71', desc: 'Festival of Sacrifice', category: 'eid' },
+      { name: 'Islamic New Year', hijriMonth: 1, hijriDay: 1, icon: '\uD83C\uDF1F', color: '#3498db', desc: 'Start of new Hijri year (' + (hijri.year + 1) + ' AH)', category: 'major' },
+      { name: 'Ashura', hijriMonth: 1, hijriDay: 10, icon: '\uD83D\uDCD6', color: '#e67e22', desc: 'Day of fasting — Prophet Musa was saved', category: 'sunnah' },
+      { name: 'Mawlid al-Nabi', hijriMonth: 3, hijriDay: 12, icon: '\uD83D\uDC9A', color: '#27ae60', desc: 'Birth of Prophet Muhammad (PBUH)', category: 'major' },
+      { name: 'Isra & Miraj', hijriMonth: 7, hijriDay: 27, icon: '\uD83C\uDF0C', color: '#8e44ad', desc: 'Night Journey & Ascension', category: 'major' },
+      { name: 'Shaban Mid-Night', hijriMonth: 8, hijriDay: 15, icon: '\uD83C\uDF1D', color: '#f39c12', desc: 'Night of Forgiveness (Laylat al-Bara\'ah)', category: 'sunnah' }
+    ];
+
+    // Calculate approximate Gregorian dates for each event
+    for (var i = 0; i < events.length; i++) {
+      var ev = events[i];
+      // Approximate: days from current Hijri date to event
+      var currentDayOfYear = (hijri.month - 1) * 29.53 + hijri.day;
+      var eventDayOfYear = (ev.hijriMonth - 1) * 29.53 + ev.hijriDay;
+      var daysUntil = eventDayOfYear - currentDayOfYear;
+      if (daysUntil < -15) daysUntil += 354; // next Hijri year
+      var eventDate = new Date();
+      eventDate.setDate(eventDate.getDate() + Math.round(daysUntil));
+      ev.gregorianDate = eventDate;
+      ev.daysUntil = Math.round(daysUntil);
+      ev.hijriLabel = ev.hijriDay + ' ' + ['Muharram','Safar','Rabi al-Awwal','Rabi al-Thani','Jumada al-Ula','Jumada al-Thani','Rajab','Sha\'ban','Ramadan','Shawwal','Dhul Qi\'dah','Dhul Hijjah'][ev.hijriMonth - 1];
+    }
+
+    // Sort by days until (upcoming first)
+    events.sort(function(a, b) { return a.daysUntil - b.daysUntil; });
+    return events;
+  },
+
+  // ---- Sunnah Fasting Days ----
+  getSunnahFastingDays: function() {
+    var hijri = this.getHijriDate();
+    var days = [];
+    // White days: 13th, 14th, 15th of each Hijri month
+    var whiteDays = [13, 14, 15];
+    for (var i = 0; i < whiteDays.length; i++) {
+      var daysUntil = whiteDays[i] - hijri.day;
+      if (daysUntil < 0) daysUntil += 30; // next month
+      days.push({ name: 'White Day (' + whiteDays[i] + 'th)', daysUntil: daysUntil, type: 'white' });
+    }
+    // Mondays and Thursdays
+    var today = new Date();
+    var dow = today.getDay(); // 0=Sun
+    var nextMon = (1 - dow + 7) % 7; if (nextMon === 0) nextMon = 7;
+    var nextThu = (4 - dow + 7) % 7; if (nextThu === 0) nextThu = 7;
+    if (dow === 1) nextMon = 0; // today is Monday
+    if (dow === 4) nextThu = 0; // today is Thursday
+    days.push({ name: 'Monday Fast', daysUntil: nextMon, type: 'weekly' });
+    days.push({ name: 'Thursday Fast', daysUntil: nextThu, type: 'weekly' });
+    days.sort(function(a, b) { return a.daysUntil - b.daysUntil; });
+    return days;
+  },
+
+  // ---- Daily Islamic Inspiration ----
+  getDailyInspiration: function() {
+    var day = new Date().getDate();
+    var inspirations = [
+      { text: 'The best among you are those who have the best manners and character.', source: 'Sahih Bukhari 6029', type: 'hadith' },
+      { text: 'Verily, with hardship comes ease.', source: 'Quran 94:6', type: 'quran' },
+      { text: 'When you ask, ask Allah. When you seek help, seek help from Allah.', source: 'Tirmidhi 2516', type: 'hadith' },
+      { text: 'And He found you lost and guided you.', source: 'Quran 93:7', type: 'quran' },
+      { text: 'The strong person is not the one who can wrestle, but the one who controls himself at times of anger.', source: 'Sahih Bukhari 6114', type: 'hadith' },
+      { text: 'So remember Me; I will remember you.', source: 'Quran 2:152', type: 'quran' },
+      { text: 'None of you truly believes until he loves for his brother what he loves for himself.', source: 'Sahih Bukhari 13', type: 'hadith' },
+      { text: 'And whoever puts their trust in Allah, then He will suffice him.', source: 'Quran 65:3', type: 'quran' },
+      { text: 'Do not waste water even if you were at a running stream.', source: 'Ibn Majah 425', type: 'hadith' },
+      { text: 'Indeed, Allah is with the patient.', source: 'Quran 2:153', type: 'quran' },
+      { text: 'The most beloved deed to Allah is the most regular and constant even if it were little.', source: 'Sahih Bukhari 6464', type: 'hadith' },
+      { text: 'And We have certainly made the Quran easy for remembrance, so is there any who will remember?', source: 'Quran 54:17', type: 'quran' },
+      { text: 'Smiling in the face of your brother is an act of charity.', source: 'Tirmidhi 1956', type: 'hadith' },
+      { text: 'My Lord, increase me in knowledge.', source: 'Quran 20:114', type: 'quran' },
+      { text: 'Whoever believes in Allah and the Last Day, let him speak good or remain silent.', source: 'Sahih Muslim 47', type: 'hadith' },
+      { text: 'And your Lord says: Call upon Me; I will respond to you.', source: 'Quran 40:60', type: 'quran' },
+      { text: 'The best of people are those that bring most benefit to the rest of mankind.', source: 'Daraqutni', type: 'hadith' },
+      { text: 'Allah does not burden a soul beyond that it can bear.', source: 'Quran 2:286', type: 'quran' },
+      { text: 'Take advantage of five before five: your youth before your old age, your health before your illness, your wealth before your poverty, your free time before your work, and your life before your death.', source: 'Hakim', type: 'hadith' },
+      { text: 'Indeed, in the remembrance of Allah do hearts find rest.', source: 'Quran 13:28', type: 'quran' },
+      { text: 'Be in this world as if you were a stranger or a traveler.', source: 'Sahih Bukhari 6416', type: 'hadith' },
+      { text: 'He who is not grateful to the people is not grateful to Allah.', source: 'Abu Dawud 4811', type: 'hadith' },
+      { text: 'And We created you in pairs.', source: 'Quran 78:8', type: 'quran' },
+      { text: 'Every act of kindness is charity.', source: 'Sahih Bukhari 6021', type: 'hadith' },
+      { text: 'And do good; indeed, Allah loves the doers of good.', source: 'Quran 2:195', type: 'quran' },
+      { text: 'The heaviest thing on the Scale will be good character.', source: 'Abu Dawud 4799', type: 'hadith' },
+      { text: 'And whoever fears Allah — He will make for him a way out.', source: 'Quran 65:2', type: 'quran' },
+      { text: 'Feed the hungry, visit the sick, and set free the captives.', source: 'Sahih Bukhari 5649', type: 'hadith' },
+      { text: 'So which of the favors of your Lord would you deny?', source: 'Quran 55:13', type: 'quran' },
+      { text: 'The dua of a fasting person is never rejected.', source: 'Ibn Majah 1752', type: 'hadith' },
+      { text: 'Indeed, the mercy of Allah is near to the doers of good.', source: 'Quran 7:56', type: 'quran' }
+    ];
+    return inspirations[day % inspirations.length];
+  },
+
   // ---- Fallback data ----
   _fallbackSurahs() {
     return [

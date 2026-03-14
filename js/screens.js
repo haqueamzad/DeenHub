@@ -1714,80 +1714,347 @@ const Screens = {
     `;
   },
 
-  // ==== COMMUNITY SCREEN ====
-  communityTab: 'feed',
+  // ==== COMMUNITY SCREEN (World-Class Muslim Engagement) ====
+  communityTab: 'mosques',
+  _communityMosques: null,
+  _communityHalal: null,
+  _communityLoading: false,
 
-  renderCommunity() {
-    const el = document.getElementById('screen-community');
-    const tabs = ['Feed', 'Events', 'Mosques'];
-    const posts = [
-      { name: 'Ahmad M.', initials: 'AM', time: '2h ago', text: 'Just completed my 30-day Quran reading challenge! Alhamdulillah for the strength to be consistent.', likes: 24, comments: 8 },
-      { name: 'Fatima K.', initials: 'FK', time: '4h ago', text: 'Reminder: Tahajjud prayer is one of the best voluntary prayers. Even 2 rakahs before Fajr can transform your spiritual life.', likes: 45, comments: 12 },
-      { name: 'Omar H.', initials: 'OH', time: '6h ago', text: 'Our local masjid is organizing a community iftar this Friday. All are welcome! DM for details.', likes: 31, comments: 15 }
-    ];
-    const mosques = [
-      { name: 'Islamic Center of Dallas', dist: '2.1 mi', rating: '4.8' },
-      { name: 'East Plano Islamic Center', dist: '5.3 mi', rating: '4.7' },
-      { name: 'Valley Ranch Islamic Center', dist: '8.2 mi', rating: '4.9' }
+  async renderCommunity() {
+    var self = this;
+    var el = document.getElementById('screen-community');
+    if (!el) return;
+
+    var tabs = [
+      { id: 'mosques', label: '\uD83D\uDD4C Mosques', icon: '\uD83D\uDD4C' },
+      { id: 'halal', label: '\uD83C\uDF5B Halal Food', icon: '\uD83C\uDF5B' },
+      { id: 'events', label: '\uD83D\uDCC5 Events', icon: '\uD83D\uDCC5' },
+      { id: 'dates', label: '\u2B50 Islamic Dates', icon: '\u2B50' },
+      { id: 'inspire', label: '\uD83D\uDCA1 Inspire', icon: '\uD83D\uDCA1' }
     ];
 
-    el.innerHTML = `
-      ${this._screenHeader('👥', 'The Ummah', 'الأمة')}
-      <div style="display:flex;gap:8px;margin-bottom:12px">
-        ${tabs.map(t => `<span class="chip ${t.toLowerCase() === this.communityTab ? 'active' : ''}" style="border-radius:20px;padding:8px 14px;border:2px solid ${t.toLowerCase() === this.communityTab ? 'var(--gold-light)' : 'rgba(212,168,67,0.3)'};background:${t.toLowerCase() === this.communityTab ? 'rgba(212,168,67,0.15)' : 'transparent'}" onclick="Screens.communityTab='${t.toLowerCase()}';Screens.renderCommunity()">${t}</span>`).join('')}
-      </div>
-      ${this.communityTab === 'feed' ? `
-        ${posts.map(p => `
-          <div class="card post-card" style="border-top:3px solid var(--gold-light);border-radius:12px">
-            <div class="post-header" style="margin-bottom:12px">
-              <div class="post-avatar" style="background:linear-gradient(135deg,var(--gold-light),rgba(212,168,67,0.5));border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);flex-shrink:0">${p.initials}</div>
-              <div class="post-meta"><div class="post-name" style="font-weight:600">${p.name}</div><div class="post-time" style="font-size:11px;color:var(--text-sec)">${p.time}</div></div>
-            </div>
-            <div class="post-body" style="line-height:1.6;margin-bottom:12px">${p.text}</div>
-            <div class="post-actions" style="display:flex;gap:16px;padding-top:8px;border-top:1px solid rgba(212,168,67,0.15)">
-              <span class="post-action" style="font-size:13px;color:var(--text-sec)">❤️ ${p.likes}</span>
-              <span class="post-action" style="font-size:13px;color:var(--text-sec)">💬 ${p.comments}</span>
-              <span class="post-action" style="font-size:13px;color:var(--text-sec)">🔁 Share</span>
-            </div>
-          </div>
-        `).join('')}
-      ` : this.communityTab === 'events' ? `
-        <div class="card mb-8" style="border-left:4px solid var(--gold);border-radius:12px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-            <span style="font-size:20px">🌙</span>
-            <div style="font-weight:700">Community Iftar</div>
-          </div>
-          <div class="text-sm text-sec">Friday, 6:30 PM · Islamic Center of Dallas</div>
-          <button class="btn btn-outline mt-8" style="font-size:12px;padding:6px 12px;border:1px solid var(--gold-light);color:var(--gold-light);border-radius:20px">RSVP</button>
-        </div>
-        <div class="card mb-8" style="border-left:4px solid var(--green);border-radius:12px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-            <span style="font-size:20px">📖</span>
-            <div style="font-weight:700">Quran Study Circle</div>
-          </div>
-          <div class="text-sm text-sec">Saturday, 10:00 AM · Online (Zoom)</div>
-          <button class="btn btn-outline mt-8" style="font-size:12px;padding:6px 12px;border:1px solid var(--green);color:var(--green);border-radius:20px">Join</button>
-        </div>
-        <div class="card mb-8" style="border-left:4px solid var(--blue);border-radius:12px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-            <span style="font-size:20px">🏀</span>
-            <div style="font-weight:700">Youth Basketball Tournament</div>
-          </div>
-          <div class="text-sm text-sec">Sunday, 2:00 PM · EPIC Gymnasium</div>
-          <button class="btn btn-outline mt-8" style="font-size:12px;padding:6px 12px;border:1px solid var(--blue);color:var(--blue);border-radius:20px">Register</button>
-        </div>
-      ` : `
-        ${mosques.map(m => `
-          <div class="card row mb-8" style="border-left:4px solid var(--gold-light);border-radius:12px">
-            <div style="width:44px;height:44px;border-radius:12px;background:rgba(212,168,67,0.15);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🕌</div>
-            <div class="flex-1">
-              <div style="font-weight:600">${m.name}</div>
-              <div class="text-xs text-sec">${m.dist} · ⭐ ${m.rating}</div>
-            </div>
-          </div>
-        `).join('')}
-      `}
-    `;
+    // Build tab bar
+    var tabsHTML = '';
+    for (var i = 0; i < tabs.length; i++) {
+      var t = tabs[i];
+      var isActive = t.id === self.communityTab;
+      tabsHTML += '<button class="ummah-tab' + (isActive ? ' active' : '') + '" data-tab="' + t.id + '">' + t.label + '</button>';
+    }
+
+    // Header + tabs
+    el.innerHTML =
+      self._screenHeader('\uD83C\uDF0D', 'Muslim Community', '\u0627\u0644\u0623\u0645\u0629 \u0627\u0644\u0625\u0633\u0644\u0627\u0645\u064A\u0629', 'Mosques, Halal Food & Islamic Life near you') +
+      '<div class="ummah-tabs">' + tabsHTML + '</div>' +
+      '<div id="ummah-content"><div class="loading-spinner"></div></div>';
+
+    // Attach tab listeners
+    var tabBtns = el.querySelectorAll('.ummah-tab');
+    for (var i = 0; i < tabBtns.length; i++) {
+      (function(btn) {
+        btn.addEventListener('click', function() {
+          self.communityTab = btn.getAttribute('data-tab');
+          self.renderCommunity();
+        });
+        btn.addEventListener('touchend', function(e) {
+          e.preventDefault();
+          self.communityTab = btn.getAttribute('data-tab');
+          self.renderCommunity();
+        });
+      })(tabBtns[i]);
+    }
+
+    // Render active tab content
+    if (self.communityTab === 'mosques') {
+      self._renderCommunityMosques();
+    } else if (self.communityTab === 'halal') {
+      self._renderCommunityHalal();
+    } else if (self.communityTab === 'events') {
+      self._renderCommunityEvents();
+    } else if (self.communityTab === 'dates') {
+      self._renderCommunityDates();
+    } else if (self.communityTab === 'inspire') {
+      self._renderCommunityInspire();
+    }
+  },
+
+  // ---- MOSQUES TAB ----
+  async _renderCommunityMosques() {
+    var self = this;
+    var content = document.getElementById('ummah-content');
+    if (!content) return;
+    content.innerHTML = '<div class="loading-spinner"></div><div style="text-align:center;color:var(--text-sec);font-size:12px;margin-top:8px">Searching nearby mosques via OpenStreetMap...</div>';
+
+    if (!self.location) self.location = await API.getLocation();
+    if (!self._communityMosques) {
+      self._communityMosques = await API.getNearbyMosques(self.location.lat, self.location.lng);
+    }
+    var mosques = self._communityMosques;
+
+    if (!mosques || mosques.length === 0) {
+      content.innerHTML = '<div class="ummah-empty"><div style="font-size:48px;margin-bottom:12px">\uD83D\uDD4C</div><div style="font-weight:600;margin-bottom:4px">No mosques found nearby</div><div style="font-size:12px;color:var(--text-sec)">Try enabling GPS or expanding your search area</div></div>';
+      return;
+    }
+
+    var html = '<div class="ummah-count">' + mosques.length + ' mosques within 20 miles</div>';
+    var limit = Math.min(mosques.length, 30);
+    for (var i = 0; i < limit; i++) {
+      var m = mosques[i];
+      var distLabel = m.dist < 0.1 ? 'Nearby' : m.dist.toFixed(1) + ' mi';
+      var detailParts = [];
+      if (m.address) detailParts.push(m.address);
+      if (m.denomination) detailParts.push(m.denomination.charAt(0).toUpperCase() + m.denomination.slice(1));
+      var detailStr = detailParts.join(' \u00B7 ');
+      var actionBtns = '';
+      if (m.phone) actionBtns += '<a href="tel:' + m.phone + '" class="ummah-action-link">\uD83D\uDCDE Call</a>';
+      if (m.website) actionBtns += '<a href="' + m.website + '" target="_blank" class="ummah-action-link">\uD83C\uDF10 Website</a>';
+      actionBtns += '<a href="https://www.google.com/maps/dir/?api=1&destination=' + m.lat + ',' + m.lng + '" target="_blank" class="ummah-action-link">\uD83D\uDDFA\uFE0F Directions</a>';
+
+      html += '<div class="ummah-card mosque-card">' +
+        '<div class="ummah-card-header">' +
+          '<div class="ummah-card-icon mosque-icon">\uD83D\uDD4C</div>' +
+          '<div class="ummah-card-info">' +
+            '<div class="ummah-card-name">' + self._escapeHTML(m.name) + '</div>' +
+            (detailStr ? '<div class="ummah-card-detail">' + self._escapeHTML(detailStr) + '</div>' : '') +
+          '</div>' +
+          '<div class="ummah-card-dist">' + distLabel + '</div>' +
+        '</div>' +
+        (m.wheelchair === 'yes' ? '<div class="ummah-badge">\u267F Wheelchair accessible</div>' : '') +
+        '<div class="ummah-card-actions">' + actionBtns + '</div>' +
+      '</div>';
+    }
+    if (mosques.length > 30) {
+      html += '<div style="text-align:center;padding:12px;color:var(--text-sec);font-size:12px">Showing 30 of ' + mosques.length + ' mosques</div>';
+    }
+    html += '<div class="ummah-source">Data from OpenStreetMap \u00B7 <a href="https://www.openstreetmap.org/" target="_blank" style="color:var(--gold-light)">Contribute</a></div>';
+    content.innerHTML = html;
+  },
+
+  // ---- HALAL FOOD TAB ----
+  async _renderCommunityHalal() {
+    var self = this;
+    var content = document.getElementById('ummah-content');
+    if (!content) return;
+    content.innerHTML = '<div class="loading-spinner"></div><div style="text-align:center;color:var(--text-sec);font-size:12px;margin-top:8px">Finding halal restaurants nearby...</div>';
+
+    if (!self.location) self.location = await API.getLocation();
+    if (!self._communityHalal) {
+      self._communityHalal = await API.getNearbyHalal(self.location.lat, self.location.lng);
+    }
+    var places = self._communityHalal;
+
+    if (!places || places.length === 0) {
+      content.innerHTML = '<div class="ummah-empty"><div style="font-size:48px;margin-bottom:12px">\uD83C\uDF5B</div><div style="font-weight:600;margin-bottom:4px">No halal restaurants found nearby</div><div style="font-size:12px;color:var(--text-sec)">OpenStreetMap data may be limited in your area.<br>Help improve data at openstreetmap.org!</div></div>';
+      return;
+    }
+
+    var amenityIcons = { restaurant: '\uD83C\uDF7D\uFE0F', fast_food: '\uD83C\uDF54', cafe: '\u2615' };
+    var html = '<div class="ummah-count">' + places.length + ' halal restaurants within 20 miles</div>';
+    var limit = Math.min(places.length, 30);
+    for (var i = 0; i < limit; i++) {
+      var p = places[i];
+      var distLabel = p.dist < 0.1 ? 'Nearby' : p.dist.toFixed(1) + ' mi';
+      var icon = amenityIcons[p.amenity] || '\uD83C\uDF7D\uFE0F';
+      var cuisineLabel = p.cuisine ? p.cuisine.replace(/;/g, ', ') : 'Halal';
+      if (cuisineLabel.length > 40) cuisineLabel = cuisineLabel.substring(0, 40) + '...';
+      var detailParts = [];
+      if (p.address) detailParts.push(p.address);
+      if (p.openingHours) detailParts.push('\u23F0 ' + p.openingHours);
+      var detailStr = detailParts.join(' \u00B7 ');
+      var actionBtns = '';
+      if (p.phone) actionBtns += '<a href="tel:' + p.phone + '" class="ummah-action-link">\uD83D\uDCDE Call</a>';
+      if (p.website) actionBtns += '<a href="' + p.website + '" target="_blank" class="ummah-action-link">\uD83C\uDF10 Website</a>';
+      actionBtns += '<a href="https://www.google.com/maps/dir/?api=1&destination=' + p.lat + ',' + p.lng + '" target="_blank" class="ummah-action-link">\uD83D\uDDFA\uFE0F Directions</a>';
+
+      html += '<div class="ummah-card halal-card">' +
+        '<div class="ummah-card-header">' +
+          '<div class="ummah-card-icon halal-icon">' + icon + '</div>' +
+          '<div class="ummah-card-info">' +
+            '<div class="ummah-card-name">' + self._escapeHTML(p.name) + '</div>' +
+            '<div class="ummah-cuisine-tag">' + self._escapeHTML(cuisineLabel) + '</div>' +
+            (detailStr ? '<div class="ummah-card-detail">' + self._escapeHTML(detailStr) + '</div>' : '') +
+          '</div>' +
+          '<div class="ummah-card-dist">' + distLabel + '</div>' +
+        '</div>' +
+        '<div class="ummah-card-actions">' + actionBtns + '</div>' +
+      '</div>';
+    }
+    if (places.length > 30) {
+      html += '<div style="text-align:center;padding:12px;color:var(--text-sec);font-size:12px">Showing 30 of ' + places.length + ' halal restaurants</div>';
+    }
+    html += '<div class="ummah-source">Data from OpenStreetMap \u00B7 <a href="https://www.openstreetmap.org/" target="_blank" style="color:var(--gold-light)">Contribute</a></div>';
+    content.innerHTML = html;
+  },
+
+  // ---- EVENTS TAB ----
+  _renderCommunityEvents() {
+    var content = document.getElementById('ummah-content');
+    if (!content) return;
+
+    var events = API.getIslamicEvents();
+    var fastDays = API.getSunnahFastingDays();
+    var hijri = API.getHijriDate();
+
+    // Header with Hijri date
+    var html = '<div class="ummah-hijri-banner">' +
+      '<div class="ummah-hijri-date">' + hijri.day + ' ' + hijri.monthName + ' ' + hijri.year + ' AH</div>' +
+      '<div class="ummah-hijri-sub">Current Hijri Date</div>' +
+    '</div>';
+
+    // Upcoming Islamic events
+    html += '<div class="ummah-section-title">\u2728 Upcoming Islamic Events</div>';
+    for (var i = 0; i < events.length; i++) {
+      var ev = events[i];
+      if (ev.daysUntil < -7) continue; // skip past events
+      var dateStr = ev.gregorianDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      var urgencyClass = ev.daysUntil <= 0 ? 'ummah-event-today' : ev.daysUntil <= 7 ? 'ummah-event-soon' : '';
+      var timeLabel = ev.daysUntil <= 0 ? 'Today / Ongoing' : ev.daysUntil === 1 ? 'Tomorrow' : ev.daysUntil + ' days away';
+
+      html += '<div class="ummah-event-card ' + urgencyClass + '" style="border-left-color:' + ev.color + '">' +
+        '<div class="ummah-event-icon">' + ev.icon + '</div>' +
+        '<div class="ummah-event-info">' +
+          '<div class="ummah-event-name">' + ev.name + '</div>' +
+          '<div class="ummah-event-desc">' + ev.desc + '</div>' +
+          '<div class="ummah-event-meta">' + ev.hijriLabel + ' \u00B7 ~' + dateStr + '</div>' +
+        '</div>' +
+        '<div class="ummah-event-countdown' + (ev.daysUntil <= 7 ? ' soon' : '') + '">' + timeLabel + '</div>' +
+      '</div>';
+    }
+
+    // Sunnah fasting days
+    html += '<div class="ummah-section-title" style="margin-top:20px">\uD83C\uDF19 Upcoming Sunnah Fasting</div>';
+    for (var i = 0; i < fastDays.length; i++) {
+      var fd = fastDays[i];
+      var fDate = new Date();
+      fDate.setDate(fDate.getDate() + fd.daysUntil);
+      var fLabel = fd.daysUntil === 0 ? 'Today' : fd.daysUntil === 1 ? 'Tomorrow' : fDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      var fIcon = fd.type === 'white' ? '\uD83C\uDF15' : '\uD83C\uDF19';
+      html += '<div class="ummah-fast-card">' +
+        '<span class="ummah-fast-icon">' + fIcon + '</span>' +
+        '<span class="ummah-fast-name">' + fd.name + '</span>' +
+        '<span class="ummah-fast-date">' + fLabel + '</span>' +
+      '</div>';
+    }
+
+    content.innerHTML = html;
+  },
+
+  // ---- ISLAMIC DATES TAB ----
+  _renderCommunityDates() {
+    var content = document.getElementById('ummah-content');
+    if (!content) return;
+
+    var hijri = API.getHijriDate();
+    var months = ['Muharram','Safar','Rabi al-Awwal','Rabi al-Thani','Jumada al-Ula','Jumada al-Thani','Rajab','Sha\'ban','Ramadan','Shawwal','Dhul Qi\'dah','Dhul Hijjah'];
+    var monthDescriptions = [
+      'Sacred month. Fasting encouraged. Contains Ashura (10th).',
+      'No special events. Good time for voluntary worship.',
+      'Birth month of Prophet Muhammad (PBUH) — 12th Rabi al-Awwal.',
+      'Continue good deeds and voluntary fasting.',
+      'Named after the dry cold weather. Focus on dhikr.',
+      'Prepare spiritually for the sacred months ahead.',
+      'Sacred month. Isra & Mi\'raj on 27th. Increase worship.',
+      'Month before Ramadan. Night of Bara\'ah on 15th. Start preparation.',
+      'The holy month of fasting, Quran, and Laylat al-Qadr.',
+      'Month of Eid al-Fitr. Six fasts of Shawwal recommended.',
+      'Month of preparation for Hajj. Increase good deeds.',
+      'Month of Hajj, Arafah (9th), and Eid al-Adha (10th). First 10 days are blessed.'
+    ];
+
+    var html = '<div class="ummah-dates-hero">' +
+      '<div style="font-size:48px;font-weight:700;color:var(--gold-light)">' + hijri.day + '</div>' +
+      '<div style="font-size:20px;font-weight:600;color:var(--text-primary)">' + hijri.monthName + '</div>' +
+      '<div style="font-size:14px;color:var(--text-sec)">' + hijri.year + ' AH</div>' +
+      '<div style="font-size:11px;color:var(--gold);margin-top:8px">' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) + '</div>' +
+    '</div>';
+
+    // Current month info
+    html += '<div class="ummah-section-title">\uD83D\uDCC6 Month of ' + hijri.monthName + '</div>';
+    html += '<div class="ummah-month-info">' + (monthDescriptions[hijri.month - 1] || '') + '</div>';
+
+    // All 12 months overview
+    html += '<div class="ummah-section-title" style="margin-top:20px">\uD83D\uDD4B Islamic Calendar (' + hijri.year + ' AH)</div>';
+    for (var i = 0; i < 12; i++) {
+      var isCurrent = (i + 1) === hijri.month;
+      html += '<div class="ummah-month-card' + (isCurrent ? ' current' : '') + '">' +
+        '<div class="ummah-month-num">' + (i + 1) + '</div>' +
+        '<div class="ummah-month-details">' +
+          '<div class="ummah-month-name">' + months[i] + (isCurrent ? ' \u25C0 Current' : '') + '</div>' +
+          '<div class="ummah-month-desc">' + monthDescriptions[i] + '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    // Sacred months highlight
+    html += '<div class="ummah-sacred-box">' +
+      '<div style="font-weight:700;color:var(--gold-light);margin-bottom:6px">\u2728 The Four Sacred Months</div>' +
+      '<div style="font-size:13px;color:var(--text-sec);line-height:1.6">Muharram, Rajab, Dhul Qi\'dah, and Dhul Hijjah are the four sacred months in Islam where fighting was traditionally prohibited and worship is especially rewarded.</div>' +
+    '</div>';
+
+    content.innerHTML = html;
+  },
+
+  // ---- INSPIRE TAB ----
+  _renderCommunityInspire() {
+    var content = document.getElementById('ummah-content');
+    if (!content) return;
+
+    var inspiration = API.getDailyInspiration();
+    var stats = Store.getStats();
+    var hijri = API.getHijriDate();
+
+    var html = '';
+
+    // Daily inspiration card
+    var isQuran = inspiration.type === 'quran';
+    html += '<div class="ummah-inspire-hero">' +
+      '<div class="ummah-inspire-label">' + (isQuran ? '\uD83D\uDCD6 Verse of the Day' : '\uD83D\uDCDC Hadith of the Day') + '</div>' +
+      '<div class="ummah-inspire-text">"' + inspiration.text + '"</div>' +
+      '<div class="ummah-inspire-source">\u2014 ' + inspiration.source + '</div>' +
+    '</div>';
+
+    // Today's Muslim dashboard
+    html += '<div class="ummah-section-title">\uD83D\uDCCA Your Muslim Dashboard</div>';
+    html += '<div class="ummah-dashboard-grid">' +
+      '<div class="ummah-stat-card"><div class="ummah-stat-num">' + (stats.streak || 0) + '</div><div class="ummah-stat-label">\uD83D\uDD25 Day Streak</div></div>' +
+      '<div class="ummah-stat-card"><div class="ummah-stat-num">' + (stats.totalPrayers || 0) + '</div><div class="ummah-stat-label">\uD83D\uDE4F Prayers Logged</div></div>' +
+      '<div class="ummah-stat-card"><div class="ummah-stat-num">' + (stats.tasbihTotal || 0).toLocaleString() + '</div><div class="ummah-stat-label">\uD83D\uDCFF Tasbih Count</div></div>' +
+      '<div class="ummah-stat-card"><div class="ummah-stat-num">Lv ' + (stats.level || 1) + '</div><div class="ummah-stat-label">\u2B50 ' + (stats.xp || 0) + ' XP</div></div>' +
+    '</div>';
+
+    // Quick access to community features
+    html += '<div class="ummah-section-title" style="margin-top:20px">\uD83D\uDE80 Quick Actions</div>';
+    var actions = [
+      { icon: '\uD83D\uDCFF', label: 'Tasbih', screen: 'tasbih' },
+      { icon: '\uD83E\uDDED', label: 'Qibla Finder', screen: 'qibla' },
+      { icon: '\uD83E\uDD32', label: 'Daily Duas', screen: 'duas' },
+      { icon: '\uD83D\uDD4C', label: 'Azan Player', screen: 'azan' },
+      { icon: '\uD83D\uDCB0', label: 'Zakat Calculator', screen: 'zakat' },
+      { icon: '\uD83D\uDCC5', label: 'Hijri Calendar', screen: 'calendar' }
+    ];
+    html += '<div class="ummah-actions-grid">';
+    for (var i = 0; i < actions.length; i++) {
+      var a = actions[i];
+      html += '<div class="ummah-action-card" onclick="App.navigate(\'' + a.screen + '\')">' +
+        '<div class="ummah-action-icon">' + a.icon + '</div>' +
+        '<div class="ummah-action-label">' + a.label + '</div>' +
+      '</div>';
+    }
+    html += '</div>';
+
+    // 99 Names of Allah (daily rotation)
+    var dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+    var names99 = [
+      ['Ar-Rahman','\u0627\u0644\u0631\u064E\u0651\u062D\u0645\u064E\u0646','The Most Gracious'],['Ar-Rahim','\u0627\u0644\u0631\u064E\u0651\u062D\u064A\u0645','The Most Merciful'],['Al-Malik','\u0627\u0644\u0645\u064E\u0644\u0650\u0643','The King'],['Al-Quddus','\u0627\u0644\u0642\u064F\u062F\u064F\u0651\u0648\u0633','The Most Holy'],['As-Salam','\u0627\u0644\u0633\u064E\u0651\u0644\u0627\u0645','The Source of Peace'],['Al-Mu\'min','\u0627\u0644\u0645\u064F\u0624\u0645\u0650\u0646','The Guardian of Faith'],['Al-Muhaymin','\u0627\u0644\u0645\u064F\u0647\u064E\u064A\u0645\u0650\u0646','The Protector'],['Al-Aziz','\u0627\u0644\u0639\u064E\u0632\u064A\u0632','The Almighty'],['Al-Jabbar','\u0627\u0644\u062C\u064E\u0628\u064E\u0651\u0627\u0631','The Compeller'],['Al-Mutakabbir','\u0627\u0644\u0645\u064F\u062A\u064E\u0643\u064E\u0628\u0650\u0651\u0631','The Greatest']
+    ];
+    var todayName = names99[dayOfYear % names99.length];
+    html += '<div class="ummah-name-card">' +
+      '<div style="font-size:10px;color:var(--gold);text-transform:uppercase;font-weight:600;letter-spacing:1px">Name of Allah Today</div>' +
+      '<div style="font-family:\'Amiri\',serif;font-size:36px;color:var(--gold-light);margin:8px 0">' + todayName[1] + '</div>' +
+      '<div style="font-size:18px;font-weight:700">' + todayName[0] + '</div>' +
+      '<div style="font-size:13px;color:var(--text-sec);margin-top:4px">' + todayName[2] + '</div>' +
+    '</div>';
+
+    content.innerHTML = html;
   },
 
   // ==== AZAN PLAYER SCREEN ====

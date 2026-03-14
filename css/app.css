@@ -3629,3 +3629,241 @@ body::after {
 [dir="rtl"] .hadith-card { direction: rtl; text-align: right; }
 [dir="rtl"] .dua-card { direction: rtl; text-align: right; }
 [dir="rtl"] .azan-voice-card { direction: rtl; }
+
+/* ============================================================
+   UMMAH / COMMUNITY — World-Class Muslim Engagement
+   ============================================================ */
+
+/* Tab bar */
+.ummah-tabs {
+  display: flex; gap: 6px; overflow-x: auto; white-space: nowrap;
+  margin-bottom: 16px; padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.ummah-tabs::-webkit-scrollbar { display: none; }
+.ummah-tab {
+  flex-shrink: 0; padding: 8px 14px; border-radius: 20px;
+  border: 2px solid rgba(212,168,67,0.25); background: transparent;
+  color: var(--text-sec); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  touch-action: manipulation; -webkit-tap-highlight-color: rgba(212,168,67,0.2);
+}
+.ummah-tab.active {
+  border-color: var(--gold-light); background: rgba(212,168,67,0.12);
+  color: var(--gold-light);
+}
+.ummah-tab:active { transform: scale(0.95); }
+
+/* Count label */
+.ummah-count {
+  font-size: 12px; color: var(--gold); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 12px; padding-left: 4px;
+}
+
+/* Cards */
+.ummah-card {
+  background: rgba(17,29,51,0.7); border-radius: 14px; padding: 14px;
+  margin-bottom: 10px; border: 1px solid rgba(212,168,67,0.1);
+  transition: border-color 0.2s;
+}
+.ummah-card:active { border-color: rgba(212,168,67,0.3); }
+.mosque-card { border-left: 4px solid rgba(212,168,67,0.6); }
+.halal-card { border-left: 4px solid rgba(46,204,113,0.6); }
+
+.ummah-card-header {
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.ummah-card-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.mosque-icon { background: rgba(212,168,67,0.12); }
+.halal-icon { background: rgba(46,204,113,0.12); }
+
+.ummah-card-info { flex: 1; min-width: 0; }
+.ummah-card-name {
+  font-weight: 700; font-size: 14px; color: var(--text-primary);
+  line-height: 1.3; margin-bottom: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ummah-card-detail {
+  font-size: 11px; color: var(--text-sec); margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ummah-card-dist {
+  flex-shrink: 0; font-size: 12px; font-weight: 700;
+  color: var(--gold-light); background: rgba(212,168,67,0.1);
+  padding: 4px 10px; border-radius: 12px;
+  white-space: nowrap;
+}
+.ummah-cuisine-tag {
+  display: inline-block; font-size: 10px; padding: 2px 8px;
+  border-radius: 8px; background: rgba(46,204,113,0.1);
+  color: rgba(46,204,113,0.8); margin-top: 2px;
+}
+.ummah-badge {
+  font-size: 11px; color: var(--text-sec); margin: 6px 0 2px 54px;
+}
+.ummah-card-actions {
+  display: flex; gap: 8px; margin-top: 10px; padding-top: 8px;
+  border-top: 1px solid rgba(212,168,67,0.08);
+}
+.ummah-action-link {
+  font-size: 11px; color: var(--gold-light); text-decoration: none;
+  padding: 4px 10px; border-radius: 14px;
+  border: 1px solid rgba(212,168,67,0.2);
+  transition: background 0.2s; white-space: nowrap;
+}
+.ummah-action-link:active { background: rgba(212,168,67,0.1); }
+
+/* Empty state */
+.ummah-empty {
+  text-align: center; padding: 40px 20px; color: var(--text-primary);
+}
+
+/* Source attribution */
+.ummah-source {
+  text-align: center; padding: 16px 0 8px; font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Events tab */
+.ummah-hijri-banner {
+  text-align: center; padding: 20px; margin-bottom: 16px;
+  background: linear-gradient(135deg, rgba(212,168,67,0.12), rgba(13,124,102,0.1));
+  border: 2px solid rgba(212,168,67,0.2); border-radius: 16px;
+}
+.ummah-hijri-date {
+  font-size: 22px; font-weight: 700; color: var(--gold-light);
+  font-family: 'Amiri', serif;
+}
+.ummah-hijri-sub { font-size: 11px; color: var(--text-sec); margin-top: 4px; }
+
+.ummah-section-title {
+  font-size: 14px; font-weight: 700; color: var(--text-primary);
+  margin-bottom: 10px; padding-left: 2px;
+}
+.ummah-event-card {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px; margin-bottom: 8px; border-radius: 12px;
+  border-left: 4px solid var(--gold); background: rgba(17,29,51,0.6);
+  border: 1px solid rgba(212,168,67,0.08);
+}
+.ummah-event-card.ummah-event-today {
+  background: rgba(212,168,67,0.08);
+  border: 1px solid rgba(212,168,67,0.2);
+}
+.ummah-event-card.ummah-event-soon {
+  background: rgba(46,204,113,0.05);
+}
+.ummah-event-icon { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
+.ummah-event-info { flex: 1; min-width: 0; }
+.ummah-event-name { font-weight: 700; font-size: 14px; color: var(--text-primary); }
+.ummah-event-desc { font-size: 12px; color: var(--text-sec); margin-top: 2px; line-height: 1.4; }
+.ummah-event-meta { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+.ummah-event-countdown {
+  flex-shrink: 0; font-size: 11px; font-weight: 600;
+  color: var(--text-sec); padding: 4px 10px; border-radius: 10px;
+  background: rgba(255,255,255,0.05); white-space: nowrap;
+}
+.ummah-event-countdown.soon { color: var(--gold-light); background: rgba(212,168,67,0.1); }
+
+/* Fasting days */
+.ummah-fast-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; margin-bottom: 6px; border-radius: 10px;
+  background: rgba(17,29,51,0.5); border: 1px solid rgba(212,168,67,0.08);
+}
+.ummah-fast-icon { font-size: 18px; }
+.ummah-fast-name { flex: 1; font-size: 13px; font-weight: 600; }
+.ummah-fast-date { font-size: 12px; color: var(--gold-light); font-weight: 600; }
+
+/* Islamic Dates tab */
+.ummah-dates-hero {
+  text-align: center; padding: 24px; margin-bottom: 16px;
+  background: linear-gradient(135deg, rgba(212,168,67,0.15), rgba(13,124,102,0.08));
+  border: 2px solid rgba(212,168,67,0.25); border-radius: 20px;
+}
+.ummah-month-info {
+  font-size: 13px; color: var(--text-sec); line-height: 1.6;
+  padding: 12px; margin-bottom: 16px; border-radius: 10px;
+  background: rgba(212,168,67,0.05); border-left: 3px solid var(--gold-light);
+}
+.ummah-month-card {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px; margin-bottom: 6px; border-radius: 10px;
+  background: rgba(17,29,51,0.5); border: 1px solid rgba(212,168,67,0.06);
+  transition: background 0.2s;
+}
+.ummah-month-card.current {
+  background: rgba(212,168,67,0.1); border-color: rgba(212,168,67,0.25);
+}
+.ummah-month-num {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(212,168,67,0.12); color: var(--gold-light);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; flex-shrink: 0;
+}
+.ummah-month-card.current .ummah-month-num {
+  background: var(--gold-light); color: var(--dark);
+}
+.ummah-month-details { flex: 1; }
+.ummah-month-name { font-weight: 700; font-size: 13px; color: var(--text-primary); }
+.ummah-month-desc { font-size: 11px; color: var(--text-sec); margin-top: 2px; line-height: 1.4; }
+.ummah-sacred-box {
+  margin-top: 16px; padding: 14px; border-radius: 12px;
+  background: rgba(212,168,67,0.06); border: 1px solid rgba(212,168,67,0.15);
+}
+
+/* Inspire tab */
+.ummah-inspire-hero {
+  text-align: center; padding: 28px 20px; margin-bottom: 16px;
+  background: linear-gradient(135deg, rgba(212,168,67,0.1), rgba(13,124,102,0.08));
+  border: 2px solid rgba(212,168,67,0.2); border-radius: 20px;
+}
+.ummah-inspire-label {
+  font-size: 11px; color: var(--gold); text-transform: uppercase;
+  font-weight: 600; letter-spacing: 1px; margin-bottom: 12px;
+}
+.ummah-inspire-text {
+  font-family: 'Amiri', serif; font-size: 18px; line-height: 1.7;
+  color: var(--text-primary); margin-bottom: 12px;
+}
+.ummah-inspire-source { font-size: 12px; color: var(--gold-light); font-weight: 600; }
+
+/* Dashboard grid */
+.ummah-dashboard-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
+}
+.ummah-stat-card {
+  text-align: center; padding: 16px 8px; border-radius: 14px;
+  background: rgba(17,29,51,0.7); border: 1px solid rgba(212,168,67,0.1);
+}
+.ummah-stat-num { font-size: 24px; font-weight: 700; color: var(--gold-light); }
+.ummah-stat-label { font-size: 11px; color: var(--text-sec); margin-top: 4px; }
+
+/* Quick actions grid */
+.ummah-actions-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px;
+}
+.ummah-action-card {
+  text-align: center; padding: 16px 8px; border-radius: 14px;
+  background: rgba(17,29,51,0.6); border: 1px solid rgba(212,168,67,0.1);
+  cursor: pointer; transition: all 0.2s;
+  touch-action: manipulation;
+}
+.ummah-action-card:active {
+  transform: scale(0.95); background: rgba(212,168,67,0.1);
+}
+.ummah-action-icon { font-size: 28px; margin-bottom: 6px; }
+.ummah-action-label { font-size: 11px; font-weight: 600; color: var(--text-sec); }
+
+/* Name of Allah card */
+.ummah-name-card {
+  text-align: center; padding: 24px; margin-top: 16px;
+  background: linear-gradient(135deg, rgba(212,168,67,0.08), rgba(13,124,102,0.06));
+  border: 2px solid rgba(212,168,67,0.15); border-radius: 20px;
+}
