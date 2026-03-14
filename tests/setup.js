@@ -141,14 +141,18 @@ global.Audio = class Audio {
   constructor() {
     this.src = '';
     this.paused = true;
+    this.muted = false;
     this.currentTime = 0;
     this.duration = 120;
     this.playbackRate = 1;
     this.onended = null;
     this._listeners = {};
+    this._attrs = {};
   }
   play() { this.paused = false; return Promise.resolve(); }
   pause() { this.paused = true; }
+  setAttribute(k, v) { this._attrs[k] = v; }
+  getAttribute(k) { return this._attrs[k] || null; }
   addEventListener(event, fn) {
     this._listeners[event] = this._listeners[event] || [];
     this._listeners[event].push(fn);

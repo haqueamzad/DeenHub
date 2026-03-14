@@ -3,6 +3,33 @@
    ============================================================ */
 
 const API = {
+  // ---- iOS Audio Unlock ----
+  // iOS Safari requires a user gesture to unlock audio playback.
+  // We pre-warm the Audio element on the first touch/click so that
+  // subsequent programmatic play() calls (e.g. continuous playback) work.
+  _audioUnlocked: false,
+  unlockAudio() {
+    if (this._audioUnlocked) return;
+    var player = this.initAudioPlayer();
+    // Play+pause a silent moment to unlock the audio context
+    player.muted = true;
+    var p = player.play();
+    if (p !== undefined) {
+      p.then(() => {
+        player.pause();
+        player.muted = false;
+        player.currentTime = 0;
+        this._audioUnlocked = true;
+      }).catch(() => {
+        player.muted = false;
+      });
+    } else {
+      player.pause();
+      player.muted = false;
+      this._audioUnlocked = true;
+    }
+  },
+
   // ---- Geolocation ----
   async getLocation() {
     return new Promise((resolve, reject) => {
@@ -316,6 +343,9 @@ const API = {
   initAudioPlayer() {
     if (!this.audioPlayer) {
       this.audioPlayer = new Audio();
+      // iOS Safari needs these attributes for reliable playback
+      this.audioPlayer.setAttribute('playsinline', '');
+      this.audioPlayer.setAttribute('webkit-playsinline', '');
       this.audioPlayer.addEventListener('ended', () => {
         this.audioState = 'paused';
         if (Screens.onAyahAudioEnded) Screens.onAyahAudioEnded();
@@ -333,7 +363,10 @@ const API = {
       player.src = url;
       this.audioCurrentUrl = url;
     }
-    player.play();
+    var playPromise = player.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(function(e) { console.warn('Audio play failed:', e.message); });
+    }
     this.audioState = 'playing';
   },
 
@@ -357,7 +390,11 @@ const API = {
         if (cb) cb();
       };
     }
-    player.play();
+    // iOS Safari: play() returns a Promise that can reject
+    var playPromise = player.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(function(e) { console.warn('Audio play failed:', e.message); });
+    }
     this.audioState = 'playing';
   },
 
@@ -374,7 +411,10 @@ const API = {
 
   resumeAudio() {
     if (this.audioPlayer) {
-      this.audioPlayer.play();
+      var playPromise = this.audioPlayer.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(function(e) { console.warn('Audio resume failed:', e.message); });
+      }
       this.audioState = 'playing';
     }
   },

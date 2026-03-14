@@ -25,6 +25,15 @@ const App = {
     I18n.init();
     I18n.updateTabBar();
 
+    // iOS audio unlock: pre-warm audio on first user interaction
+    var unlockHandler = function() {
+      API.unlockAudio();
+      document.removeEventListener('touchstart', unlockHandler, true);
+      document.removeEventListener('click', unlockHandler, true);
+    };
+    document.addEventListener('touchstart', unlockHandler, true);
+    document.addEventListener('click', unlockHandler, true);
+
     // Network status monitoring
     this._setupNetworkMonitor();
 
