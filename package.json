@@ -1,8 +1,17 @@
 {
   "name": "deenhub-pwa",
   "version": "1.0.0",
-  "description": "DeenHub - Your Islamic Companion PWA",
+  "description": "DeenHub - Your Complete Islamic Companion PWA",
+  "private": true,
   "scripts": {
-    "test": "node --test tests/test-storage.js tests/test-api.js tests/test-app.js tests/test-screens.js"
+    "test": "node --test tests/test-storage.js tests/test-api.js tests/test-app.js tests/test-screens.js",
+    "build": "node build.js",
+    "build:staging": "DEPLOY_ENV=staging node build.js",
+    "build:prod": "DEPLOY_ENV=production node build.js",
+    "start": "python3 -m http.server 8080",
+    "start:dist": "cd dist && python3 -m http.server 8080"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
