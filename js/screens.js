@@ -1871,6 +1871,7 @@ const Screens = {
           var km = parseInt(btn.getAttribute('data-km'));
           if (km !== self._communityRadius) {
             self._communityRadius = km;
+            API._nearbyCache = {}; // Clear API cache so new radius fetches fresh
             if (type === 'mosques') { self._communityMosques = null; self._renderCommunityMosques(); }
             else { self._communityHalal = null; self._renderCommunityHalal(); }
           }

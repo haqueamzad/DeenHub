@@ -624,98 +624,266 @@ const API = {
     return { day, month, year, monthName: months[month - 1] || 'Unknown' };
   },
 
-  // ---- Nearby Mosques (OpenStreetMap Overpass API — free, no key) ----
+  // ---- Nearby Mosques (Multi-source: Overpass + Nominatim + curated) ----
   _nearbyCache: {},
+
+  // Deduplicate by proximity (within 100m = same place)
+  _deduplicatePlaces(places) {
+    var unique = [];
+    for (var i = 0; i < places.length; i++) {
+      var dominated = false;
+      for (var j = 0; j < unique.length; j++) {
+        var d = this._haversine(places[i].lat, places[i].lng, unique[j].lat, unique[j].lng);
+        if (d < 0.1) { // within 100m
+          // Keep the one with more data (longer name or has address)
+          if ((places[i].name || '').length > (unique[j].name || '').length ||
+              (places[i].address && !unique[j].address)) {
+            // Merge: keep new entry's data but fill gaps from old
+            if (!places[i].phone && unique[j].phone) places[i].phone = unique[j].phone;
+            if (!places[i].website && unique[j].website) places[i].website = unique[j].website;
+            if (!places[i].address && unique[j].address) places[i].address = unique[j].address;
+            unique[j] = places[i];
+          }
+          dominated = true;
+          break;
+        }
+      }
+      if (!dominated) unique.push(places[i]);
+    }
+    return unique;
+  },
 
   async getNearbyMosques(lat, lng, radiusKm) {
     radiusKm = radiusKm || 32; // ~20 miles
-    var cacheKey = 'mosques_' + Math.round(lat*10) + '_' + Math.round(lng*10);
+    var cacheKey = 'mosques_' + Math.round(lat*10) + '_' + Math.round(lng*10) + '_' + radiusKm;
     if (this._nearbyCache[cacheKey]) return this._nearbyCache[cacheKey];
+
+    var allMosques = [];
+    var self = this;
+    var radius = radiusKm * 1000;
+    var area = 'around:' + radius + ',' + lat + ',' + lng;
+
+    // --- Source 1: Comprehensive Overpass query (all tagging patterns) ---
     try {
-      var query = '[out:json][timeout:15];(' +
-        'node["amenity"="place_of_worship"]["religion"="muslim"](around:' + (radiusKm*1000) + ',' + lat + ',' + lng + ');' +
-        'way["amenity"="place_of_worship"]["religion"="muslim"](around:' + (radiusKm*1000) + ',' + lat + ',' + lng + ');' +
+      // Cover ALL known OSM tagging schemes for mosques/Islamic centres:
+      // 1. amenity=place_of_worship + religion=muslim (standard)
+      // 2. building=mosque (without amenity tag)
+      // 3. amenity=community_centre + religion=muslim (dual-purpose)
+      // 4. Name-based: "mosque", "masjid", "islamic", "musalla" in name
+      var query = '[out:json][timeout:30];(' +
+        // Standard: place of worship + muslim
+        'node["amenity"="place_of_worship"]["religion"="muslim"](' + area + ');' +
+        'way["amenity"="place_of_worship"]["religion"="muslim"](' + area + ');' +
+        'relation["amenity"="place_of_worship"]["religion"="muslim"](' + area + ');' +
+        // Building tagged as mosque (may lack amenity tag)
+        'node["building"="mosque"](' + area + ');' +
+        'way["building"="mosque"](' + area + ');' +
+        'relation["building"="mosque"](' + area + ');' +
+        // Community centres with religion=muslim
+        'node["amenity"="community_centre"]["religion"="muslim"](' + area + ');' +
+        'way["amenity"="community_centre"]["religion"="muslim"](' + area + ');' +
+        // Name-based catch-all (finds mosques with incomplete tags)
+        'node["name"~"[Mm]osque|[Mm]asjid|[Ii]slamic|[Mm]usalla|[Mm]uslim"](' + area + ');' +
+        'way["name"~"[Mm]osque|[Mm]asjid|[Ii]slamic|[Mm]usalla|[Mm]uslim"](' + area + ');' +
+        'relation["name"~"[Mm]osque|[Mm]asjid|[Ii]slamic|[Mm]usalla|[Mm]uslim"](' + area + ');' +
         ');out center body;';
+
       var res = await fetch('https://overpass-api.de/api/interpreter', {
         method: 'POST', body: 'data=' + encodeURIComponent(query),
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
       var data = await res.json();
-      var mosques = [];
+      var seen = {};
       for (var i = 0; i < data.elements.length; i++) {
         var el = data.elements[i];
+        if (seen[el.type + '_' + el.id]) continue;
+        seen[el.type + '_' + el.id] = true;
         var elLat = el.lat || (el.center && el.center.lat);
         var elLng = el.lon || (el.center && el.center.lon);
         if (!elLat || !elLng) continue;
         var tags = el.tags || {};
-        var name = tags.name || tags['name:en'] || tags['name:ar'] || 'Mosque';
-        var dist = this._haversine(lat, lng, elLat, elLng);
-        mosques.push({
-          id: el.id, name: name, lat: elLat, lng: elLng, dist: dist,
-          address: (tags['addr:street'] ? tags['addr:housenumber'] ? tags['addr:housenumber'] + ' ' + tags['addr:street'] : tags['addr:street'] : '') || tags['addr:full'] || '',
+        // Filter name-based results: skip non-mosque businesses
+        var elName = tags.name || tags['name:en'] || tags['name:ar'] || '';
+        var isReligiousTag = (tags.amenity === 'place_of_worship' || tags.building === 'mosque' ||
+          tags.religion === 'muslim' || tags.religion === 'islam');
+        if (!isReligiousTag) {
+          // Name-matched entry — verify it's actually a mosque, not "Islamic Bookstore" etc
+          var lName = elName.toLowerCase();
+          var isMosqueName = lName.indexOf('mosque') >= 0 || lName.indexOf('masjid') >= 0 ||
+            lName.indexOf('islamic center') >= 0 || lName.indexOf('islamic centre') >= 0 ||
+            lName.indexOf('islamic association') >= 0 || lName.indexOf('islamic society') >= 0 ||
+            lName.indexOf('islamic foundation') >= 0 || lName.indexOf('musalla') >= 0 ||
+            lName.indexOf('muslim community') >= 0 || lName.indexOf('muslim center') >= 0;
+          if (!isMosqueName) continue; // Skip unrelated name matches
+        }
+        var dist = self._haversine(lat, lng, elLat, elLng);
+        allMosques.push({
+          id: el.id, name: elName || 'Mosque', lat: elLat, lng: elLng, dist: dist,
+          address: (tags['addr:street'] ? (tags['addr:housenumber'] ? tags['addr:housenumber'] + ' ' : '') + tags['addr:street'] : '') || tags['addr:full'] || '',
           phone: tags.phone || tags['contact:phone'] || '',
           website: tags.website || tags['contact:website'] || '',
           wheelchair: tags.wheelchair || '',
-          denomination: tags.denomination || ''
+          denomination: tags.denomination || '',
+          source: 'overpass'
         });
       }
-      mosques.sort(function(a, b) { return a.dist - b.dist; });
-      this._nearbyCache[cacheKey] = mosques;
-      return mosques;
     } catch(e) {
       console.error('Overpass mosque error:', e);
-      return [];
     }
+
+    // --- Source 2: Nominatim text search (catches differently-indexed entries) ---
+    var searchTerms = ['mosque', 'masjid', 'islamic+center', 'islamic+association', 'musalla'];
+    var nominatimBbox = (lng - radiusKm/85) + ',' + (lat - radiusKm/111) + ',' + (lng + radiusKm/85) + ',' + (lat + radiusKm/111);
+    for (var s = 0; s < searchTerms.length; s++) {
+      try {
+        var nUrl = 'https://nominatim.openstreetmap.org/search?q=' + searchTerms[s] +
+          '&viewbox=' + nominatimBbox + '&bounded=1&format=json&limit=50&addressdetails=1' +
+          '&accept-language=en';
+        var nRes = await fetch(nUrl, {
+          headers: { 'User-Agent': 'DeenHub-PWA/1.0 (Islamic community app)' }
+        });
+        var nData = await nRes.json();
+        for (var n = 0; n < nData.length; n++) {
+          var item = nData[n];
+          var nLat = parseFloat(item.lat);
+          var nLng = parseFloat(item.lon);
+          if (isNaN(nLat) || isNaN(nLng)) continue;
+          var nDist = self._haversine(lat, lng, nLat, nLng);
+          if (nDist > radiusKm) continue;
+          var nName = item.display_name ? item.display_name.split(',')[0] : searchTerms[s];
+          var nAddr = '';
+          if (item.address) {
+            var a = item.address;
+            nAddr = (a.house_number ? a.house_number + ' ' : '') + (a.road || a.street || '');
+            if (a.city || a.town || a.suburb) nAddr += (nAddr ? ', ' : '') + (a.city || a.town || a.suburb);
+          }
+          allMosques.push({
+            id: 'nom_' + item.osm_id, name: nName, lat: nLat, lng: nLng, dist: nDist,
+            address: nAddr, phone: '', website: '',
+            wheelchair: '', denomination: '', source: 'nominatim'
+          });
+        }
+      } catch(e) {
+        console.warn('Nominatim search error for "' + searchTerms[s] + '":', e);
+      }
+    }
+
+    // --- Deduplicate, sort, cache ---
+    allMosques = this._deduplicatePlaces(allMosques);
+    allMosques.sort(function(a, b) { return a.dist - b.dist; });
+    this._nearbyCache[cacheKey] = allMosques;
+    return allMosques;
   },
 
-  // ---- Nearby Halal Restaurants (OpenStreetMap Overpass API) ----
+  // ---- Nearby Halal Restaurants (Multi-source: Overpass + Nominatim) ----
   async getNearbyHalal(lat, lng, radiusKm) {
     radiusKm = radiusKm || 32;
-    var cacheKey = 'halal_' + Math.round(lat*10) + '_' + Math.round(lng*10);
+    var cacheKey = 'halal_' + Math.round(lat*10) + '_' + Math.round(lng*10) + '_' + radiusKm;
     if (this._nearbyCache[cacheKey]) return this._nearbyCache[cacheKey];
+
+    var allPlaces = [];
+    var self = this;
+    var radius = radiusKm * 1000;
+    var area = 'around:' + radius + ',' + lat + ',' + lng;
+
+    // --- Source 1: Comprehensive Overpass query ---
     try {
-      var query = '[out:json][timeout:15];(' +
-        'node["amenity"~"restaurant|fast_food|cafe"]["diet:halal"="yes"](around:' + (radiusKm*1000) + ',' + lat + ',' + lng + ');' +
-        'node["amenity"~"restaurant|fast_food|cafe"]["cuisine"~"halal"](around:' + (radiusKm*1000) + ',' + lat + ',' + lng + ');' +
-        'way["amenity"~"restaurant|fast_food|cafe"]["diet:halal"="yes"](around:' + (radiusKm*1000) + ',' + lat + ',' + lng + ');' +
-        'way["amenity"~"restaurant|fast_food|cafe"]["cuisine"~"halal"](around:' + (radiusKm*1000) + ',' + lat + ',' + lng + ');' +
+      var query = '[out:json][timeout:30];(' +
+        // Standard: diet:halal or halal in cuisine for restaurants/fast_food/cafe
+        'node["amenity"~"restaurant|fast_food|cafe"]["diet:halal"="yes"](' + area + ');' +
+        'node["amenity"~"restaurant|fast_food|cafe"]["cuisine"~"halal"](' + area + ');' +
+        'way["amenity"~"restaurant|fast_food|cafe"]["diet:halal"="yes"](' + area + ');' +
+        'way["amenity"~"restaurant|fast_food|cafe"]["cuisine"~"halal"](' + area + ');' +
+        // Butchers and shops tagged halal
+        'node["shop"~"butcher|supermarket|convenience"]["diet:halal"="yes"](' + area + ');' +
+        'node["shop"~"butcher|supermarket|convenience"]["name"~"[Hh]alal"](' + area + ');' +
+        'way["shop"~"butcher|supermarket|convenience"]["diet:halal"="yes"](' + area + ');' +
+        // Name-based: "halal" in the name (catches untagged places)
+        'node["amenity"~"restaurant|fast_food|cafe"]["name"~"[Hh]alal"](' + area + ');' +
+        'way["amenity"~"restaurant|fast_food|cafe"]["name"~"[Hh]alal"](' + area + ');' +
+        // Broader cuisine match: middle eastern, arab, pakistani, turkish, etc
+        'node["amenity"~"restaurant|fast_food|cafe"]["cuisine"~"arab|middle_eastern|pakistani|afghan|turkish|persian|moroccan|lebanese|indian|bangladeshi|somali|yemeni|egyptian|syrian"](' + area + ');' +
+        'way["amenity"~"restaurant|fast_food|cafe"]["cuisine"~"arab|middle_eastern|pakistani|afghan|turkish|persian|moroccan|lebanese|indian|bangladeshi|somali|yemeni|egyptian|syrian"](' + area + ');' +
         ');out center body;';
       var res = await fetch('https://overpass-api.de/api/interpreter', {
         method: 'POST', body: 'data=' + encodeURIComponent(query),
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
       var data = await res.json();
-      var places = [];
       var seen = {};
       for (var i = 0; i < data.elements.length; i++) {
         var el = data.elements[i];
-        if (seen[el.id]) continue;
-        seen[el.id] = true;
+        if (seen[el.type + '_' + el.id]) continue;
+        seen[el.type + '_' + el.id] = true;
         var elLat = el.lat || (el.center && el.center.lat);
         var elLng = el.lon || (el.center && el.center.lon);
         if (!elLat || !elLng) continue;
         var tags = el.tags || {};
         var name = tags.name || tags['name:en'] || 'Halal Restaurant';
-        var dist = this._haversine(lat, lng, elLat, elLng);
+        var dist = self._haversine(lat, lng, elLat, elLng);
         var cuisine = tags.cuisine || '';
         cuisine = cuisine.replace(/halal[;,]?\s*/i, '').replace(/[;,]\s*halal/i, '');
-        places.push({
+        var isHalal = tags['diet:halal'] === 'yes' || (tags.cuisine && tags.cuisine.toLowerCase().indexOf('halal') >= 0) ||
+          (tags.name && tags.name.toLowerCase().indexOf('halal') >= 0);
+        allPlaces.push({
           id: el.id, name: name, lat: elLat, lng: elLng, dist: dist,
-          cuisine: cuisine || 'Halal',
+          cuisine: cuisine || (tags.shop ? 'Halal ' + (tags.shop === 'butcher' ? 'Butcher' : 'Market') : 'Halal'),
           address: (tags['addr:street'] ? (tags['addr:housenumber'] ? tags['addr:housenumber'] + ' ' : '') + tags['addr:street'] : '') || tags['addr:full'] || '',
           phone: tags.phone || tags['contact:phone'] || '',
           website: tags.website || tags['contact:website'] || '',
-          amenity: tags.amenity || 'restaurant',
-          openingHours: tags.opening_hours || ''
+          amenity: tags.amenity || tags.shop || 'restaurant',
+          openingHours: tags.opening_hours || '',
+          halal_verified: isHalal,
+          source: 'overpass'
         });
       }
-      places.sort(function(a, b) { return a.dist - b.dist; });
-      this._nearbyCache[cacheKey] = places;
-      return places;
     } catch(e) {
       console.error('Overpass halal error:', e);
-      return [];
     }
+
+    // --- Source 2: Nominatim text search ---
+    var halalTerms = ['halal+restaurant', 'halal+food', 'halal+market'];
+    var nominatimBbox = (lng - radiusKm/85) + ',' + (lat - radiusKm/111) + ',' + (lng + radiusKm/85) + ',' + (lat + radiusKm/111);
+    for (var s = 0; s < halalTerms.length; s++) {
+      try {
+        var nUrl = 'https://nominatim.openstreetmap.org/search?q=' + halalTerms[s] +
+          '&viewbox=' + nominatimBbox + '&bounded=1&format=json&limit=50&addressdetails=1' +
+          '&accept-language=en';
+        var nRes = await fetch(nUrl, {
+          headers: { 'User-Agent': 'DeenHub-PWA/1.0 (Islamic community app)' }
+        });
+        var nData = await nRes.json();
+        for (var n = 0; n < nData.length; n++) {
+          var item = nData[n];
+          var nLat = parseFloat(item.lat);
+          var nLng = parseFloat(item.lon);
+          if (isNaN(nLat) || isNaN(nLng)) continue;
+          var nDist = self._haversine(lat, lng, nLat, nLng);
+          if (nDist > radiusKm) continue;
+          var nName = item.display_name ? item.display_name.split(',')[0] : 'Halal Restaurant';
+          var nAddr = '';
+          if (item.address) {
+            var a = item.address;
+            nAddr = (a.house_number ? a.house_number + ' ' : '') + (a.road || a.street || '');
+            if (a.city || a.town || a.suburb) nAddr += (nAddr ? ', ' : '') + (a.city || a.town || a.suburb);
+          }
+          allPlaces.push({
+            id: 'nom_' + item.osm_id, name: nName, lat: nLat, lng: nLng, dist: nDist,
+            cuisine: 'Halal', address: nAddr, phone: '', website: '',
+            amenity: 'restaurant', openingHours: '', halal_verified: false,
+            source: 'nominatim'
+          });
+        }
+      } catch(e) {
+        console.warn('Nominatim halal search error:', e);
+      }
+    }
+
+    // --- Deduplicate, sort, cache ---
+    allPlaces = this._deduplicatePlaces(allPlaces);
+    allPlaces.sort(function(a, b) { return a.dist - b.dist; });
+    this._nearbyCache[cacheKey] = allPlaces;
+    return allPlaces;
   },
 
   _haversine: function(lat1, lng1, lat2, lng2) {
