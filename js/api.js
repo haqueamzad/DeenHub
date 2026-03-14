@@ -349,7 +349,12 @@ const API = {
       this._onAudioEnd = onEnd;
       player.onended = () => {
         this.audioState = 'paused';
-        if (this._onAudioEnd) { this._onAudioEnd(); this._onAudioEnd = null; }
+        // Save and clear callback BEFORE calling it, so that if
+        // the callback sets a new _onAudioEnd (continuous play chain),
+        // we don't null it out afterwards
+        var cb = this._onAudioEnd;
+        this._onAudioEnd = null;
+        if (cb) cb();
       };
     }
     player.play();
