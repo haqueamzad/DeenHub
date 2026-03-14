@@ -175,6 +175,7 @@ body::after {
   min-height: 56px;
   background: linear-gradient(180deg, rgba(10, 22, 40, 0.95) 0%, rgba(7, 14, 27, 0.98) 100%);
   z-index: 10;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(212, 168, 67, 0.08);
   position: relative;
@@ -212,8 +213,8 @@ body::after {
 }
 
 .header-icon {
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -292,6 +293,7 @@ body::after {
   justify-content: space-around;
   align-items: center;
   z-index: 100;
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   overflow: hidden;
 }
@@ -315,13 +317,16 @@ body::after {
   gap: 2px;
   cursor: pointer;
   color: var(--text-sec);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
+  -webkit-transition: all var(--transition-fast);
   transition: all var(--transition-fast);
-  padding: 6px 0;
+  padding: 8px 0;
   flex: 1;
   position: relative;
   z-index: 1;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .tab-item.active {
@@ -389,6 +394,7 @@ body::after {
   position: relative;
   border: 1px solid rgba(212, 168, 67, 0.08);
   transition: all var(--transition-smooth);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
@@ -485,6 +491,7 @@ body::after {
   margin-bottom: 12px;
   gap: 8px;
   border: 1px solid rgba(212, 168, 67, 0.1);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
@@ -492,9 +499,10 @@ body::after {
   background: none;
   border: none;
   color: var(--text);
-  font-size: 14px;
+  font-size: 16px; /* 16px prevents iOS Safari auto-zoom on focus */
   width: 100%;
   outline: none;
+  -webkit-appearance: none;
 }
 
 .search-bar input::placeholder {
@@ -633,6 +641,7 @@ body::after {
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(212, 168, 67, 0.15);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   box-shadow: 0 8px 32px rgba(13, 124, 102, 0.15);
 }
@@ -700,6 +709,7 @@ body::after {
   padding: 12px 4px;
   margin-bottom: 14px;
   border: 1px solid rgba(212, 168, 67, 0.08);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
@@ -714,7 +724,7 @@ body::after {
 }
 
 .prayer-cell-name {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-sec);
   margin-bottom: 4px;
   transition: color var(--transition-fast);
@@ -748,6 +758,7 @@ body::after {
   padding: 12px 16px;
   margin-bottom: 14px;
   border: 1px solid rgba(212, 168, 67, 0.1);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
@@ -842,7 +853,7 @@ body::after {
 }
 
 .quick-label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-sec);
   position: relative;
@@ -995,15 +1006,18 @@ body::after {
 
 .chat-input {
   flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
   background: rgba(22, 32, 51, 0.8);
   border: 1px solid rgba(212, 168, 67, 0.2);
   border-radius: 24px;
   padding: 10px 16px;
   color: var(--text);
-  font-size: 14px;
+  font-size: 16px;
   outline: none;
   resize: none;
   transition: all var(--transition-fast);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
@@ -1052,8 +1066,8 @@ body::after {
 }
 
 .ai-related-btn {
-  font-size: 11px;
-  padding: 4px 12px;
+  font-size: 12px;
+  padding: 8px 14px;
   border-radius: 12px;
   border-color: rgba(52, 152, 219, 0.2);
   background: rgba(52, 152, 219, 0.06);
@@ -1470,14 +1484,18 @@ body::after {
 
 .form-input {
   width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
   background: rgba(22, 32, 51, 0.8);
   border: 1px solid rgba(212, 168, 67, 0.2);
   border-radius: 12px;
   padding: 12px 14px;
   color: var(--text);
-  font-size: 15px;
+  font-size: 16px; /* 16px prevents iOS Safari zoom on focus */
   outline: none;
+  -webkit-transition: all var(--transition-fast);
   transition: all var(--transition-fast);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
@@ -1900,6 +1918,7 @@ body::after {
   transition: all var(--transition-smooth);
   border-left: 3px solid transparent;
   border: 1px solid rgba(212, 168, 67, 0.1);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
@@ -2262,6 +2281,7 @@ body::after {
   position: relative;
   border: 1px solid rgba(212, 168, 67, 0.1);
   transition: all var(--transition-smooth);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
@@ -2718,6 +2738,7 @@ body::after {
   transition: all var(--transition-smooth);
   pointer-events: none;
   border: 1px solid rgba(212, 168, 67, 0.2);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
 
@@ -2747,6 +2768,7 @@ body::after {
   opacity: 0;
   transition: opacity 0.5s ease;
   pointer-events: none;
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
@@ -3245,6 +3267,7 @@ body::after {
   background: rgba(22, 32, 51, 0.8);
   border-radius: 14px;
   border: 1px solid rgba(212, 168, 67, 0.15);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   margin-top: 12px;
 }
@@ -3252,8 +3275,9 @@ body::after {
 .chat-input-islamic input {
   background: none;
   border: none;
+  -webkit-appearance: none;
   color: var(--text);
-  font-size: 14px;
+  font-size: 16px;
   flex: 1;
   outline: none;
 }
@@ -3900,7 +3924,7 @@ body::after {
 .ummah-search-input {
   width: 100%; padding: 10px 12px 10px 36px; border-radius: 12px;
   border: 1px solid rgba(212,168,67,0.2); background: rgba(17,29,51,0.7);
-  color: var(--text-primary); font-size: 13px; outline: none;
+  color: var(--text-primary); font-size: 16px; outline: none; -webkit-appearance: none;
   transition: border-color 0.2s; box-sizing: border-box;
 }
 .ummah-search-input:focus { border-color: var(--gold-light); }
@@ -4059,3 +4083,59 @@ input:focus-visible,
 }
 
 /* Screen transition already handled by fadeInSlide animation in core CSS */
+
+/* ========== iOS & MOBILE OPTIMIZATION ========== */
+
+/* Hover states wrapped for pointer devices only — touch gets :active instead */
+@media (hover: hover) and (pointer: fine) {
+  .card:hover { transform: translateY(-2px); }
+  .list-item:hover::before { opacity: 1; }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-gold:hover { filter: brightness(1.1); }
+  .btn-outline:hover { background: rgba(212, 168, 67, 0.08); }
+  .cal-day:hover { background: rgba(212, 168, 67, 0.1); }
+  .quran-ayah-btn:hover { background: rgba(212, 168, 67, 0.15); }
+}
+
+/* Active states for touch devices */
+.card:active { -webkit-transform: scale(0.98); transform: scale(0.98); }
+.list-item:active { background: rgba(212, 168, 67, 0.06); }
+.btn-primary:active { -webkit-transform: scale(0.96); transform: scale(0.96); }
+.btn-gold:active { -webkit-transform: scale(0.96); transform: scale(0.96); }
+.btn-outline:active { -webkit-transform: scale(0.96); transform: scale(0.96); background: rgba(212, 168, 67, 0.1); }
+.cal-day:active { background: rgba(212, 168, 67, 0.15); }
+.quran-ayah-btn:active { -webkit-transform: scale(0.92); transform: scale(0.92); }
+.dua-play-btn:active { -webkit-transform: scale(0.9); transform: scale(0.9); }
+
+/* Ensure all interactive elements have minimum 44px touch target on mobile */
+@media (max-width: 480px) {
+  .quran-ayah-num { min-width: 36px; min-height: 36px; }
+  .quran-ayah-btn { min-width: 44px; min-height: 44px; }
+  .prayer-cell { min-height: 44px; }
+  .chip { min-height: 36px; padding: 8px 14px; font-size: 12px; }
+
+  /* Fix font sizes too small for mobile */
+  .cal-day-header { font-size: 12px; }
+  .text-xs { font-size: 12px; }
+}
+
+/* iPhone SE / very small screens (320-375px) */
+@media (max-width: 375px) {
+  .header-title { font-size: 20px; }
+  .prayer-time-big { font-size: 32px; }
+  .arabic-text { font-size: 20px; }
+  .tab-icon { font-size: 20px; }
+  .tab-item { font-size: 10px; }
+  .prayer-cell-name { font-size: 11px; }
+  .prayer-cell-time { font-size: 13px; }
+  .card { padding: 14px; }
+  .quran-ayah-arabic { font-size: 22px !important; }
+  .cal-day { font-size: 12px; min-width: 36px; }
+}
+
+/* iOS PWA standalone mode: extra bottom padding for home indicator */
+@media (display-mode: standalone) {
+  .tab-bar {
+    padding-bottom: max(var(--safe-bottom), 8px);
+  }
+}
