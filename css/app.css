@@ -4041,21 +4041,4 @@ input:focus-visible,
   50% { box-shadow: 0 0 0 10px rgba(46,204,113,0); }
 }
 
-/* ========== ENHANCEMENT: Better Toast ========== */
-.toast {
-  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
-  background: rgba(17,29,51,0.95); color: #fff; padding: 12px 24px;
-  border-radius: 12px; font-size: 14px; font-weight: 500; z-index: 9999;
-  opacity: 0; transition: all 0.3s ease; pointer-events: none;
-  border: 1px solid rgba(212,168,67,0.2); backdrop-filter: blur(10px);
-  max-width: 85vw; text-align: center;
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-/* ========== ENHANCEMENT: Screen Transition ========== */
-.screen {
-  opacity: 0; transition: opacity 0.2s ease;
-}
-.screen.active {
-  opacity: 1;
-}
+/* Screen transition already handled by fadeInSlide animation in core CSS */

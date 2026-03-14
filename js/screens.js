@@ -581,7 +581,7 @@ const Screens = {
   },
 
   // ==== HADITH SCREEN ====
-  hadithCollection: 'sahih_bukhari',
+  hadithCollection: 'bukhari',
   hadithSearch: '',
 
   renderHadith() {
@@ -593,7 +593,7 @@ const Screens = {
       const q = this.hadithSearch.toLowerCase();
       filtered = filtered.filter(h => h.text.toLowerCase().includes(q) || h.narrator.toLowerCase().includes(q));
     }
-    const activeCol = collections.find(c => c.id === this.hadithCollection);
+    const activeCol = collections.find(c => c.id === this.hadithCollection) || collections[0];
 
     const scrollSVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:32px;height:32px">
       <rect x="25" y="15" width="50" height="70" fill="none" stroke="rgba(212,168,67,0.8)" stroke-width="2" rx="3"/>
