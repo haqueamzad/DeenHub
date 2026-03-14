@@ -17,8 +17,8 @@
 | Environment | Branch    | URL                                  | Purpose          |
 |------------|-----------|--------------------------------------|------------------|
 | Development | local     | localhost:8080                       | Local coding     |
-| Staging     | staging   | staging.deenhub.pages.dev            | QA & testing     |
-| Production  | main      | deenhub.app (or deenhub.pages.dev)   | Live users       |
+| Staging     | staging   | staging.deenhub-3j7.pages.dev        | QA & testing     |
+| Production  | main      | deenhub-3j7.pages.dev                | Live users       |
 
 **Scaling:** Cloudflare Pages serves from 300+ edge locations worldwide. Static assets are cached at the edge. No server to manage — handles millions of requests automatically.
 
@@ -117,9 +117,9 @@ gh pr create --base staging --head develop --title "Release: description"
 When the PR is merged, GitHub Actions will automatically:
 1. Run all 127 tests
 2. Build the optimized dist/ folder
-3. Deploy to staging.deenhub.pages.dev
+3. Deploy to staging.deenhub-3j7.pages.dev
 
-**Test on staging** — open staging.deenhub.pages.dev on your phone and verify.
+**Test on staging** — open staging.deenhub-3j7.pages.dev on your phone and verify.
 
 ### Deploying to Production
 
@@ -130,7 +130,7 @@ gh pr create --base main --head staging --title "Production: description"
 # Or via GitHub UI: Pull Requests > New > base:main ← compare:staging
 ```
 
-When merged, the same pipeline deploys to production (deenhub.pages.dev or your custom domain).
+When merged, the same pipeline deploys to production (deenhub-3j7.pages.dev or your custom domain).
 
 ---
 

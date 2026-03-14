@@ -57,7 +57,7 @@ jobs:
     if: github.ref == 'refs/heads/staging'
     environment:
       name: staging
-      url: https://staging.deenhub.pages.dev
+      url: https://staging.deenhub-3j7.pages.dev
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -78,7 +78,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     environment:
       name: production
-      url: https://deenhub.pages.dev
+      url: https://deenhub-3j7.pages.dev
     steps:
       - uses: actions/download-artifact@v4
         with:
