@@ -11,7 +11,7 @@ const App = {
   async init() {
     // Register service worker
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(e => console.log('SW registration skipped:', e.message));
+      navigator.serviceWorker.register('sw.js').catch(e => console.log('SW registration skipped:', e.message));
     }
 
     // Initialize streak on first visit
@@ -24,6 +24,9 @@ const App = {
     // Initialize i18n system (auto-detect or load saved language)
     I18n.init();
     I18n.updateTabBar();
+
+    // Network status monitoring
+    this._setupNetworkMonitor();
 
     // Request notification permission early
     this.requestNotificationPermission();
@@ -336,9 +339,45 @@ const App = {
     const t = document.getElementById('toast');
     t.textContent = msg;
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2500);
+    setTimeout(() => t.classList.remove('show'), 3500);
+  },
+
+  // ---- Network Status Monitor ----
+  _setupNetworkMonitor() {
+    var banner = document.getElementById('offline-banner');
+    if (!banner) return;
+
+    var updateStatus = function() {
+      if (navigator.onLine) {
+        banner.classList.add('hidden');
+      } else {
+        banner.classList.remove('hidden');
+      }
+    };
+
+    window.addEventListener('online', function() {
+      updateStatus();
+      App.toast('Back online!');
+    });
+    window.addEventListener('offline', function() {
+      updateStatus();
+    });
+
+    // Initial check
+    updateStatus();
   }
 };
+
+// Keyboard navigation for tab bar
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    var tab = document.activeElement;
+    if (tab && tab.classList.contains('tab-item') && tab.dataset.tab) {
+      e.preventDefault();
+      App.navigate(tab.dataset.tab);
+    }
+  }
+});
 
 // Boot
 document.addEventListener('DOMContentLoaded', () => App.init());

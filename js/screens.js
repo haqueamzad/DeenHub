@@ -16,6 +16,10 @@ const Screens = {
       this._qiblaWatchId = null;
       this._qiblaCompassActive = false;
     }
+    // Stop Dua audio timer
+    if (this._duaTimer) { clearInterval(this._duaTimer); this._duaTimer = null; }
+    // Stop any compass RAF
+    if (this._qiblaRAF) { cancelAnimationFrame(this._qiblaRAF); this._qiblaRAF = null; }
   },
 
   // ==== SHARED ISLAMIC HELPERS ====
@@ -874,7 +878,7 @@ const Screens = {
         <div class="tasbih-target" style="font-size:16px;color:var(--text-sec)">of ${this.tasbihTarget}</div>
         <div class="tasbih-ring" style="width:140px;height:140px;margin:20px auto;border:4px solid var(--gold-light);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;background:radial-gradient(circle,rgba(212,168,67,0.05),transparent);font-size:32px;font-weight:700;color:var(--gold-light);transition:all 0.2s" onclick="Screens.incrementTasbih()">TAP</div>
         <div class="row" style="justify-content:center;gap:12px;margin:24px 0">
-          <button class="btn btn-outline" onclick="Screens.tasbihCount=0;Screens.renderTasbih()">Reset</button>
+          <button class="btn btn-outline" onclick="Screens.resetTasbih()">Reset</button>
           <button class="btn btn-primary" onclick="Screens.tasbihTarget=Screens.tasbihTarget===33?99:Screens.tasbihTarget===99?100:33;Screens.renderTasbih()">Target: ${this.tasbihTarget}</button>
         </div>
         <div class="card" style="border:2px solid var(--gold-light);border-radius:12px">
@@ -886,9 +890,20 @@ const Screens = {
     `;
   },
 
+  resetTasbih() {
+    if (this.tasbihCount === 0) return;
+    if (confirm('Reset tasbih counter to 0?')) {
+      this.tasbihCount = 0;
+      this.renderTasbih();
+    }
+  },
+
   incrementTasbih() {
+    // Haptic feedback
+    if (navigator.vibrate) navigator.vibrate(15);
     this.tasbihCount++;
     if (this.tasbihCount >= this.tasbihTarget) {
+      if (navigator.vibrate) navigator.vibrate([30, 50, 30]); // completion pattern
       Store.addTasbih(this.tasbihTarget);
       Store.addXP(25);
       if (Store.getTasbihTotal() >= 100) Store.unlockAchievement('tasbih_100');
@@ -1021,27 +1036,19 @@ const Screens = {
       window.removeEventListener('deviceorientation', self._qiblaOrientHandler);
     }
 
-    self._qiblaOrientHandler = function(e) {
-      var heading = 0;
-      if (e.webkitCompassHeading !== undefined) {
-        // iOS Safari
-        heading = e.webkitCompassHeading;
-      } else if (e.alpha !== null) {
-        // Android Chrome — alpha is counterclockwise from north
-        heading = (360 - e.alpha) % 360;
-      } else {
-        return;
-      }
+    // Throttle compass updates to ~20fps via RAF to save battery
+    self._qiblaPendingHeading = null;
+    self._qiblaRAF = null;
+
+    var applyCompassUpdate = function() {
+      self._qiblaRAF = null;
+      var heading = self._qiblaPendingHeading;
+      if (heading === null) return;
 
       self._qiblaHeading = heading;
-
-      // Rotate the compass ring opposite to heading (so N stays at north)
       var compassEl = document.getElementById('qibla-compass');
-      if (compassEl) {
-        compassEl.style.transform = 'rotate(' + (-heading) + 'deg)';
-      }
+      if (compassEl) compassEl.style.transform = 'rotate(' + (-heading) + 'deg)';
 
-      // Check if device is roughly pointing at Qibla
       var diff = Math.abs(heading - self.qiblaAngle);
       if (diff > 180) diff = 360 - diff;
 
@@ -1049,14 +1056,33 @@ const Screens = {
       var instructEl = document.getElementById('qibla-instruction');
 
       if (diff < 5) {
+        if (navigator.vibrate && !self._qiblaVibrated) { navigator.vibrate(100); self._qiblaVibrated = true; }
         if (statusEl) { statusEl.className = 'qibla-status qibla-found'; statusEl.innerHTML = '<span class="qibla-status-dot found"></span> Facing Qibla!'; }
         if (instructEl) instructEl.textContent = 'You are facing the Kaaba. Allahu Akbar!';
-      } else if (diff < 15) {
-        if (statusEl) { statusEl.className = 'qibla-status qibla-close'; statusEl.innerHTML = '<span class="qibla-status-dot close"></span> Almost there...'; }
-        if (instructEl) instructEl.textContent = 'Turn slightly ' + (self._qiblaTurnDir(heading) ? 'right' : 'left');
       } else {
-        if (statusEl) { statusEl.className = 'qibla-status'; statusEl.innerHTML = '<span class="qibla-status-dot"></span> Finding Qibla...'; }
-        if (instructEl) instructEl.textContent = 'Hold your phone flat and rotate until the arrow points up';
+        self._qiblaVibrated = false;
+        if (diff < 15) {
+          if (statusEl) { statusEl.className = 'qibla-status qibla-close'; statusEl.innerHTML = '<span class="qibla-status-dot close"></span> Almost there...'; }
+          if (instructEl) instructEl.textContent = 'Turn slightly ' + (self._qiblaTurnDir(heading) ? 'right' : 'left');
+        } else {
+          if (statusEl) { statusEl.className = 'qibla-status'; statusEl.innerHTML = '<span class="qibla-status-dot"></span> Finding Qibla...'; }
+          if (instructEl) instructEl.textContent = 'Hold your phone flat and rotate until the arrow points up';
+        }
+      }
+    };
+
+    self._qiblaOrientHandler = function(e) {
+      var heading = 0;
+      if (e.webkitCompassHeading !== undefined) {
+        heading = e.webkitCompassHeading;
+      } else if (e.alpha !== null) {
+        heading = (360 - e.alpha) % 360;
+      } else {
+        return;
+      }
+      self._qiblaPendingHeading = heading;
+      if (!self._qiblaRAF) {
+        self._qiblaRAF = requestAnimationFrame(applyCompassUpdate);
       }
     };
 

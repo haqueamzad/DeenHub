@@ -4005,3 +4005,57 @@ body::after {
   background: rgba(17,29,51,0.5); border: 1px solid rgba(212,168,67,0.06); min-width: 60px;
 }
 .ummah-names-mini.current { background: rgba(212,168,67,0.1); border-color: rgba(212,168,67,0.25); }
+
+/* ========== ENHANCEMENT: Offline Banner ========== */
+.offline-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 10000;
+  background: linear-gradient(90deg, #e74c3c, #c0392b);
+  color: #fff; text-align: center; font-size: 13px; font-weight: 600;
+  padding: 8px 16px; letter-spacing: 0.3px;
+  transform: translateY(0); transition: transform 0.3s ease;
+}
+.offline-banner.hidden { transform: translateY(-100%); pointer-events: none; }
+
+/* ========== ENHANCEMENT: Focus Indicators (Keyboard Accessibility) ========== */
+.tab-item:focus-visible,
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--gold-light);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ========== ENHANCEMENT: Smooth Tasbih Tap Feedback ========== */
+.tasbih-ring:active {
+  transform: scale(0.92) !important;
+  background: radial-gradient(circle, rgba(212,168,67,0.15), transparent) !important;
+}
+
+/* ========== ENHANCEMENT: Qibla Found Pulse ========== */
+.qibla-found .qibla-status-dot.found {
+  animation: qiblaPulse 1.5s ease infinite;
+}
+@keyframes qiblaPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46,204,113,0.5); }
+  50% { box-shadow: 0 0 0 10px rgba(46,204,113,0); }
+}
+
+/* ========== ENHANCEMENT: Better Toast ========== */
+.toast {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: rgba(17,29,51,0.95); color: #fff; padding: 12px 24px;
+  border-radius: 12px; font-size: 14px; font-weight: 500; z-index: 9999;
+  opacity: 0; transition: all 0.3s ease; pointer-events: none;
+  border: 1px solid rgba(212,168,67,0.2); backdrop-filter: blur(10px);
+  max-width: 85vw; text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ========== ENHANCEMENT: Screen Transition ========== */
+.screen {
+  opacity: 0; transition: opacity 0.2s ease;
+}
+.screen.active {
+  opacity: 1;
+}

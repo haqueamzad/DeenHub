@@ -29,7 +29,7 @@
     </div>
 
     <!-- Screen Area -->
-    <div class="screen-area">
+    <div class="screen-area" role="main" aria-live="polite">
       <div id="screen-home" class="screen active"></div>
       <div id="screen-quran" class="screen"></div>
       <div id="screen-hadith" class="screen"></div>
@@ -44,34 +44,37 @@
       <div id="screen-azan" class="screen"></div>
     </div>
 
+    <!-- Offline Banner -->
+    <div id="offline-banner" class="offline-banner hidden">You are offline — some features may be unavailable</div>
+
     <!-- Bottom Tab Bar -->
-    <div class="tab-bar">
-      <div class="tab-item active" data-tab="home" onclick="App.navigate('home')">
+    <div class="tab-bar" role="navigation" aria-label="Main navigation">
+      <div class="tab-item active" data-tab="home" onclick="App.navigate('home')" role="tab" aria-label="Home - Prayer times and dashboard" aria-selected="true" tabindex="0">
         <div class="tab-icon">&#127968;</div>
         <div>Home</div>
         <div class="tab-dot"></div>
       </div>
-      <div class="tab-item" data-tab="quran" onclick="App.navigate('quran')">
+      <div class="tab-item" data-tab="quran" onclick="App.navigate('quran')" role="tab" aria-label="Quran - Read and listen to the Holy Quran" aria-selected="false" tabindex="0">
         <div class="tab-icon">&#128214;</div>
         <div>Quran</div>
         <div class="tab-dot"></div>
       </div>
-      <div class="tab-item" data-tab="hadith" onclick="App.navigate('hadith')">
+      <div class="tab-item" data-tab="hadith" onclick="App.navigate('hadith')" role="tab" aria-label="Hadith - Prophetic traditions" aria-selected="false" tabindex="0">
         <div class="tab-icon">&#128220;</div>
         <div>Hadith</div>
         <div class="tab-dot"></div>
       </div>
-      <div class="tab-item" data-tab="ai" onclick="App.navigate('ai')">
+      <div class="tab-item" data-tab="ai" onclick="App.navigate('ai')" role="tab" aria-label="AI Scholar - Ask Islamic questions" aria-selected="false" tabindex="0">
         <div class="tab-icon">&#10024;</div>
         <div>AI</div>
         <div class="tab-dot"></div>
       </div>
-      <div class="tab-item" data-tab="community" onclick="App.navigate('community')">
+      <div class="tab-item" data-tab="community" onclick="App.navigate('community')" role="tab" aria-label="Ummah - Muslim community near you" aria-selected="false" tabindex="0">
         <div class="tab-icon">&#128101;</div>
         <div>Ummah</div>
         <div class="tab-dot"></div>
       </div>
-      <div class="tab-item" data-tab="profile" onclick="App.navigate('profile')">
+      <div class="tab-item" data-tab="profile" onclick="App.navigate('profile')" role="tab" aria-label="Profile - Settings and achievements" aria-selected="false" tabindex="0">
         <div class="tab-icon">&#128100;</div>
         <div>Profile</div>
         <div class="tab-dot"></div>
