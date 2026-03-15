@@ -616,13 +616,17 @@ const Screens = {
   },
 
   cycleAudioSpeed() {
-    const speeds = [1.0, 1.25, 1.5, 0.75];
+    const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 4.0];
     const idx = speeds.indexOf(this.quranAudioSpeed);
     this.quranAudioSpeed = speeds[(idx + 1) % speeds.length];
-    if (this.quranPlayingAyah) {
-      API.setAudioSpeed(this.quranAudioSpeed);
+    if (API.audioPlayer) API.audioPlayer.playbackRate = this.quranAudioSpeed;
+    // Update just the speed button text without full re-render
+    const btn = document.querySelector('.quran-toggle[onclick*="cycleAudioSpeed"]');
+    if (btn) {
+      btn.textContent = 'Speed: ' + this.quranAudioSpeed + 'x';
+    } else {
+      this.renderQuran();
     }
-    this.renderQuranReader(document.getElementById('screen-quran'));
   },
 
   toggleBookmark(surahNum) {
