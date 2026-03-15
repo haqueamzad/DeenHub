@@ -391,6 +391,14 @@ const Screens = {
 
     const ayahs = await API.getSurahText(this.quranActiveSurah, this.quranSelectedReciter, this.quranSelectedTranslation);
     this.quranAyahs = ayahs;
+
+    // Strip Bismillah from first ayah to avoid duplication with the decorative banner
+    if (this.quranActiveSurah !== 1 && this.quranActiveSurah !== 9 && ayahs.length > 0) {
+      const bism = '\u0628\u0650\u0633\u0652\u0645\u0650 \u0671\u0644\u0644\u0651\u064e\u0647\u0650 \u0671\u0644\u0631\u0651\u064e\u062d\u0652\u0645\u064e\u0670\u0646\u0650 \u0671\u0644\u0631\u0651\u064e\u062d\u0650\u064a\u0645\u0650';
+      if (ayahs[0].arabic.startsWith(bism)) {
+        ayahs[0].arabic = ayahs[0].arabic.slice(bism.length).trim();
+      }
+    }
     const surah = this.quranSurahs?.find(s => s.number === this.quranActiveSurah) || { name: `Surah ${this.quranActiveSurah}` };
 
     Store.setLastRead(this.quranActiveSurah, 1);
